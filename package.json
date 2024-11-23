@@ -11,7 +11,7 @@
     "type": "tsc --noEmit"
   },
   "prisma": {
-    "seed": "ts-node-dev prisma\\seed.ts"
+    "seed": "tsx prisma/seed.ts"
   },
   "repository": {
     "type": "git",

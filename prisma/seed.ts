@@ -1,3 +1,5 @@
+import { hash } from "bcryptjs";
+
 const { PrismaClient } = require("@prisma/client") as {
   PrismaClient: typeof import("@prisma/client").PrismaClient;
 };
@@ -197,7 +199,7 @@ const prisma = new PrismaClient();
 //         },
 //         role:true,
 //       }
-   
+
 //   });
 //   console.log(count.length);
 //   fs.writeFileSync("external.json", JSON.stringify(count));
@@ -206,9 +208,6 @@ const prisma = new PrismaClient();
 // externalCount().finally(()=>{
 //   console.log("external count done")
 // })
-
-
-
 
 // async function winnerList(){
 //   const winner = await prisma.winners.findMany({
@@ -261,7 +260,7 @@ const prisma = new PrismaClient();
 //         },
 //         role:true,
 //       }
-   
+
 //   });
 //   console.log(count.length);
 //   fs.writeFileSync("inernalfirstyear.json", JSON.stringify(count));
@@ -270,7 +269,6 @@ const prisma = new PrismaClient();
 // internalCount().finally(()=>{
 //   console.log("internal first year count done")
 // })
-
 
 // async function collegeWiseUserCount(){
 //   const count = await prisma.college.findMany({
@@ -301,42 +299,64 @@ const prisma = new PrismaClient();
 //   console.log("college wise count done")
 // })
 
-async function participantsListEventWise(){
-  const participation = await prisma.team.findMany({
-    where: {
-      attended: true,
-    },
-    include: {
-      TeamMembers: {
-        include: {
-          User: {
-            include: {
-              College: true,
-            },
-          },
-        },
-      },
-      Event: {
-        select: {
-          name: true,
+// async function participantsListEventWise(){
+//   const participation = await prisma.team.findMany({
+//     where: {
+//       attended: true,
+//     },
+//     include: {
+//       TeamMembers: {
+//         include: {
+//           User: {
+//             include: {
+//               College: true,
+//             },
+//           },
+//         },
+//       },
+//       Event: {
+//         select: {
+//           name: true,
+//         },
+//       },
+//     },
+//   });
+//   console.log(participation);
+//   fs.writeFileSync("participants.json", JSON.stringify(participation));
+// }
+
+// participantsListEventWise().finally(()=>{
+//      console.log("participants count done")
+// })
+
+const mockDb = async () => {
+  await prisma.user.create({
+    data: {
+      email: "test@incridea.in",
+      name: "Test",
+      password: await hash("asdfghjkl;'", 12),
+      isVerified: true,
+      role: "ADMIN",
+      College: {
+        create: {
+          name: "NMAM Institute of Technology",
+          type: "ENGINEERING",
         },
       },
     },
   });
-  console.log(participation);
-  fs.writeFileSync("participants.json", JSON.stringify(participation));
-}
+};
 
-participantsListEventWise().finally(()=>{
-     console.log("participants count done")
-})
+mockDb().finally(() => {
+  console.log("done");
+});
 
 // async function SDITCollegeparticipantsList() {
 //   const participants = await prisma.user.findMany({
 //   where:{
 //     collegeId: 48,
 //     role:"PARTICIPANT",
-    
+
 //   },
 //   select:{
 //     name:true,
@@ -347,7 +367,7 @@ participantsListEventWise().finally(()=>{
 //         name:true
 //       }
 //     },
-   
+
 //   }
 //   })
 //    console.log(participants.length);
@@ -357,7 +377,6 @@ participantsListEventWise().finally(()=>{
 // SDITCollegeparticipantsList().finally(()=>{
 //      console.log("participants count done")
 // })
-
 
 // async function getEventsParticipants() {
 // const participants = await prisma.user.findMany({
@@ -438,7 +457,7 @@ participantsListEventWise().finally(()=>{
 //     fs.writeFileSync('participant_counts.json', JSON.stringify(collegeCounts, null, 2));
 
 //   }
-  
+
 //   getCollegeWiseParticipants().finally(()=>{
 //        console.log("participants count done")
 //   })

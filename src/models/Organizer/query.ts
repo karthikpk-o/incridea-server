@@ -21,5 +21,5 @@ builder.queryField("eventByOrganizer", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

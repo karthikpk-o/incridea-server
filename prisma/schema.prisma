@@ -88,7 +88,7 @@ model Branch {
     Event      Event[]
 }
 
-// User many-to-many  Branch 
+// User many-to-many  Branch
 
 // BranchRep userId-BranchID
 

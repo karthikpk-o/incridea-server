@@ -39,7 +39,7 @@ builder.queryField("users", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("me", (t) =>
@@ -55,7 +55,7 @@ builder.queryField("me", (t) =>
       }
       return user;
     },
-  })
+  }),
 );
 
 builder.queryField("userById", (t) =>
@@ -74,7 +74,7 @@ builder.queryField("userById", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("totalRegistrations", (t) =>
@@ -106,7 +106,7 @@ builder.queryField("totalRegistrations", (t) =>
             },
             createdAt: {
               gte: new Date(
-                new Date().getTime() - args.last * 86400000
+                new Date().getTime() - args.last * 86400000,
               ).toISOString(),
             },
           },
@@ -120,13 +120,13 @@ builder.queryField("totalRegistrations", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("getAvatars", (t) =>
   t.field({
     type: "String",
-   
+
     resolve: async (root, args, ctx) => {
       const user = await ctx.user;
       if (!user) {
@@ -134,5 +134,5 @@ builder.queryField("getAvatars", (t) =>
       }
       return JSON.stringify(avatarList);
     },
-  })
+  }),
 );

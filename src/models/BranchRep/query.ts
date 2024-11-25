@@ -23,5 +23,5 @@ builder.queryField("eventsByBranchRep", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

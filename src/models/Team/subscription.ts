@@ -25,5 +25,5 @@ builder.queryField("judgeGetTeamsByRound", (t) =>
       });
       return teams;
     },
-  })
+  }),
 );

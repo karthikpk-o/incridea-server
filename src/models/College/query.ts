@@ -8,5 +8,5 @@ builder.queryField("colleges", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

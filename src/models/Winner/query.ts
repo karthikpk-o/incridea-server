@@ -21,7 +21,7 @@ builder.queryField("winnersByEvent", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("allWinners", (t) =>
@@ -39,5 +39,5 @@ builder.queryField("allWinners", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

@@ -56,7 +56,7 @@ builder.mutationField("addScore", (t) =>
       });
       return score;
     },
-  })
+  }),
 );
 
 builder.mutationField("addComment", (t) =>
@@ -117,5 +117,5 @@ builder.mutationField("addComment", (t) =>
       });
       return comment;
     },
-  })
+  }),
 );

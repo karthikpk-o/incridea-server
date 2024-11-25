@@ -1,4 +1,5 @@
 import { builder } from "../../builder";
+
 enum EventTypeEnum {
   INDIVIDUAL = "INDIVIDUAL",
   TEAM = "TEAM",
@@ -98,7 +99,7 @@ builder.mutationField("createEvent", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("updateEvent", (t) =>
@@ -151,7 +152,7 @@ builder.mutationField("updateEvent", (t) =>
         });
         if (!organizer)
           throw new Error(
-            `Oops ${user.name}! you are not an organizer of this event`
+            `Oops ${user.name}! you are not an organizer of this event`,
           );
       }
 
@@ -174,7 +175,7 @@ builder.mutationField("updateEvent", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteEvent", (t) =>
@@ -219,7 +220,7 @@ builder.mutationField("deleteEvent", (t) =>
         });
         if (!organizer)
           throw new Error(
-            `Oops ${user.name}! you are not an organizer of this event`
+            `Oops ${user.name}! you are not an organizer of this event`,
           );
       }
       if (event.published) throw new Error("Event is already published");
@@ -230,7 +231,7 @@ builder.mutationField("deleteEvent", (t) =>
       });
       return "Event Deleted Successfully";
     },
-  })
+  }),
 );
 
 builder.mutationField("publishEvent", (t) =>
@@ -264,5 +265,5 @@ builder.mutationField("publishEvent", (t) =>
       });
       return "Event published Successfully";
     },
-  })
+  }),
 );

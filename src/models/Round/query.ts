@@ -8,7 +8,7 @@ builder.queryField("rounds", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("roundsByEvent", (t) =>
@@ -25,5 +25,5 @@ builder.queryField("roundsByEvent", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

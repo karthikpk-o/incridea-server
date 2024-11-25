@@ -1,11 +1,11 @@
 import { builder } from "../../builder";
-import "./query";
 import "./mutation";
+import "./query";
 
 builder.prismaObject("Level", {
-    fields: (t) => ({
-        id: t.exposeID("id"),
-        point: t.exposeInt("point"),
-        xp: t.relation("XP"),
-    }),
+  fields: (t) => ({
+    id: t.exposeID("id"),
+    point: t.exposeInt("point"),
+    xp: t.relation("XP"),
+  }),
 });

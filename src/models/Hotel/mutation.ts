@@ -48,7 +48,7 @@ builder.mutationField("createHotel", (t) =>
         throw new Error("Something went wrong");
       }
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteHotel", (t) =>
@@ -92,7 +92,7 @@ builder.mutationField("deleteHotel", (t) =>
         throw new Error("Something went wrong");
       }
     },
-  })
+  }),
 );
 
 //mutation to delete Hotels

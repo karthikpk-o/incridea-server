@@ -1,9 +1,10 @@
-import { sendVerificationRequest } from "./sendgrid";
 import { prisma } from "../db/prisma";
+import { sendVerificationRequest } from "./sendgrid";
+
 export async function sendEmail(
   email: string,
   content: string,
-  subject: string
+  subject: string,
 ) {
   const count = await getCount();
   const user = getUser(count);
@@ -34,7 +35,7 @@ export const getUser = (count: number) => {
   const user3 = process.env.EMAIL_SERVER_USER3 as string;
   const user4 = process.env.EMAIL_SERVER_USER4 as string;
   const user5 = process.env.EMAIL_SERVER_USER5 as string;
-  const queue = [user1,user2,user3,user4,user5];
+  const queue = [user1, user2, user3, user4, user5];
   return queue[count % 5];
 };
 

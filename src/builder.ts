@@ -1,14 +1,15 @@
 import SchemaBuilder from "@pothos/core";
-import { DateResolver, DateTimeResolver } from "graphql-scalars";
+import ErrorsPlugin from "@pothos/plugin-errors";
 import PrismaPlugin from "@pothos/plugin-prisma";
 import type PrismaTypes from "@pothos/plugin-prisma/generated";
-import ErrorsPlugin from "@pothos/plugin-errors";
 import RelayPlugin from "@pothos/plugin-relay";
-import { prisma } from "./utils/db/prisma";
-import { context } from "./context";
 import SmartSubscriptionsPlugin, {
   subscribeOptionsFromIterator,
 } from "@pothos/plugin-smart-subscriptions";
+import { DateResolver, DateTimeResolver } from "graphql-scalars";
+
+import { context } from "./context";
+import { prisma } from "./utils/db/prisma";
 
 export const builder = new SchemaBuilder<{
   Scalars: {
@@ -19,19 +20,19 @@ export const builder = new SchemaBuilder<{
   Context: ReturnType<typeof context>;
 }>({
   plugins: [ErrorsPlugin, PrismaPlugin, RelayPlugin, SmartSubscriptionsPlugin],
-  relayOptions: {
+  relay: {
     clientMutationId: "omit",
     cursorType: "String",
   },
   smartSubscriptions: {
     ...subscribeOptionsFromIterator((name, ctx) => {
-      return ctx.pubsub.asyncIterator(name);
+      return ctx.pubsub.asyncIterableIterator(name);
     }),
   },
   prisma: {
     client: prisma,
   },
-  errorOptions: {
+  errors: {
     defaultTypes: [],
   },
 });
@@ -46,12 +47,8 @@ builder.objectType(Error, {
   name: "Error",
   fields: (t) => ({
     message: t.string({
-      resolve: (root) => {
-        if (root.name === "Error") {
-          return root.message;
-        }
-        return "Something went wrong";
-      },
+      resolve: (root) =>
+        root.name === "Error" ? root.message : "Something went wrong",
     }),
   }),
 });

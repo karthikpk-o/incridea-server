@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+
 export const AUTH_SECRET = process.env.AUTH_SECRET as string;
 
 export const secrets = {
@@ -23,7 +24,7 @@ export function generateRefreshToken(user: { id: any }, jti: any) {
     secrets.JWT_REFRESH_SECRET as string,
     {
       expiresIn: "7d",
-    }
+    },
   );
 }
 
@@ -46,7 +47,7 @@ export function generateVerificationToken(user: { id: any }, jti: any) {
     secrets.JWT_VERIFICATION_SECRET as string,
     {
       expiresIn: "1d",
-    }
+    },
   ) as string;
 }
 
@@ -59,6 +60,6 @@ export function generatePasswordResetToken(user: { id: any }, jti: any) {
     secrets.JWT_PASSWORD_RESET_SECRET as string,
     {
       expiresIn: "1d",
-    }
+    },
   ) as string;
 }

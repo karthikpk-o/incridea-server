@@ -1,6 +1,6 @@
 import { builder } from "../../builder";
-import "./query";
 import "./mutation";
+import "./query";
 
 export const avatarList = [
   {
@@ -78,7 +78,6 @@ export const avatarList = [
     name: "avatar15",
     url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113030/8%20bit/samusaran.png",
   },
-  
 ];
 builder.prismaObject("User", {
   fields: (t) => ({

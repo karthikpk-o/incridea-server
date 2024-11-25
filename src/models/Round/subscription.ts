@@ -26,5 +26,5 @@ builder.queryField("getRoundStatus", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

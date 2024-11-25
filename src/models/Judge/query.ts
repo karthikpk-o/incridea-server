@@ -25,5 +25,5 @@ builder.queryField("roundByJudge", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

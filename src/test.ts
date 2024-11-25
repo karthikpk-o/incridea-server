@@ -1,5 +1,7 @@
-import { prisma } from "./utils/db/prisma";
 import fs from "fs";
+
+import { prisma } from "./utils/db/prisma";
+
 async function updateRegisteredStatus() {
   const users = fs.readFileSync("./src/certificate.json", "utf-8");
   const usersData = JSON.parse(users);

@@ -32,7 +32,7 @@ builder.queryField("events", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 //Events By ID
@@ -53,7 +53,7 @@ builder.queryField("eventById", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("registeredEvents", (t) =>
@@ -93,7 +93,7 @@ builder.queryField("registeredEvents", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("publishedEvents", (t) =>
@@ -136,7 +136,7 @@ builder.queryField("publishedEvents", (t) =>
       });
       return [...core_event, ...non_core_event];
     },
-  })
+  }),
 );
 
 //completed events by checking if winners are present or not
@@ -151,17 +151,16 @@ builder.queryField("completedEvents", (t) =>
         select: {
           eventId: true,
         },
-      }
-      );
-        const events = await ctx.prisma.event.findMany({
+      });
+      const events = await ctx.prisma.event.findMany({
         where: {
           id: {
             in: eventIds.map((event) => event.eventId),
-          }
+          },
         },
         ...query,
       });
       return events;
     },
-  })
+  }),
 );

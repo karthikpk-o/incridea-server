@@ -40,7 +40,7 @@
     "@pothos/plugin-relay": "^4.3.0",
     "@pothos/plugin-smart-subscriptions": "^4.1.1",
     "bcryptjs": "^2.4.3",
-    "cloudinary": "^2.5.1",
+    "cloudinary": "^1.21.0",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "graphql-scalars": "^1.23.0",

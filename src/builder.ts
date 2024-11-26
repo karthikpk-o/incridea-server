@@ -17,21 +17,23 @@ export const builder = new SchemaBuilder<{
   };
   PrismaTypes: PrismaTypes;
   Context: ReturnType<typeof context>;
+  DefaultFieldNullability: false;
 }>({
   plugins: [ErrorsPlugin, PrismaPlugin, RelayPlugin, SmartSubscriptionsPlugin],
-  relayOptions: {
+  relay: {
     clientMutationId: "omit",
     cursorType: "String",
   },
   smartSubscriptions: {
     ...subscribeOptionsFromIterator((name, ctx) => {
-      return ctx.pubsub.asyncIterator(name);
+      return ctx.pubsub.asyncIterableIterator(name);
     }),
   },
   prisma: {
     client: prisma,
   },
-  errorOptions: {
+  defaultFieldNullability: false,
+  errors: {
     defaultTypes: [],
   },
 });

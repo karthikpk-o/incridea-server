@@ -32,7 +32,7 @@ app.get("/", (_req, res) => {
   res.send("Hello Incridea");
 });
 
-app.use("/graphql", yoga);
+app.use("/graphql", yoga.requestListener);
 app.post("/webhook/capture", razorpayCapture);
 app.post("/cloudinary/upload/:eventName", upload.single("image"), imageUpload);
 app.post("/easter-egg/upload", easterUpload.single("image"), imageUpload);

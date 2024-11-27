@@ -1,27 +1,30 @@
+import { QuestionType } from "@prisma/client";
 import { builder } from "../../builder";
-import "./query"
+import "./query";
 
-builder.prismaObject("Question",{
-    fields:(t)=>({
-        id: t.exposeID("id"),
-        quizId: t.exposeID("quizId"),
-        quiz: t.relation("Quiz"),
-        question: t.expose("question",{
-            type:"String",
-            nullable:false
-        }),
-        point: t.exposeInt("points"),
-        negativePoint: t.exposeInt("negativePoints"),
-        image: t.expose("image",{
-            type:"String",
-            nullable:true
-        }),
-        questionType: t.exposeString("questionType"),
-        options: t.relation("options"),
-        LASubmissions: t.relation("LASubmissions")
+builder.enumType(QuestionType, {
+  name: "QuestionType",
+});
 
-
-    })
-})
-
-
+builder.prismaObject("Question", {
+  fields: (t) => ({
+    id: t.exposeID("id"),
+    quizId: t.exposeID("quizId"),
+    quiz: t.relation("Quiz"),
+    question: t.expose("question", {
+      type: "String",
+      nullable: false,
+    }),
+    point: t.exposeInt("points"),
+    negativePoint: t.exposeInt("negativePoints"),
+    image: t.expose("image", {
+      type: "String",
+      nullable: true,
+    }),
+    questionType: t.expose("questionType", {
+      type: QuestionType,
+    }),
+    options: t.relation("options"),
+    LASubmissions: t.relation("LASubmissions"),
+  }),
+});

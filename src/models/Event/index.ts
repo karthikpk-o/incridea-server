@@ -1,6 +1,15 @@
+import { EventCategory, EventType } from "@prisma/client";
 import { builder } from "../../builder";
 import "./mutation";
 import "./query";
+
+builder.enumType(EventType, {
+  name: "EventType",
+});
+
+builder.enumType(EventCategory, {
+  name: "EventCategory",
+});
 
 builder.prismaObject("Event", {
   fields: (t) => ({
@@ -27,10 +36,13 @@ builder.prismaObject("Event", {
       nullable: true,
     }),
     organizers: t.relation("Organizers"),
-    eventType: t.exposeString("eventType"),
+    eventType: t.expose("eventType", {
+      type: EventType,
+    }),
     teams: t.relation("Teams"),
     rounds: t.relation("Rounds"),
-    category: t.exposeString("category", {
+    category: t.expose("category", {
+      type: EventCategory,
       nullable: true,
     }),
     winner: t.relation("Winner", {

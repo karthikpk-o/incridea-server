@@ -1,6 +1,7 @@
 import { builder } from "../../builder";
 import "./query";
 import "./mutation";
+import { Role } from "@prisma/client";
 
 export const avatarList = [
   {
@@ -78,14 +79,20 @@ export const avatarList = [
     name: "avatar15",
     url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113030/8%20bit/samusaran.png",
   },
-  
 ];
+
+builder.enumType(Role, {
+  name: "Role",
+});
+
 builder.prismaObject("User", {
   fields: (t) => ({
     id: t.exposeID("id"),
     name: t.exposeString("name"),
     email: t.exposeString("email"),
-    role: t.exposeString("role"),
+    role: t.expose("role", {
+      type: Role,
+    }),
     isVerified: t.exposeBoolean("isVerified"),
     createdAt: t.expose("createdAt", { type: "Date" }),
     phoneNumber: t.exposeString("phoneNumber", {

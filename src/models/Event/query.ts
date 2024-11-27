@@ -11,10 +11,9 @@ builder.queryField("events", (t) =>
         required: false,
       }),
     },
-
-    resolve: (query, root, args, ctx, info) => {
+    resolve: async (query, root, args, ctx, info) => {
       const filter = args.contains || "";
-      return ctx.prisma.event.findMany({
+      return await ctx.prisma.event.findMany({
         where: {
           OR: [
             {
@@ -45,8 +44,8 @@ builder.queryField("eventById", (t) =>
         required: true,
       }),
     },
-    resolve: (query, root, args, ctx, info) => {
-      return ctx.prisma.event.findUniqueOrThrow({
+    resolve: async (query, root, args, ctx, info) => {
+      return await ctx.prisma.event.findUniqueOrThrow({
         where: {
           id: Number(args.id),
         },
@@ -151,13 +150,12 @@ builder.queryField("completedEvents", (t) =>
         select: {
           eventId: true,
         },
-      }
-      );
-        const events = await ctx.prisma.event.findMany({
+      });
+      const events = await ctx.prisma.event.findMany({
         where: {
           id: {
             in: eventIds.map((event) => event.eventId),
-          }
+          },
         },
         ...query,
       });

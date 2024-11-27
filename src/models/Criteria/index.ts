@@ -1,10 +1,17 @@
-import { builder } from '../../builder';
-import './mutation';
+import { CriteriaType } from "@prisma/client";
+import { builder } from "../../builder";
+import "./mutation";
 
-builder.prismaObject('Criteria', {
+builder.enumType(CriteriaType, {
+  name: "CriteriaType",
+});
+
+builder.prismaObject("Criteria", {
   fields: (t) => ({
-    id: t.exposeID('id'),
-    name: t.exposeString('name'),
-    type: t.exposeString('type'),
+    id: t.exposeID("id"),
+    name: t.exposeString("name"),
+    type: t.expose("type", {
+      type: CriteriaType,
+    }),
   }),
 });

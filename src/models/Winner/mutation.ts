@@ -1,17 +1,13 @@
 import { builder } from "../../builder";
 import { WinnerType } from "@prisma/client";
 
-const WinnerTypeEnum = builder.enumType(WinnerType, {
-  name: "WinnerType",
-});
-
 builder.mutationField("createWinner", (t) =>
   t.prismaField({
     type: "Winners",
     args: {
       teamId: t.arg({ type: "ID", required: true }),
       eventId: t.arg({ type: "ID", required: true }),
-      type: t.arg({ type: WinnerTypeEnum, required: true }),
+      type: t.arg({ type: WinnerType, required: true }),
     },
     errors: {
       types: [Error],
@@ -69,8 +65,8 @@ builder.mutationField("createWinner", (t) =>
           id: Number(args.teamId),
         },
         include: {
-          TeamMembers: true
-        }
+          TeamMembers: true,
+        },
       });
 
       if (!team) {
@@ -119,20 +115,22 @@ builder.mutationField("createWinner", (t) =>
             levelId: levelExists.id,
           },
         });
-        if (xp.length==0) {
+        if (xp.length == 0) {
           //give xp points to all team members
           const userXp = await ctx.prisma.xP.createMany({
-            data:teamMembers.map((userId) => ({
+            data: teamMembers.map((userId) => ({
               userId,
               levelId: levelExists.id,
             })),
           });
         }
-      }else{
+      } else {
         // give xp points for winning
-        let point = args.type === "WINNER" ? 100 : args.type === "RUNNER_UP" ? 75 : 50;
-        if(event.category === "CORE"){
-          point = args.type === "WINNER" ? 150 : args.type === "RUNNER_UP" ? 100 : 75;
+        let point =
+          args.type === "WINNER" ? 100 : args.type === "RUNNER_UP" ? 75 : 50;
+        if (event.category === "CORE") {
+          point =
+            args.type === "WINNER" ? 150 : args.type === "RUNNER_UP" ? 100 : 75;
         }
         const level = await ctx.prisma.level.create({
           data: {
@@ -142,7 +140,7 @@ builder.mutationField("createWinner", (t) =>
         });
         //give xp points to all team members
         const userXp = await ctx.prisma.xP.createMany({
-          data:teamMembers.map((userId) => ({
+          data: teamMembers.map((userId) => ({
             userId,
             levelId: level.id,
           })),
@@ -243,7 +241,7 @@ builder.mutationField("deleteWinner", (t) =>
               in: teamMembers,
             },
             levelId: level.id,
-          }
+          },
         });
         const data = await ctx.prisma.level.delete({
           where: {

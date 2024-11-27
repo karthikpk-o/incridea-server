@@ -1,18 +1,31 @@
+import { AccommodationBookingStatus, Gender } from "@prisma/client";
 import { builder } from "../../builder";
 import "./mutation";
 import "./query";
 
+builder.enumType(Gender, {
+  name: "Gender",
+});
+
+builder.enumType(AccommodationBookingStatus, {
+  name: "AccommodationBookingStatus",
+});
+
 builder.prismaObject("UserInHotel", {
   fields: (t) => ({
     id: t.exposeID("id"),
-    gender: t.exposeString("gender"),
+    gender: t.expose("gender", {
+      type: Gender,
+    }),
     room: t.exposeString("room", {
       nullable: true,
     }),
     IdCard: t.exposeString("IdCard", {
       nullable: true,
     }),
-    status: t.exposeString("status"),
+    status: t.expose("status", {
+      type: AccommodationBookingStatus,
+    }),
     ac: t.exposeBoolean("AC"),
     hotel: t.relation("Hotel"),
     user: t.relation("User"), //Check if this can be included

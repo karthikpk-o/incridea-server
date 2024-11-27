@@ -1,23 +1,5 @@
+import { EventCategory, EventType } from "@prisma/client";
 import { builder } from "../../builder";
-enum EventTypeEnum {
-  INDIVIDUAL = "INDIVIDUAL",
-  TEAM = "TEAM",
-  INDIVIDUAL_MULTIPLE_ENTRY = "INDIVIDUAL_MULTIPLE_ENTRY",
-  TEAM_MULTIPLE_ENTRY = "TEAM_MULTIPLE_ENTRY",
-}
-enum EventCategoryEnum {
-  TECHNICAL = "TECHNICAL",
-  NON_TECHNICAL = "NON_TECHNICAL",
-  CORE = "CORE",
-  SPECIAL = "SPECIAL",
-}
-const EventType = builder.enumType(EventTypeEnum, {
-  name: "EventType",
-});
-
-const EventCategory = builder.enumType(EventCategoryEnum, {
-  name: "EventCategory",
-});
 
 const EventCreateInput = builder.inputType("EventCreateInput", {
   fields: (t) => ({
@@ -30,6 +12,7 @@ const EventCreateInput = builder.inputType("EventCreateInput", {
     venue: t.string({ required: false }),
   }),
 });
+
 const EventUpdateInput = builder.inputType("EventUpdateInput", {
   fields: (t) => ({
     name: t.string({ required: false }),

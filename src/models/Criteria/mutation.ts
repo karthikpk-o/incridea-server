@@ -1,15 +1,11 @@
 import { CriteriaType } from "@prisma/client";
 import { builder } from "../../builder";
 
-const CriteriaTypeEnum = builder.enumType(CriteriaType, {
-  name: "CriteriaType",
-});
-
 const CreateCriteriaInput = builder.inputType("CreateCriteriaInput", {
   fields: (t) => ({
     name: t.string({ required: false }),
     type: t.field({
-      type: CriteriaTypeEnum,
+      type: CriteriaType,
       required: false,
     }),
     roundNo: t.int({ required: true }),

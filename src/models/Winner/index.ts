@@ -1,7 +1,8 @@
-import { builder } from "../../builder";
-import "./query";
-import "./mutation";
 import { WinnerType } from "@prisma/client";
+
+import { builder } from "~/builder";
+import "~/models/Winner/mutation";
+import "~/models/Winner/query";
 
 builder.enumType(WinnerType, {
   name: "WinnerType",

@@ -1,7 +1,9 @@
-import { prisma } from "./utils/db/prisma";
 import fs from "fs";
+
+import { prisma } from "~/utils/db/prisma";
+
 async function updateRegisteredStatus() {
-  const users = fs.readFileSync("./src/certificate.json", "utf-8");
+  const users = fs.readFileSync("~/src/certificate.json", "utf-8");
   const usersData = JSON.parse(users);
   const keys = Object.keys(usersData);
   let updated = {} as any;
@@ -35,7 +37,7 @@ async function updateRegisteredStatus() {
     }
     updated[key] = newUsers;
   }
-  fs.writeFileSync("./new_certificate1.json", JSON.stringify(updated));
+  fs.writeFileSync("~/new_certificate1.json", JSON.stringify(updated));
 }
 
 updateRegisteredStatus().then(() => {

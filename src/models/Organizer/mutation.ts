@@ -1,5 +1,7 @@
-import { builder } from "../../builder";
 import { Role } from "@prisma/client";
+
+import { builder } from "~/builder";
+
 builder.mutationField("addOrganizer", (t) =>
   t.prismaField({
     type: "Organizer",
@@ -65,7 +67,7 @@ builder.mutationField("addOrganizer", (t) =>
       }
       return data;
     },
-  })
+  }),
 );
 
 builder.mutationField("removeOrganizer", (t) =>
@@ -144,5 +146,5 @@ builder.mutationField("removeOrganizer", (t) =>
       });
       return "removed Organizer";
     },
-  })
+  }),
 );

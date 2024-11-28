@@ -1,5 +1,5 @@
-import { builder } from "../../builder";
-import { context } from "../../context";
+import { builder } from "~/builder";
+import { context } from "~/context";
 
 builder.queryField("getRoundStatus", (t) =>
   t.prismaField({
@@ -26,5 +26,5 @@ builder.queryField("getRoundStatus", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

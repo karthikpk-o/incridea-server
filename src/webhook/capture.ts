@@ -1,28 +1,36 @@
 import { Request, Response } from "express";
-import { prisma } from "../utils/db/prisma";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
+
+import { env } from "~/env";
+import { prisma } from "~/utils/db/prisma";
 
 export async function handler(req: Request, res: Response) {
   if (req.method !== "POST") {
-    return res.status(405).send({ message: "Only POST requests allowed" });
+    res.status(405).send({ message: "Only POST requests allowed" });
+    return;
   }
-  const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET as string;
+
+  const webhookSecret = env.RAZORPAY_WEBHOOK_SECRET as string;
   const webhookSignature = req.headers["x-razorpay-signature"] as string;
   if (
     !validateWebhookSignature(
       JSON.stringify(req.body),
       webhookSignature,
-      webhookSecret
+      webhookSecret,
     )
   ) {
-    return res.status(400).send({ message: "Invalid request" });
+    res.status(400).send({ message: "Invalid request" });
+    return;
   }
+
   try {
     const order_id = req.body?.payload?.payment?.entity?.order_id as string;
     const status = req.body?.payload?.payment?.entity?.status as string;
     if (!order_id || !status) {
-      return res.status(400).send({ message: "Invalid request" });
+      res.status(400).send({ message: "Invalid request" });
+      return;
     }
+
     if (status === "captured") {
       // find payment order from two tables
       const paymentOrder = await prisma.paymentOrder.findUnique({
@@ -50,7 +58,8 @@ export async function handler(req: Request, res: Response) {
           },
         });
 
-        return res.status(200).json(updatedPaymentOrder);
+        res.status(200).json(updatedPaymentOrder);
+        return;
       } else {
         const updatedPaymentOrder = await prisma.eventPaymentOrder.update({
           where: {
@@ -69,7 +78,8 @@ export async function handler(req: Request, res: Response) {
             confirmed: true,
           },
         });
-        return res.status(200).json(updatedPaymentOrder);
+        res.status(200).json(updatedPaymentOrder);
+        return;
       }
     } else {
       await prisma.paymentOrder.update({
@@ -83,6 +93,7 @@ export async function handler(req: Request, res: Response) {
       });
     }
   } catch (err) {
-    return res.status(400).json(err);
+    res.status(400).json(err);
+    return;
   }
 }

@@ -1,6 +1,7 @@
 import { PaymentType, Status } from "@prisma/client";
-import { builder } from "../../builder";
-import "./mutation";
+
+import { builder } from "~/builder";
+import "~/models/PaymentOrder/mutation";
 
 builder.enumType(PaymentType, {
   name: "PaymentType",

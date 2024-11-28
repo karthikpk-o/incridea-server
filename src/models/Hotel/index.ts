@@ -1,6 +1,6 @@
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
+import { builder } from "~/builder";
+import "~/models/Hotel/mutation";
+import "~/models/Hotel/query";
 
 builder.prismaObject("Hotel", {
   fields: (t) => ({

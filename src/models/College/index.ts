@@ -1,7 +1,8 @@
 import { CollegeType } from "@prisma/client";
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
+
+import { builder } from "~/builder";
+import "~/models/College/mutation";
+import "~/models/College/query";
 
 builder.enumType(CollegeType, {
   name: "CollegeType",

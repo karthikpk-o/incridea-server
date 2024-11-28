@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("eventByOrganizer", (t) =>
   t.prismaField({
@@ -21,5 +21,5 @@ builder.queryField("eventByOrganizer", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

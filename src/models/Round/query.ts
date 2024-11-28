@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("rounds", (t) =>
   t.prismaField({
@@ -8,7 +8,7 @@ builder.queryField("rounds", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("roundsByEvent", (t) =>
@@ -25,5 +25,5 @@ builder.queryField("roundsByEvent", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

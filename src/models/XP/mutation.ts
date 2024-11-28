@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 //add xp to user
 builder.mutationField("addXP", (t) =>

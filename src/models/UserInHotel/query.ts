@@ -1,5 +1,5 @@
-import checkIfAccommodationMember from "../../accommodationMembers/checkIfAccommodationMembers";
-import { builder } from "../../builder";
+import { builder } from "~/builder";
+import { checkIfAccommodationMember } from "~/models/UserInHotel/utils";
 
 //Accommodation requests for Hotels
 builder.queryField("accommodationRequests", (t) =>
@@ -17,7 +17,7 @@ builder.queryField("accommodationRequests", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 //Accommodation requests by user
@@ -34,7 +34,7 @@ builder.queryField("accommodationRequestsByUser", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("accommodationRequestsByUserId", (t) =>
@@ -56,7 +56,7 @@ builder.queryField("accommodationRequestsByUserId", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 //Accommodation requests by Day
@@ -81,7 +81,7 @@ builder.queryField("accommodationRequestByDay", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 //Accommodation requests by Hotel
@@ -117,7 +117,7 @@ builder.queryField("accommodationRequestByHotel", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("getUserAccommodation", (t) =>
@@ -137,5 +137,5 @@ builder.queryField("getUserAccommodation", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

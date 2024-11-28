@@ -1,7 +1,8 @@
-import { builder } from "../../builder";
-import "./query";
-import "./mutation";
 import { Role } from "@prisma/client";
+
+import { builder } from "~/builder";
+import "~/models/User/mutation";
+import "~/models/User/query";
 
 export const avatarList = [
   {
@@ -79,7 +80,7 @@ export const avatarList = [
     name: "avatar15",
     url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113030/8%20bit/samusaran.png",
   },
-];
+] as const;
 
 builder.enumType(Role, {
   name: "Role",

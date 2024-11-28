@@ -1,7 +1,7 @@
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
-import "./subscription";
+import { builder } from "~/builder";
+import "~/models/Round/mutation";
+import "~/models/Round/query";
+import "~/models/Round/subscription";
 
 builder.prismaObject("Round", {
   fields: (t) => ({

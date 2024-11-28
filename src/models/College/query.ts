@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("colleges", (t) =>
   t.prismaField({
@@ -8,5 +8,5 @@ builder.queryField("colleges", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

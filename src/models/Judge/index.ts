@@ -1,6 +1,6 @@
-import "./mutation";
-import "./query";
-import { builder } from "../../builder";
+import { builder } from "~/builder";
+import "~/models/Judge/mutation";
+import "~/models/Judge/query";
 
 builder.prismaObject("Judge", {
   fields: (t) => ({

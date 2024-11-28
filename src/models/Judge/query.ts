@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("roundByJudge", (t) =>
   t.prismaField({
@@ -25,5 +25,5 @@ builder.queryField("roundByJudge", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

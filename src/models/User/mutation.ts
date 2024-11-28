@@ -1,28 +1,13 @@
-import { builder } from "../../builder";
-import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcryptjs";
+import fs from "fs";
 import jwt from "jsonwebtoken";
-const fs = require("fs");
-const path = require("path");
-let verifyEmail = fs.readFileSync(
-  path.resolve(__dirname, "../../templates/verifyEmail.html"),
-  "utf8"
-);
-let forgotPassword = fs.readFileSync(
-  path.resolve(__dirname, "../../templates/forgotPassword.html"),
-  "utf8"
-);
-import {
-  findUserByEmail,
-  createUserByEmailAndPassword,
-  findUserById,
-} from "../../services/user.services";
-import {
-  generatePasswordResetToken,
-  generateTokens,
-  generateVerificationToken,
-  secrets,
-} from "../../utils/auth/jwt";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+
+import { builder } from "~/builder";
+import { env } from "~/env";
+import { getSrcDir } from "~/global";
+import { avatarList } from "~/models/User";
 import {
   addVerificationTokenToWhitelist,
   addRefreshTokenToWhitelist,
@@ -33,10 +18,30 @@ import {
   addPasswordResetTokenToWhitelist,
   revokePasswordResetToken,
   findPasswordResetTokenByID,
-} from "../../services/auth.service";
-import { hashToken } from "../../utils/auth/hashToken";
-import { sendEmail } from "../../utils/email";
-import { avatarList } from "../User";
+} from "~/services/auth.service";
+import {
+  findUserByEmail,
+  createUserByEmailAndPassword,
+  findUserById,
+} from "~/services/user.services";
+import { hashToken } from "~/utils/auth/hashToken";
+import {
+  generatePasswordResetToken,
+  generateTokens,
+  generateVerificationToken,
+  secrets,
+} from "~/utils/auth/jwt";
+import { sendEmail } from "~/utils/email";
+
+const verifyEmail = fs.readFileSync(
+  path.join(getSrcDir(), "/templates/verifyEmail.html"),
+  "utf8",
+);
+
+const forgotPassword = fs.readFileSync(
+  path.join(getSrcDir(), "/templates/forgotPassword.html"),
+  "utf8",
+);
 
 // register user
 const UserCreateInput = builder.inputType("UserCreateInput", {
@@ -73,11 +78,11 @@ builder.mutationField("signUp", (t) =>
       }
 
       args.data.profileImage =
-        avatarList[Math.floor(Math.random() * avatarList.length)].url;
+        avatarList[Math.floor(Math.random() * (avatarList.length - 1))]!.url;
       const user = await createUserByEmailAndPassword(args.data);
       return user;
     },
-  })
+  }),
 );
 
 // User Login
@@ -125,7 +130,7 @@ builder.mutationField("login", (t) =>
       }
       const validPassword = await bcrypt.compare(
         args.data.password,
-        existingUser.password
+        existingUser.password,
       );
       if (!validPassword) {
         throw new Error("Invalid password");
@@ -148,7 +153,7 @@ builder.mutationField("login", (t) =>
         refreshToken,
       };
     },
-  })
+  }),
 );
 
 // refresh token
@@ -168,10 +173,10 @@ builder.mutationField("refreshToken", (t) =>
     resolve: async (root, args, ctx) => {
       const payload = jwt.verify(
         args.refreshToken,
-        secrets.JWT_REFRESH_SECRET as string
+        secrets.JWT_REFRESH_SECRET as string,
       ) as any;
       const savedRefreshToken = await findRefreshTokenById(
-        payload?.jti as string
+        payload?.jti as string,
       );
       if (!savedRefreshToken || savedRefreshToken.revoked === true) {
         throw new Error("Unauthorized");
@@ -188,7 +193,7 @@ builder.mutationField("refreshToken", (t) =>
       const jti = uuidv4();
       const { accessToken, refreshToken: newRefreshToken } = generateTokens(
         user,
-        jti
+        jti,
       );
       await addRefreshTokenToWhitelist({
         jti,
@@ -201,7 +206,7 @@ builder.mutationField("refreshToken", (t) =>
         refreshToken: newRefreshToken,
       };
     },
-  })
+  }),
 );
 
 builder.mutationField("sendEmailVerification", (t) =>
@@ -218,28 +223,30 @@ builder.mutationField("sendEmailVerification", (t) =>
     },
     resolve: async (root, args, ctx) => {
       const existingUser = await findUserByEmail(args.email);
-      if (!existingUser) {
-        throw new Error("No user found");
-      }
-      if (existingUser.isVerified) {
-        throw new Error("User already verified");
-      }
+      if (!existingUser) throw new Error("No user found");
+      if (existingUser.isVerified) throw new Error("User already verified");
+
       const { id: token } = await addVerificationTokenToWhitelist({
         userId: existingUser.id,
       });
+
       const verificationToken = generateVerificationToken(existingUser, token);
-      const url = `${process.env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`;
+
+      const url = `${env.FRONTEND_URL}/auth/verify-email?token=${verificationToken}`;
+
       const content = verifyEmail
         .replace("{{name}}", existingUser.name)
         .replace("{{link}}", url);
-      await sendEmail(
-        existingUser.email,
-        content,
-        "Incridea Email Verification"
-      );
+
+      await sendEmail({
+        to: existingUser.email,
+        subject: "Incridea Email Verification",
+        html: content,
+      });
+
       return "Email sent";
     },
-  })
+  }),
 );
 
 builder.mutationField("verifyEmail", (t) =>
@@ -255,10 +262,10 @@ builder.mutationField("verifyEmail", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const payload = jwt.verify(
         args.token,
-        secrets.JWT_VERIFICATION_SECRET as string
+        secrets.JWT_VERIFICATION_SECRET as string,
       ) as any;
       const savedToken = await findVerificationTokenByID(
-        payload?.jti as string
+        payload?.jti as string,
       );
       if (!savedToken || savedToken.revoked === true) {
         throw new Error("Invalid token");
@@ -275,7 +282,7 @@ builder.mutationField("verifyEmail", (t) =>
 
       return verified_user;
     },
-  })
+  }),
 );
 
 // send password reset email
@@ -293,24 +300,33 @@ builder.mutationField("sendPasswordResetEmail", (t) =>
     },
     resolve: async (root, args, ctx) => {
       const existingUser = await findUserByEmail(args.email);
-      if (!existingUser) {
+      if (!existingUser)
         throw new Error("You do not have an account here. Please sign up");
-      }
+
       const { id: token } = await addPasswordResetTokenToWhitelist({
         userId: existingUser.id,
       });
+
       const passwordResetToken = generatePasswordResetToken(
         existingUser,
-        token
+        token,
       );
-      const url = `${process.env.FRONTEND_URL}/auth/reset-password?token=${passwordResetToken}`;
+
+      const url = `${env.FRONTEND_URL}/auth/reset-password?token=${passwordResetToken}`;
+
       const content = forgotPassword
         .replace("{{name}}", existingUser.name)
         .replace("{{link}}", url);
-      await sendEmail(existingUser.email, content, "Incridea Reset Password");
+
+      await sendEmail({
+        to: existingUser.email,
+        html: content,
+        subject: "Incridea Reset Password",
+      });
+
       return "Email sent";
     },
-  })
+  }),
 );
 
 // reset password
@@ -327,10 +343,10 @@ builder.mutationField("resetPassword", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const payload = jwt.verify(
         args.token,
-        secrets.JWT_PASSWORD_RESET_SECRET as string
+        secrets.JWT_PASSWORD_RESET_SECRET as string,
       ) as any;
       const savedToken = await findPasswordResetTokenByID(
-        payload?.jti as string
+        payload?.jti as string,
       );
       if (!savedToken || savedToken.revoked === true) {
         throw new Error("Invalid token");
@@ -349,7 +365,7 @@ builder.mutationField("resetPassword", (t) =>
 
       return updated_user;
     },
-  })
+  }),
 );
 
 builder.mutationField("updateProfileImage", (t) =>
@@ -371,5 +387,5 @@ builder.mutationField("updateProfileImage", (t) =>
         data: { profileImage: args.imageURL },
       });
     },
-  })
+  }),
 );

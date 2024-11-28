@@ -1,6 +1,7 @@
 import { QuestionType } from "@prisma/client";
-import { builder } from "../../builder";
-import "./query";
+
+import { builder } from "~/builder";
+import "~/models/Question/query";
 
 builder.enumType(QuestionType, {
   name: "QuestionType",

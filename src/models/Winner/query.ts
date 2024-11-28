@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("winnersByEvent", (t) =>
   t.prismaField({
@@ -21,7 +21,7 @@ builder.queryField("winnersByEvent", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("allWinners", (t) =>
@@ -39,5 +39,5 @@ builder.queryField("allWinners", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

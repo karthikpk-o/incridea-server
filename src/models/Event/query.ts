@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 // with pagination and filtering
 builder.queryField("events", (t) =>
@@ -31,7 +31,7 @@ builder.queryField("events", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 //Events By ID
@@ -52,7 +52,7 @@ builder.queryField("eventById", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("registeredEvents", (t) =>
@@ -92,7 +92,7 @@ builder.queryField("registeredEvents", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("publishedEvents", (t) =>
@@ -135,7 +135,7 @@ builder.queryField("publishedEvents", (t) =>
       });
       return [...core_event, ...non_core_event];
     },
-  })
+  }),
 );
 
 //completed events by checking if winners are present or not
@@ -161,5 +161,5 @@ builder.queryField("completedEvents", (t) =>
       });
       return events;
     },
-  })
+  }),
 );

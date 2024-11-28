@@ -1,5 +1,7 @@
-import { builder } from "../../builder";
 import bcrypt from "bcryptjs";
+
+import { builder } from "~/builder";
+
 builder.mutationField("createJudge", (t) =>
   t.prismaField({
     type: "Judge",
@@ -57,7 +59,7 @@ builder.mutationField("createJudge", (t) =>
       });
       return judge;
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteJudge", (t) =>
@@ -108,5 +110,5 @@ builder.mutationField("deleteJudge", (t) =>
         throw new Error("Judge not found");
       }
     },
-  })
+  }),
 );

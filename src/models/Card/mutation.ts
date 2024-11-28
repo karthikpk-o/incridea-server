@@ -1,6 +1,7 @@
-import { builder } from "../../builder";
 import { DayType } from "@prisma/client";
-import checkIfPublicityMember from "../../publicityMembers/checkIfPublicityMember";
+
+import { builder } from "~/builder";
+import { checkIfPublicityMember } from "~/models/UserInHotel/utils";
 
 //for easter eggs scanned using QR codes around the college for Publcity Committee
 builder.mutationField("createCard", (t) =>
@@ -24,7 +25,7 @@ builder.mutationField("createCard", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("updateCard", (t) =>
@@ -58,7 +59,7 @@ builder.mutationField("updateCard", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteCard", (t) =>
@@ -86,5 +87,5 @@ builder.mutationField("deleteCard", (t) =>
         },
       });
     },
-  })
+  }),
 );

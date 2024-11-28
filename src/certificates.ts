@@ -1,4 +1,3 @@
-import { prisma } from "./utils/db/prisma";
 // async function sendParticipationCertificate() {
 //   const participation = await prisma.team.findMany({
 //     where: {
@@ -43,7 +42,7 @@ import { prisma } from "./utils/db/prisma";
 //     []
 //   );
 //   fs.writeFileSync(
-//     "./participation.json",
+//     "~/participation.json",
 //     JSON.stringify(flattenedParticipationData)
 //   );
 //   const otherParticipation = participation
@@ -62,14 +61,13 @@ import { prisma } from "./utils/db/prisma";
 //     .reduce((acc, val) => acc.concat(val), [])
 //     .filter((member) => member.college === "Other");
 //   fs.writeFileSync(
-//     "./otherParticipation.json",
+//     "~/otherParticipation.json",
 //     JSON.stringify(otherParticipation)
 //   );
 // }
 // sendParticipationCertificate().then(() => {
 //   console.log("done");
 // });
-
 // async function totalReg() {
 //   const totalParticipation = await prisma.user.count({
 //     where: {
@@ -92,7 +90,6 @@ import { prisma } from "./utils/db/prisma";
 //   console.log(nmamit);
 //   console.log(totalParticipation - nmamit);
 // }
-
 // async function aluminiInfo() {
 //   const ids = [1510, 1614, 1615, 1310, 1373, 1321, 1488, 1486, 1360];
 //   const users = await prisma.user.findMany({
@@ -123,16 +120,18 @@ import { prisma } from "./utils/db/prisma";
 //     };
 //   });
 //   console.log(filterdData);
-//   fs.writeFileSync("./refund.json", JSON.stringify(filterdData));
+//   fs.writeFileSync("~/refund.json", JSON.stringify(filterdData));
 // }
 // aluminiInfo().then(() => {
 //   console.log("done");
 // });
-import * as fs from "fs";
-import * as path from "path";
-import * as nodemailer from "nodemailer";
+import fs from "fs";
 import htmlToImage from "node-html-to-image";
-import { getCount, getUser, updateCount } from "./utils/email";
+import path from "path";
+
+import { getSrcDir } from "~/global";
+import { prisma } from "~/utils/db/prisma";
+import { sendEmail } from "~/utils/email";
 
 let certificateSentSuccess = 0;
 let certificateSentError = 0;
@@ -140,23 +139,22 @@ let certificateSentError = 0;
 async function generateCertificate(
   participantName: string,
   college: string,
-  eventName: string
+  eventName: string,
 ): Promise<string> {
   try {
-    const templatePath = path.join(__dirname, "templates/certificate.html");
+    const templatePath = path.join(getSrcDir(), "templates/certificate.html");
     let html = fs.readFileSync(templatePath, "utf-8");
 
     // Replace {{name}} with participant name
-    if (college == "OTHER") {
+    if (college == "OTHER")
       html = html.replace("{{college}}", " ").replace("<span> OF</span>", "");
-    }
+
     html = html
       .replace("{{name}}", participantName)
       .replace("{{college}}", college)
       .replace("{{event}}", eventName);
 
     // Generate image from HTML
-
     const imageBuffer = await htmlToImage({
       html,
     });
@@ -165,79 +163,71 @@ async function generateCertificate(
     let imagePaths: string[] = [];
     if (Array.isArray(imageBuffer)) {
       imagePaths = imageBuffer.map((buffer, index) => {
-        const imagePath = path.join(__dirname, `src/certificate_${index}.png`);
+        const imagePath = path.join(
+          getSrcDir(),
+          `src/certificate_${index}.png`,
+        );
         fs.writeFileSync(imagePath, buffer);
         return imagePath;
       });
     } else {
-      const imagePath = path.join(__dirname, "certificate.png");
+      const imagePath = path.join(getSrcDir(), "certificate.png");
       fs.writeFileSync(imagePath, imageBuffer);
       imagePaths.push(imagePath);
     }
 
-    return imagePaths[0]; // Returning the first image path for simplicity
+    return imagePaths[0] ?? ""; // Returning the first image path for simplicity
   } catch (error) {
     console.error("Error generating certificate:", error);
     throw new Error("Error generating certificate");
   }
 }
 
-async function sendEmailWithAttachment(
+const sendEmailWithAttachment = async (
   participantEmail: string,
   attachmentPath: string,
   subject: string,
-  text: string
-): Promise<void> {
+  text: string,
+) => {
   try {
-    // Create a nodemailer transporter
-    const count = await getCount();
-    const user = getUser(count);
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      auth: {
-        user: user,
-        pass: process.env.EMAIL_SERVER_PASSWORD as string,
-      },
-    });
-
-    // Compose the email
-    const mailOptions = {
-      from: process.env.EMAIL_FROM as string,
+    const info = await sendEmail({
       to: participantEmail,
       subject: subject,
       text: text,
-      attachments: [{ path: attachmentPath, filename: `certificate.png` }],
-    };
-    await transporter.sendMail(mailOptions);
-    await updateCount(count);
+      attachments: [
+        {
+          path: attachmentPath,
+          filename: `certificate.png`,
+        },
+      ],
+    });
     console.log("Email sent successfully!");
   } catch (error) {
     console.error("Error sending email:", error);
     throw new Error("Could not send Email: Internal server error");
   }
-}
+};
 
 const sendCertificate = async (
   participantName: string,
   college: string,
   eventName: string,
-  participantEmail: string
+  participantEmail: string,
 ) => {
   const emailText = `Hi ${participantName},
 
 Thank you for your active participation in Incridea, held from February 22nd-24th at NMAMIT, Nitte.
 
 Your captivating performance perfectly aligned with our theme, 'Dice of Destiny', casting a spell of chance and fortune. Let's continue to embrace the unpredictable twists of creativity and imagination through Incridea in the years to come.❤️
-  
+
 Please find your participation certificate attached.
-  
+
 Warm Regards,
 Team Incridea
-  
+
 Check out the Official Aftermovie '24 down below 👇
 https://youtu.be/YoWeuaSMytk
-  
+
 Find more updates and highlights of the fest on our Instagram page @incridea 👇
 https://instagram.com/incridea
  `;
@@ -245,13 +235,13 @@ https://instagram.com/incridea
   const certificatePath = await generateCertificate(
     participantName,
     college,
-    eventName
+    eventName,
   );
   await sendEmailWithAttachment(
     participantEmail,
     certificatePath,
     emailSubject,
-    emailText
+    emailText,
   );
 };
 
@@ -299,16 +289,16 @@ async function sendParticipationCertificate() {
   // reduce the array of arrays to a single array
   const flattenedParticipationData = participationData.reduce(
     (acc, val) => acc.concat(val),
-    []
+    [],
   );
   for (let i = 0; i < flattenedParticipationData.length; i++) {
-    const participant = flattenedParticipationData[i];
+    const participant = flattenedParticipationData[i]!;
     try {
       await sendCertificate(
         participant.name,
         participant.college || "OTHER",
         participant.eventName,
-        participant.email
+        participant.email,
       );
       certificateSentSuccess++;
       await prisma.certificateIssue.create({
@@ -329,13 +319,13 @@ async function sendParticipationCertificate() {
       });
     }
     console.log(
-      `Sent ${certificateSentSuccess} certificates and ${certificateSentError} failed`
+      `Sent ${certificateSentSuccess} certificates and ${certificateSentError} failed`,
     );
   }
 
   await fs.writeFileSync(
-    "./participation.json",
-    JSON.stringify(flattenedParticipationData)
+    "~/participation.json",
+    JSON.stringify(flattenedParticipationData),
   );
 }
 

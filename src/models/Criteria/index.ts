@@ -1,6 +1,7 @@
 import { CriteriaType } from "@prisma/client";
-import { builder } from "../../builder";
-import "./mutation";
+
+import { builder } from "~/builder";
+import "~/models/Criteria/mutation";
 
 builder.enumType(CriteriaType, {
   name: "CriteriaType",

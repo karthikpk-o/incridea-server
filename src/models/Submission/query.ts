@@ -1,6 +1,7 @@
-import { builder } from "../../builder";
-import checkIfPublicityMember from "../../publicityMembers/checkIfPublicityMember";
 import { DayType } from "@prisma/client";
+
+import { builder } from "~/builder";
+import { checkIfPublicityMember } from "~/models/UserInHotel/utils";
 
 builder.queryField("getAllSubmissions", (t) =>
   t.prismaField({
@@ -23,7 +24,7 @@ builder.queryField("getAllSubmissions", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("submissionsByUser", (t) =>
@@ -49,5 +50,5 @@ builder.queryField("submissionsByUser", (t) =>
       });
       return submissions;
     },
-  })
+  }),
 );

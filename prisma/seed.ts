@@ -1,21 +1,25 @@
-import { hash } from "bcryptjs";
-
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const db = new PrismaClient();
 
 const main = async () => {
+  await db.emailMonitor.create({
+    data: {},
+  });
+
   const college = await db.college.create({
     data: {
       name: "NMAM Institute of Technology",
       type: "ENGINEERING",
     },
   });
+
   const user = await db.user.create({
     data: {
       email: "test@incridea.in",
       name: "Test",
-      password: await hash("asdfghjkl;'", 12),
+      password: await bcrypt.hash("asdfghjkl;'", 12),
       isVerified: true,
       role: "ADMIN",
       College: {
@@ -52,7 +56,21 @@ const main = async () => {
     data: {
       name: "Test Event",
       category: "CORE",
-      description: "Test Event Description",
+      // NOTE: RTE will parse description, which might lead to client build fails, hence this example RTE data is used in seed
+      description: JSON.stringify({
+        blocks: [
+          {
+            key: "de7u0",
+            text: "This is the description for this test event",
+            type: "unstyled",
+            depth: 0,
+            inlineStyleRanges: [],
+            entityRanges: [],
+            data: {},
+          },
+        ],
+        entityMap: {},
+      }),
       fees: 100,
       maxTeams: 10,
       minTeamSize: 2,
@@ -94,7 +112,7 @@ const main = async () => {
       data: {
         email: "user1@incridea.in",
         name: "User 1",
-        password: await hash("asdfghjkl;'", 12),
+        password: await bcrypt.hash("asdfghjkl;'", 12),
         isVerified: true,
         role: "PARTICIPANT",
         collegeId: college.id,
@@ -104,7 +122,7 @@ const main = async () => {
       data: {
         email: "user2@incridea.in",
         name: "User 2",
-        password: await hash("asdfghjkl;'", 12),
+        password: await bcrypt.hash("asdfghjkl;'", 12),
         isVerified: true,
         role: "PARTICIPANT",
         collegeId: college.id,
@@ -141,6 +159,4 @@ const main = async () => {
   });
 };
 
-main().finally(() => {
-  console.log("done");
-});
+main().finally(() => void null);

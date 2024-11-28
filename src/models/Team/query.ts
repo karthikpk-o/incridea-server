@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("teamsByRound", (t) =>
   t.prismaConnection({
@@ -95,7 +95,7 @@ builder.queryField("teamsByRound", (t) =>
       });
       return teams;
     },
-  })
+  }),
 );
 
 builder.queryField("teamDetails", (t) =>
@@ -119,7 +119,7 @@ builder.queryField("teamDetails", (t) =>
       }
       return data;
     },
-  })
+  }),
 );
 
 // check if user is in team for particular event and retrun team details
@@ -153,5 +153,5 @@ builder.queryField("myTeam", (t) =>
       }
       return data;
     },
-  })
+  }),
 );

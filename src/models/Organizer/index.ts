@@ -1,6 +1,7 @@
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
+import { builder } from "~/builder";
+import "~/models/Organizer/mutation";
+import "~/models/Organizer/query";
+
 builder.prismaObject("Organizer", {
   fields: (t) => ({
     eventId: t.exposeID("eventId"),

@@ -1,7 +1,8 @@
 import { DayType } from "@prisma/client";
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
+
+import { builder } from "~/builder";
+import "~/models/Card/mutation";
+import "~/models/Card/query";
 
 builder.enumType(DayType, {
   name: "DayType",

@@ -1,5 +1,6 @@
 import { LAAnswerStatus } from "@prisma/client";
-import { builder } from "../../builder";
+
+import { builder } from "~/builder";
 
 builder.enumType(LAAnswerStatus, {
   name: "LAAnswerStatus",

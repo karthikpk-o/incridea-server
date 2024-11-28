@@ -1,5 +1,7 @@
-import { builder } from "../../builder";
 import { CriteriaType } from "@prisma/client";
+
+import { builder } from "~/builder";
+
 builder.queryField("getScore", (t) =>
   t.prismaField({
     type: "Scores",
@@ -31,7 +33,7 @@ builder.queryField("getScore", (t) =>
       });
       return data;
     },
-  })
+  }),
 );
 
 builder.queryField("getComment", (t) =>
@@ -66,7 +68,7 @@ builder.queryField("getComment", (t) =>
       });
       return data;
     },
-  })
+  }),
 );
 
 class TotalScoreClass {
@@ -78,7 +80,7 @@ class TotalScoreClass {
     totalScore: number,
     judgeScore: number,
     teamId: number,
-    criteriaType: CriteriaType
+    criteriaType: CriteriaType,
   ) {
     this.totalScore = totalScore;
     this.judgeScore = judgeScore;
@@ -161,7 +163,7 @@ builder.queryField("getTotalScores", (t) =>
 
         const totalScore = scores.reduce(
           (acc, score) => acc + (score.score ? Number(score.score) : 0),
-          0
+          0,
         );
         const judgeScore = scores.reduce((acc, score) => {
           if (score.judgeId === user.id) {
@@ -178,7 +180,7 @@ builder.queryField("getTotalScores", (t) =>
       });
       return Promise.all(total_scores);
     },
-  })
+  }),
 );
 
 class CriteriaClass {
@@ -190,7 +192,7 @@ class CriteriaClass {
     criteriaName: string,
     criteriaId: number,
     score: number,
-    criteriaType: CriteriaType
+    criteriaType: CriteriaType,
   ) {
     this.criteriaId = criteriaId;
     this.score = score;
@@ -219,7 +221,7 @@ class ScoreSheetClass {
     teamName: string,
     teamId: number,
     teamScore: number,
-    judges: JudgeClass[]
+    judges: JudgeClass[],
   ) {
     this.teamName = teamName;
     this.teamId = teamId;
@@ -316,7 +318,7 @@ builder.queryField("getScoreSheetJuryView", (t) =>
           });
           const criteriaScore = criteria.map((criterion) => {
             const score = scores.find(
-              (score) => score.criteriaId === criterion.id
+              (score) => score.criteriaId === criterion.id,
             );
             return {
               criteriaId: criterion.id,
@@ -341,7 +343,7 @@ builder.queryField("getScoreSheetJuryView", (t) =>
         });
         const totalScore = scores.reduce(
           (acc, score) => acc + (score.score ? Number(score.score) : 0),
-          0
+          0,
         );
         return {
           teamName: team.name,
@@ -352,5 +354,5 @@ builder.queryField("getScoreSheetJuryView", (t) =>
       });
       return Promise.all(scoreSheet);
     },
-  })
+  }),
 );

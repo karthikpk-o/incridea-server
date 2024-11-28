@@ -1,6 +1,7 @@
 import { ProniteDay } from "@prisma/client";
-import { builder } from "../../builder";
-import "./mutation";
+
+import { builder } from "~/builder";
+import "~/models/ProniteRegistration/mutation";
 
 builder.enumType(ProniteDay, {
   name: "ProniteDay",

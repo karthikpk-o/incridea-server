@@ -1,7 +1,8 @@
 import { AccommodationBookingStatus, Gender } from "@prisma/client";
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
+
+import { builder } from "~/builder";
+import "~/models/UserInHotel/mutation";
+import "~/models/UserInHotel/query";
 
 builder.enumType(Gender, {
   name: "Gender",

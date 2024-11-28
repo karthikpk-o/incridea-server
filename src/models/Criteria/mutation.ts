@@ -1,5 +1,6 @@
 import { CriteriaType } from "@prisma/client";
-import { builder } from "../../builder";
+
+import { builder } from "~/builder";
 
 const CreateCriteriaInput = builder.inputType("CreateCriteriaInput", {
   fields: (t) => ({
@@ -66,7 +67,7 @@ builder.mutationField("createCriteria", (t) =>
         !event.Rounds.find(
           (r) =>
             r.roundNo === args.data.roundNo &&
-            r.Judges.find((j) => j.userId === user.id)
+            r.Judges.find((j) => j.userId === user.id),
         )
       )
         throw new Error("Not Permitted");
@@ -84,7 +85,7 @@ builder.mutationField("createCriteria", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 // 2. Delete Criteria - Organizers
@@ -145,7 +146,7 @@ builder.mutationField("deleteCriteria", (t) =>
         !event.Rounds.find(
           (r) =>
             r.roundNo === args.roundNo &&
-            r.Judges.find((j) => j.userId === user.id)
+            r.Judges.find((j) => j.userId === user.id),
         )
       )
         throw new Error("Not Permitted");
@@ -153,7 +154,7 @@ builder.mutationField("deleteCriteria", (t) =>
       // 4. criteria related checks
       if (
         !event.Rounds.find((r) => r.roundNo === args.roundNo)?.Criteria.find(
-          (c) => c.id === Number(args.criteriaId)
+          (c) => c.id === Number(args.criteriaId),
         )
       ) {
         throw new Error(`No Criteria with id ${args.criteriaId}!`);
@@ -171,5 +172,5 @@ builder.mutationField("deleteCriteria", (t) =>
         throw new Error("Couldn't delete criteria");
       }
     },
-  })
+  }),
 );

@@ -1,5 +1,6 @@
-import { builder } from "../../builder";
 import { WinnerType } from "@prisma/client";
+
+import { builder } from "~/builder";
 
 builder.mutationField("createWinner", (t) =>
   t.prismaField({
@@ -49,13 +50,13 @@ builder.mutationField("createWinner", (t) =>
       }
 
       const total_rounds = event.Rounds.length;
-      if (event.Rounds[total_rounds - 1].completed) {
+      if (event.Rounds[total_rounds - 1]!.completed) {
         throw new Error("Cant Change Round Completed");
       }
       // check if he is the judge of last round
       if (
-        !event.Rounds[total_rounds - 1].Judges.some(
-          (judge) => judge.userId === user.id
+        !event.Rounds[total_rounds - 1]!.Judges.some(
+          (judge) => judge.userId === user.id,
         )
       ) {
         throw new Error("Not authorized");
@@ -148,7 +149,7 @@ builder.mutationField("createWinner", (t) =>
       }
       return data;
     },
-  })
+  }),
 );
 
 // delete winner
@@ -214,12 +215,12 @@ builder.mutationField("deleteWinner", (t) =>
         throw new Error("Not authorized");
       }
       const total_rounds = event.Rounds.length;
-      if (event.Rounds[total_rounds - 1].completed) {
+      if (event.Rounds[total_rounds - 1]!.completed) {
         throw new Error("Cant Change Round Completed");
       }
       if (
-        !event.Rounds[total_rounds - 1].Judges.some(
-          (judge) => judge.userId === user.id
+        !event.Rounds[total_rounds - 1]!.Judges.some(
+          (judge) => judge.userId === user.id,
         )
       ) {
         throw new Error("Not authorized");
@@ -232,7 +233,7 @@ builder.mutationField("deleteWinner", (t) =>
       });
       //get all team members id
       const teamMembers = winner.Team.TeamMembers.map(
-        (member) => member.userId
+        (member) => member.userId,
       );
       if (level) {
         const xp = await ctx.prisma.xP.deleteMany({
@@ -257,5 +258,5 @@ builder.mutationField("deleteWinner", (t) =>
       });
       return data;
     },
-  })
+  }),
 );

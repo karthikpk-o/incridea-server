@@ -1,15 +1,14 @@
-import { createYoga } from "graphql-yoga";
+import { useDepthLimit } from "@envelop/depth-limit";
+import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
-import { context } from "./context";
-import { schema } from "./schema";
-import bodyParser from "body-parser";
-import { handler as razorpayCapture } from "./webhook/capture";
-
-import { useDepthLimit } from "@envelop/depth-limit";
+import { createYoga } from "graphql-yoga";
 import { createRouteHandler } from "uploadthing/express";
+import { context } from "~/context";
+import { env } from "~/env";
+import { schema } from "~/schema";
+import { handler as razorpayCapture } from "~/webhook/capture";
 import { uploadRouter } from "./uploadthing";
-const port = Number(process.env.API_PORT) || 4000;
 
 const yoga = createYoga({
   context,
@@ -18,13 +17,21 @@ const yoga = createYoga({
 });
 
 const app = express();
-const authMiddleware = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  const authHeader = req.headers.authorization; 
+const authMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction,
+) => {
+  const authHeader = req.headers.authorization;
   console.log("Authorization Header:", authHeader);
   next();
 };
 
-app.use(cors());
+app.use(
+  cors({
+    origin: env.FRONTEND_URL,
+  }),
+);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -35,23 +42,15 @@ app.get("/", (_req, res) => {
 
 app.use("/graphql", yoga.requestListener);
 app.post("/webhook/capture", razorpayCapture);
-app.use("/uploadthing",authMiddleware,createRouteHandler({router: uploadRouter}),);
+app.use(
+  "/uploadthing",
+  authMiddleware,
+  createRouteHandler({ router: uploadRouter }),
+);
 
-
-app.listen(port, () => {
+app.listen(env.PORT, () => {
   console.log(`🚀 Server ready at: http://localhost:4000/graphql`);
 });
-
-
-
-
-
-
-
-
-
-
-
 
 // const { upload } = config;
 // const { upload: easterUpload } = easterConfig;

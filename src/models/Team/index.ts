@@ -1,7 +1,7 @@
-import { builder } from "../../builder";
-import "./mutation";
-import "./query";
-import "./subscription";
+import { builder } from "~/builder";
+import "~/models/Team/mutation";
+import "~/models/Team/query";
+import "~/models/Team/subscription";
 
 builder.prismaObject("Team", {
   fields: (t) => ({

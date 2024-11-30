@@ -1,53 +1,53 @@
-import { sendVerificationRequest } from "./sendgrid";
-import { prisma } from "../db/prisma";
-export async function sendEmail(
-  email: string,
-  content: string,
-  subject: string
-) {
-  const count = await getCount();
-  const user = getUser(count);
-  const provider = {
-    server: {
-      host: process.env.EMAIL_SERVER_HOST as string,
-      port: Number(process.env.EMAIL_EMAIL_SERVER_PORT),
-      auth: {
-        user,
-        pass: process.env.EMAIL_SERVER_PASSWORD as string,
-      },
+import { createTransport, SendMailOptions } from "nodemailer";
+
+import { env } from "~/env";
+import { prisma } from "~/utils/db/prisma";
+
+const sendEmail = async (
+  mailOptions: SendMailOptions & {
+    from?: never;
+  },
+) => {
+  const count = (await prisma.emailMonitor.findFirst())?.count ?? 0;
+  const email = [
+    env.SMTP_EMAIL1,
+    env.SMTP_EMAIL2,
+    env.SMTP_EMAIL3,
+    env.SMTP_EMAIL4,
+    env.SMTP_EMAIL5,
+  ][count % 5]!;
+
+  const transport = createTransport({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    secure: env.SMTP_PORT === 465,
+    auth: {
+      user: email,
+      pass: env.SMTP_PASSWORD,
     },
-    from: process.env.EMAIL_FROM as string,
-  };
-  await sendVerificationRequest({
-    identifier: email,
-    provider,
-    subject: subject,
-    html: content,
-    text: "",
   });
-  await updateCount(count + 1);
-}
 
-export const getUser = (count: number) => {
-  const user1 = process.env.EMAIL_SERVER_USER1 as string;
-  const user2 = process.env.EMAIL_SERVER_USER2 as string;
-  const user3 = process.env.EMAIL_SERVER_USER3 as string;
-  const user4 = process.env.EMAIL_SERVER_USER4 as string;
-  const user5 = process.env.EMAIL_SERVER_USER5 as string;
-  const queue = [user1,user2,user3,user4,user5];
-  return queue[count % 5];
-};
+  const info = await transport.sendMail({
+    from: env.SMTP_FROM,
+    ...mailOptions,
+  });
 
-export const getCount = async () => {
-  const emailMonitor = await prisma.emailMonitor.findFirst({});
-  if (!emailMonitor) return 0;
-  let count = emailMonitor.count;
-  return count;
-};
-
-export const updateCount = async (count: number) => {
   await prisma.emailMonitor.update({
     where: { id: 1 },
-    data: { count: count + 1 },
+    data: {
+      count: {
+        increment: 1,
+      },
+    },
   });
+
+  console.log("Rejected emails", info.rejected);
+  console.log("Pending emails", info.pending);
+
+  const failed = info.rejected.concat(info.pending).filter(Boolean);
+
+  if (failed.length > 0)
+    throw new Error(`Email(s) (${failed.join(", ")}) could not be sent`);
 };
+
+export { sendEmail };

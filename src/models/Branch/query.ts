@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("getBranch", (t) =>
   t.prismaField({
@@ -16,7 +16,7 @@ builder.queryField("getBranch", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("getBranches", (t) =>
@@ -27,5 +27,5 @@ builder.queryField("getBranches", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

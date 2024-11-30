@@ -1,6 +1,7 @@
-import { builder } from "../../builder";
 import Razorpay from "razorpay";
-import { v4 as uuidv4 } from "uuid";
+
+import { builder } from "~/builder";
+import { env } from "~/env";
 
 enum OrderTypeEnum {
   FEST_REGISTRATION = "FEST_REGISTRATION",
@@ -37,8 +38,8 @@ builder.mutationField("createPaymentOrder", (t) =>
       }
 
       const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY as string,
-        key_secret: process.env.RAZORPAY_SECRET as string,
+        key_id: env.RAZORPAY_KEY,
+        key_secret: env.RAZORPAY_SECRET,
       });
       if (args.type === OrderTypeEnum.EVENT_REGISTRATION) {
         // EVENT_REGISTRATION
@@ -110,7 +111,7 @@ builder.mutationField("createPaymentOrder", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("eventPaymentOrder", (t) =>
@@ -150,7 +151,7 @@ builder.mutationField("eventPaymentOrder", (t) =>
         team.TeamMembers.length < team.Event.minTeamSize
       ) {
         throw new Error(
-          `Still need ${team.Event.minTeamSize} members to register`
+          `Still need ${team.Event.minTeamSize} members to register`,
         );
       }
       if (
@@ -158,7 +159,7 @@ builder.mutationField("eventPaymentOrder", (t) =>
         team.TeamMembers.length > team.Event.maxTeamSize
       ) {
         throw new Error(
-          `Team size exceeded. Max team size is ${team.Event.maxTeamSize}`
+          `Team size exceeded. Max team size is ${team.Event.maxTeamSize}`,
         );
       }
 
@@ -169,8 +170,8 @@ builder.mutationField("eventPaymentOrder", (t) =>
         throw new Error("Oops! You are Not the leader");
       }
       const razorpay = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY as string,
-        key_secret: process.env.RAZORPAY_SECRET as string,
+        key_id: env.RAZORPAY_KEY,
+        key_secret: env.RAZORPAY_SECRET,
       });
 
       const payment_capture = 1;
@@ -196,5 +197,5 @@ builder.mutationField("eventPaymentOrder", (t) =>
         },
       });
     },
-  })
+  }),
 );

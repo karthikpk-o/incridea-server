@@ -1,5 +1,5 @@
-import { builder } from "../../builder";
-import { canRegister } from "../../services/event.services";
+import { builder } from "~/builder";
+import { canRegister } from "~/services/event.services";
 
 builder.mutationField("createTeam", (t) =>
   t.prismaField({
@@ -38,7 +38,7 @@ builder.mutationField("createTeam", (t) =>
           !(await canRegister(
             user.id,
             user.College?.type as string,
-            event.category
+            event.category,
           ))
         ) {
           throw new Error("Not eligible to register");
@@ -109,7 +109,7 @@ builder.mutationField("createTeam", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("joinTeam", (t) =>
@@ -172,7 +172,7 @@ builder.mutationField("joinTeam", (t) =>
           !(await canRegister(
             user.id,
             user.College?.type as string,
-            event.category
+            event.category,
           ))
         ) {
           throw new Error("Not eligible to register");
@@ -223,7 +223,7 @@ builder.mutationField("joinTeam", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("leaveTeam", (t) =>
@@ -277,7 +277,7 @@ builder.mutationField("leaveTeam", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("confirmTeam", (t) =>
@@ -347,7 +347,7 @@ builder.mutationField("confirmTeam", (t) =>
 
       if (teamMembers.length < event.minTeamSize) {
         throw new Error(
-          `Team is not full need at least ${event.minTeamSize} members`
+          `Team is not full need at least ${event.minTeamSize} members`,
         );
       }
       return await ctx.prisma.team.update({
@@ -359,7 +359,7 @@ builder.mutationField("confirmTeam", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteTeam", (t) =>
@@ -412,7 +412,7 @@ builder.mutationField("deleteTeam", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("removeTeamMember", (t) =>
@@ -443,7 +443,9 @@ builder.mutationField("removeTeamMember", (t) =>
         throw new Error("Team not found");
       }
 
-      if (team.TeamMembers.find((member) => member.userId === args.userId)) {
+      if (
+        team.TeamMembers.find((member) => member.userId === Number(args.userId))
+      ) {
         throw new Error("User does not belong to this team");
       }
 
@@ -465,7 +467,7 @@ builder.mutationField("removeTeamMember", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 // Solo Events
 
@@ -504,7 +506,7 @@ builder.mutationField("registerSoloEvent", (t) =>
           !(await canRegister(
             user.id,
             user.College?.type as string,
-            event.category
+            event.category,
           ))
         ) {
           throw new Error("Not eligible to register");
@@ -546,7 +548,7 @@ builder.mutationField("registerSoloEvent", (t) =>
       });
       return team;
     },
-  })
+  }),
 );
 
 // organizer
@@ -606,7 +608,7 @@ builder.mutationField("organizerCreateTeam", (t) =>
         throw new Error("Team already exists");
       }
     },
-  })
+  }),
 );
 
 builder.mutationField("organizerDeleteTeam", (t) =>
@@ -654,7 +656,7 @@ builder.mutationField("organizerDeleteTeam", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("organizerAddTeamMember", (t) =>
@@ -716,7 +718,7 @@ builder.mutationField("organizerAddTeamMember", (t) =>
           !canRegister(
             participant.id,
             participant.College?.type as string,
-            team.Event.category
+            team.Event.category,
           )
         ) {
           throw new Error("Not eligible to register");
@@ -781,7 +783,7 @@ builder.mutationField("organizerAddTeamMember", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("organizerDeleteTeamMember", (t) =>
@@ -833,7 +835,7 @@ builder.mutationField("organizerDeleteTeamMember", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 // mark attendance for team
@@ -955,7 +957,7 @@ builder.mutationField("organizerMarkAttendance", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 // mark attendance for solo events
@@ -1088,7 +1090,7 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
       }
       return updated.count;
     },
-  })
+  }),
 );
 
 builder.mutationField("organizerRegisterSolo", (t) =>
@@ -1155,7 +1157,7 @@ builder.mutationField("organizerRegisterSolo", (t) =>
           !canRegister(
             participant.id,
             participant.College?.type as string,
-            event.category
+            event.category,
           )
         ) {
           throw new Error("Not eligible to register");
@@ -1201,7 +1203,7 @@ builder.mutationField("organizerRegisterSolo", (t) =>
 
       return team;
     },
-  })
+  }),
 );
 
 builder.mutationField("promoteToNextRound", (t) =>
@@ -1288,5 +1290,5 @@ builder.mutationField("promoteToNextRound", (t) =>
       ctx.pubsub.publish(`TEAM_UPDATED/${team.Event.id}-${args.roundNo}`, data);
       return data;
     },
-  })
+  }),
 );

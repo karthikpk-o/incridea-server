@@ -1,7 +1,8 @@
 import { v2 as cloudinary } from "cloudinary";
 import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
-import { env } from "process";
+
+import { env } from "~/env";
 
 cloudinary.config({
   cloud_name: env.CLOUDINARY_CLOUD_NAME,
@@ -30,4 +31,5 @@ const storage = new CloudinaryStorage({
   cloudinary,
   params,
 });
+
 export const config = { cloudinary, upload: multer({ storage }) };

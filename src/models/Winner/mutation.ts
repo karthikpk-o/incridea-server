@@ -1,9 +1,6 @@
-import { builder } from "../../builder";
 import { WinnerType } from "@prisma/client";
 
-const WinnerTypeEnum = builder.enumType(WinnerType, {
-  name: "WinnerType",
-});
+import { builder } from "~/builder";
 
 builder.mutationField("createWinner", (t) =>
   t.prismaField({
@@ -11,7 +8,7 @@ builder.mutationField("createWinner", (t) =>
     args: {
       teamId: t.arg({ type: "ID", required: true }),
       eventId: t.arg({ type: "ID", required: true }),
-      type: t.arg({ type: WinnerTypeEnum, required: true }),
+      type: t.arg({ type: WinnerType, required: true }),
     },
     errors: {
       types: [Error],
@@ -53,13 +50,13 @@ builder.mutationField("createWinner", (t) =>
       }
 
       const total_rounds = event.Rounds.length;
-      if (event.Rounds[total_rounds - 1].completed) {
+      if (event.Rounds[total_rounds - 1]!.completed) {
         throw new Error("Cant Change Round Completed");
       }
       // check if he is the judge of last round
       if (
-        !event.Rounds[total_rounds - 1].Judges.some(
-          (judge) => judge.userId === user.id
+        !event.Rounds[total_rounds - 1]!.Judges.some(
+          (judge) => judge.userId === user.id,
         )
       ) {
         throw new Error("Not authorized");
@@ -69,8 +66,8 @@ builder.mutationField("createWinner", (t) =>
           id: Number(args.teamId),
         },
         include: {
-          TeamMembers: true
-        }
+          TeamMembers: true,
+        },
       });
 
       if (!team) {
@@ -119,20 +116,22 @@ builder.mutationField("createWinner", (t) =>
             levelId: levelExists.id,
           },
         });
-        if (xp.length==0) {
+        if (xp.length == 0) {
           //give xp points to all team members
           const userXp = await ctx.prisma.xP.createMany({
-            data:teamMembers.map((userId) => ({
+            data: teamMembers.map((userId) => ({
               userId,
               levelId: levelExists.id,
             })),
           });
         }
-      }else{
+      } else {
         // give xp points for winning
-        let point = args.type === "WINNER" ? 100 : args.type === "RUNNER_UP" ? 75 : 50;
-        if(event.category === "CORE"){
-          point = args.type === "WINNER" ? 150 : args.type === "RUNNER_UP" ? 100 : 75;
+        let point =
+          args.type === "WINNER" ? 100 : args.type === "RUNNER_UP" ? 75 : 50;
+        if (event.category === "CORE") {
+          point =
+            args.type === "WINNER" ? 150 : args.type === "RUNNER_UP" ? 100 : 75;
         }
         const level = await ctx.prisma.level.create({
           data: {
@@ -142,7 +141,7 @@ builder.mutationField("createWinner", (t) =>
         });
         //give xp points to all team members
         const userXp = await ctx.prisma.xP.createMany({
-          data:teamMembers.map((userId) => ({
+          data: teamMembers.map((userId) => ({
             userId,
             levelId: level.id,
           })),
@@ -150,7 +149,7 @@ builder.mutationField("createWinner", (t) =>
       }
       return data;
     },
-  })
+  }),
 );
 
 // delete winner
@@ -216,12 +215,12 @@ builder.mutationField("deleteWinner", (t) =>
         throw new Error("Not authorized");
       }
       const total_rounds = event.Rounds.length;
-      if (event.Rounds[total_rounds - 1].completed) {
+      if (event.Rounds[total_rounds - 1]!.completed) {
         throw new Error("Cant Change Round Completed");
       }
       if (
-        !event.Rounds[total_rounds - 1].Judges.some(
-          (judge) => judge.userId === user.id
+        !event.Rounds[total_rounds - 1]!.Judges.some(
+          (judge) => judge.userId === user.id,
         )
       ) {
         throw new Error("Not authorized");
@@ -234,7 +233,7 @@ builder.mutationField("deleteWinner", (t) =>
       });
       //get all team members id
       const teamMembers = winner.Team.TeamMembers.map(
-        (member) => member.userId
+        (member) => member.userId,
       );
       if (level) {
         const xp = await ctx.prisma.xP.deleteMany({
@@ -243,7 +242,7 @@ builder.mutationField("deleteWinner", (t) =>
               in: teamMembers,
             },
             levelId: level.id,
-          }
+          },
         });
         const data = await ctx.prisma.level.delete({
           where: {
@@ -259,5 +258,5 @@ builder.mutationField("deleteWinner", (t) =>
       });
       return data;
     },
-  })
+  }),
 );

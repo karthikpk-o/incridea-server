@@ -1,8 +1,9 @@
-import { initContextCache } from "@pothos/core";
 import { YogaInitialContext } from "@graphql-yoga/node";
-import { prisma } from "./utils/db/prisma";
-import { authenticateUser } from "./utils/auth/authenticateUser";
-import { pubsub } from "./pubsub";
+import { initContextCache } from "@pothos/core";
+
+import { pubsub } from "~/pubsub";
+import { authenticateUser } from "~/utils/auth/authenticateUser";
+import { prisma } from "~/utils/db/prisma";
 
 export const context = ({ request: req }: YogaInitialContext) => {
   return {

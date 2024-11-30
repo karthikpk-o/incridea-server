@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.mutationField("createRound", (t) =>
   t.prismaField({
@@ -46,7 +46,7 @@ builder.mutationField("createRound", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteRound", (t) =>
@@ -107,7 +107,7 @@ builder.mutationField("deleteRound", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 // judge mark round as completed
@@ -164,7 +164,7 @@ builder.mutationField("completeRound", (t) =>
       });
       return data;
     },
-  })
+  }),
 );
 
 builder.mutationField("changeSelectStatus", (t) =>
@@ -227,5 +227,5 @@ builder.mutationField("changeSelectStatus", (t) =>
       });
       return data;
     },
-  })
+  }),
 );

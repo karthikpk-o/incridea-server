@@ -1,6 +1,7 @@
 import { AccommodationBookingStatus, Gender, Status } from "@prisma/client";
-import checkIfAccommodationMember from "../../accommodationMembers/checkIfAccommodationMembers";
-import { builder } from "../../builder";
+
+import { builder } from "~/builder";
+import { checkIfAccommodationMember } from "~/models/UserInHotel/utils";
 
 builder.mutationField("addAccommodationRequest", (t) =>
   t.prismaField({
@@ -56,7 +57,7 @@ builder.mutationField("addAccommodationRequest", (t) =>
       });
       return data;
     },
-  })
+  }),
 );
 
 builder.mutationField("updateStatus", (t) =>
@@ -99,5 +100,5 @@ builder.mutationField("updateStatus", (t) =>
 
       return data;
     },
-  })
+  }),
 );

@@ -1,15 +1,18 @@
 import jwt from "jsonwebtoken";
-export const AUTH_SECRET = process.env.AUTH_SECRET as string;
+
+import { env } from "~/env";
+
+export const AUTH_SECRET = env.AUTH_SECRET;
 
 export const secrets = {
   JWT_ACCESS_SECRET: AUTH_SECRET + "access",
   JWT_REFRESH_SECRET: AUTH_SECRET + "refresh",
   JWT_VERIFICATION_SECRET: AUTH_SECRET + "verification",
   JWT_PASSWORD_RESET_SECRET: AUTH_SECRET + "password-reset",
-};
+} as const;
 
 export function generateAccessToken(user: { id: any }) {
-  return jwt.sign({ userId: user.id }, secrets.JWT_ACCESS_SECRET as string, {
+  return jwt.sign({ userId: user.id }, secrets.JWT_ACCESS_SECRET, {
     expiresIn: "1d",
   });
 }
@@ -20,10 +23,10 @@ export function generateRefreshToken(user: { id: any }, jti: any) {
       userId: user.id,
       jti,
     },
-    secrets.JWT_REFRESH_SECRET as string,
+    secrets.JWT_REFRESH_SECRET,
     {
       expiresIn: "7d",
-    }
+    },
   );
 }
 
@@ -43,10 +46,10 @@ export function generateVerificationToken(user: { id: any }, jti: any) {
       userId: user.id,
       jti,
     },
-    secrets.JWT_VERIFICATION_SECRET as string,
+    secrets.JWT_VERIFICATION_SECRET,
     {
       expiresIn: "1d",
-    }
+    },
   ) as string;
 }
 
@@ -56,9 +59,9 @@ export function generatePasswordResetToken(user: { id: any }, jti: any) {
       userId: user.id,
       jti,
     },
-    secrets.JWT_PASSWORD_RESET_SECRET as string,
+    secrets.JWT_PASSWORD_RESET_SECRET,
     {
       expiresIn: "1d",
-    }
-  ) as string;
+    },
+  );
 }

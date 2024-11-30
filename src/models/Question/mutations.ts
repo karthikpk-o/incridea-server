@@ -1,5 +1,6 @@
 import { QuestionType } from "@prisma/client";
-import { builder } from "../../builder";
+
+import { builder } from "~/builder";
 
 builder.mutationField("createQuestion", (t) =>
   t.prismaField({
@@ -53,7 +54,7 @@ builder.mutationField("createQuestion", (t) =>
       });
       return data;
     },
-  })
+  }),
 );
 
 builder.mutationField("updateQuizStatus", (t) =>
@@ -90,5 +91,5 @@ builder.mutationField("updateQuizStatus", (t) =>
       });
       return data;
     },
-  })
+  }),
 );

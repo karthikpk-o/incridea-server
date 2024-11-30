@@ -1,5 +1,5 @@
-import checkIfAccommodationMember from "../../accommodationMembers/checkIfAccommodationMembers";
-import { builder } from "../../builder";
+import { builder } from "~/builder";
+import { checkIfAccommodationMember } from "~/models/UserInHotel/utils";
 
 //mutation to create hotel
 builder.mutationField("createHotel", (t) =>
@@ -48,7 +48,7 @@ builder.mutationField("createHotel", (t) =>
         throw new Error("Something went wrong");
       }
     },
-  })
+  }),
 );
 
 builder.mutationField("deleteHotel", (t) =>
@@ -92,7 +92,7 @@ builder.mutationField("deleteHotel", (t) =>
         throw new Error("Something went wrong");
       }
     },
-  })
+  }),
 );
 
 //mutation to delete Hotels

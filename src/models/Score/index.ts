@@ -1,6 +1,6 @@
-import { builder } from "../../builder";
-import "./query";
-import "./mutation";
+import { builder } from "~/builder";
+import "~/models/Score/mutation";
+import "~/models/Score/query";
 
 builder.prismaObject("Scores", {
   fields: (t) => ({

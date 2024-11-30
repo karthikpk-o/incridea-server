@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 // with pagination and filtering
 builder.queryField("events", (t) =>
@@ -11,10 +11,9 @@ builder.queryField("events", (t) =>
         required: false,
       }),
     },
-
-    resolve: (query, root, args, ctx, info) => {
+    resolve: async (query, root, args, ctx, info) => {
       const filter = args.contains || "";
-      return ctx.prisma.event.findMany({
+      return await ctx.prisma.event.findMany({
         where: {
           OR: [
             {
@@ -32,7 +31,7 @@ builder.queryField("events", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );
 
 //Events By ID
@@ -45,15 +44,15 @@ builder.queryField("eventById", (t) =>
         required: true,
       }),
     },
-    resolve: (query, root, args, ctx, info) => {
-      return ctx.prisma.event.findUniqueOrThrow({
+    resolve: async (query, root, args, ctx, info) => {
+      return await ctx.prisma.event.findUniqueOrThrow({
         where: {
           id: Number(args.id),
         },
         ...query,
       });
     },
-  })
+  }),
 );
 
 builder.queryField("registeredEvents", (t) =>
@@ -93,7 +92,7 @@ builder.queryField("registeredEvents", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.queryField("publishedEvents", (t) =>
@@ -136,7 +135,7 @@ builder.queryField("publishedEvents", (t) =>
       });
       return [...core_event, ...non_core_event];
     },
-  })
+  }),
 );
 
 //completed events by checking if winners are present or not
@@ -151,17 +150,16 @@ builder.queryField("completedEvents", (t) =>
         select: {
           eventId: true,
         },
-      }
-      );
-        const events = await ctx.prisma.event.findMany({
+      });
+      const events = await ctx.prisma.event.findMany({
         where: {
           id: {
             in: eventIds.map((event) => event.eventId),
-          }
+          },
         },
         ...query,
       });
       return events;
     },
-  })
+  }),
 );

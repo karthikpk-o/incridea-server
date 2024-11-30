@@ -1,5 +1,7 @@
-import { builder } from "../../builder";
 import { Role } from "@prisma/client";
+
+import { builder } from "~/builder";
+
 builder.mutationField("addBranchRep", (t) =>
   t.prismaField({
     type: "BranchRep",
@@ -49,7 +51,7 @@ builder.mutationField("addBranchRep", (t) =>
         },
       });
     },
-  })
+  }),
 );
 
 builder.mutationField("removeBranchRep", (t) =>
@@ -112,5 +114,5 @@ builder.mutationField("removeBranchRep", (t) =>
       });
       return "Branch Representative has been Removed";
     },
-  })
+  }),
 );

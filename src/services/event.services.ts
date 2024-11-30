@@ -1,10 +1,11 @@
-import { prisma } from "../utils/db/prisma";
 import { EventCategory } from "@prisma/client";
+
+import { prisma } from "~/utils/db/prisma";
 
 export async function canRegister(
   userId: number,
   type: string,
-  eventCategory: EventCategory
+  eventCategory: EventCategory,
 ) {
   if (eventCategory !== "CORE") {
     return false;

@@ -1,12 +1,20 @@
-import { builder } from "../../builder";
-import "./query";
-import "./mutation";
+import { WinnerType } from "@prisma/client";
+
+import { builder } from "~/builder";
+import "~/models/Winner/mutation";
+import "~/models/Winner/query";
+
+builder.enumType(WinnerType, {
+  name: "WinnerType",
+});
 
 builder.prismaObject("Winners", {
-    fields: (t) => ({
-        id: t.exposeID("id"),
-        team: t.relation("Team"),
-        event: t.relation("Event"),
-        type: t.exposeString("type"),
+  fields: (t) => ({
+    id: t.exposeID("id"),
+    team: t.relation("Team"),
+    event: t.relation("Event"),
+    type: t.expose("type", {
+      type: WinnerType,
     }),
+  }),
 });

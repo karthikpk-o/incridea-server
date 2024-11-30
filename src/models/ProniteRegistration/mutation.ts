@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.mutationField("registerPronite", (t) =>
   t.prismaField({
@@ -28,7 +28,11 @@ builder.mutationField("registerPronite", (t) =>
       // ID of pronite email used for scanning
       if (authUser.id != 5181)
         throw new Error("permission denied, wrong account");
-      if (!["PARTICIPANT", "ORGANIZER", "BRANCH_REP","ADMIN","JURY"].includes(user.role)) {
+      if (
+        !["PARTICIPANT", "ORGANIZER", "BRANCH_REP", "ADMIN", "JURY"].includes(
+          user.role,
+        )
+      ) {
         throw new Error("User did not register for the fest");
       }
 
@@ -59,5 +63,5 @@ builder.mutationField("registerPronite", (t) =>
       });
       return createdPronite;
     },
-  })
+  }),
 );

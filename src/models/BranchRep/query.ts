@@ -1,4 +1,4 @@
-import { builder } from "../../builder";
+import { builder } from "~/builder";
 
 builder.queryField("eventsByBranchRep", (t) =>
   t.prismaField({
@@ -23,5 +23,5 @@ builder.queryField("eventsByBranchRep", (t) =>
         ...query,
       });
     },
-  })
+  }),
 );

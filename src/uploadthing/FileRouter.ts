@@ -1,5 +1,5 @@
 import { createUploadthing, type FileRouter } from "uploadthing/express";
-import { context } from "./context";
+import { context } from "../context";
 const f = createUploadthing();
 
 export const uploadRouter = {
@@ -14,29 +14,27 @@ export const uploadRouter = {
       maxFileCount: 1,
     },
   }).onUploadComplete((data) => {
-   console.log(context)
-    // create a new event
+    console.log(context);
     console.log("upload completed", data);
   }),
 
-
- easterEggUploader: f({
-    image:{
-        maxFileCount:1,
-        maxFileSize:"4MB"
+  easterEggUploader: f({
+    image: {
+      maxFileCount: 1,
+      maxFileSize: "4MB",
     },
- }).onUploadComplete((data)=>{
-    console.log("easter Egg uploaded")
- }),
+  }).onUploadComplete((data) => {
+    console.log("easter Egg uploaded");
+  }),
 
- idUploader: f({
-    image:{
-        maxFileCount:1,
-        maxFileSize:"4MB"
+  idUploader: f({
+    image: {
+      maxFileCount: 1,
+      maxFileSize: "4MB",
     },
- }).onUploadComplete((data)=>{
-    console.log("id uploaded")
- })
+  }).onUploadComplete((data) => {
+    console.log("id uploaded");
+  }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof uploadRouter;

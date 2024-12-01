@@ -9,6 +9,11 @@ import { env } from "~/env";
 import { schema } from "~/schema";
 import { handler as razorpayCapture } from "~/webhook/capture";
 import { uploadRouter } from "./uploadthing";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { secrets } from "./utils/auth/jwt";
+import { authenticateUser } from "./utils/auth/authenticateUser";
+import { PrismaClient } from "@prisma/client";
+import { prisma } from "./utils/db/prisma";
 
 const yoga = createYoga({
   context,
@@ -17,16 +22,40 @@ const yoga = createYoga({
 });
 
 const app = express();
-const authMiddleware = (
+const authMiddleware = async (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction,
 ) => {
   const authHeader = req.headers.authorization;
-  console.log("Authorization Header:", authHeader);
-  next();
-};
+  const token = authHeader?.split(" ")[1];
 
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized: No token provided" });
+  }
+
+  try {
+    const tokenPayload = jwt.verify(
+      token,
+      secrets.JWT_ACCESS_SECRET as string,
+    ) as JwtPayload;
+
+    if (tokenPayload.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: tokenPayload.userId },
+      });
+
+      if (!user) {
+        return res.status(401).json({ error: "Unauthorized: User not found" });
+      }
+    }
+
+    next(); // Call next to proceed to the next middleware or route handler
+  } catch (e) {
+    console.error("Token verification error:", e);
+    return res.status(401).json({ error: "Unauthorized: Invalid token" });
+  }
+};
 app.use(
   cors({
     origin: env.FRONTEND_URL,
@@ -45,7 +74,10 @@ app.post("/webhook/capture", razorpayCapture);
 app.use(
   "/uploadthing",
   authMiddleware,
-  createRouteHandler({ router: uploadRouter }),
+  createRouteHandler({
+    router: uploadRouter,
+    config: { token: env.UPLOADTHING_SECRET },
+  }),
 );
 
 app.listen(env.PORT, () => {

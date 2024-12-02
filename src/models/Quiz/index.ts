@@ -1,5 +1,6 @@
 import { builder } from "~/builder";
 import "~/models/Quiz/query";
+import "~/models/Quiz/mutations";
 
 builder.prismaObject("Quiz", {
   fields: (t) => ({

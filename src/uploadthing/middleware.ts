@@ -3,14 +3,24 @@ import { secrets } from "~/utils/auth/jwt";
 import { prisma } from "~/utils/db/prisma";
 import express from "express";
 
-const authMiddleware: express.RequestHandler = async (req, res, next) => {
+class UnauthorizedError extends Error {
+  statusCode: number;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "UnauthorizedError";
+    this.statusCode = 401;
+  }
+}
+
+const authMiddleware = async (req: express.Request) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.split(" ")[1];
 
   if (!token) {
-    res.status(401).json({ error: "Unauthorized: No token provided" });
-    return;
+    throw new UnauthorizedError("Unauthorized: No token provided");
   }
+
   try {
     const tokenPayload = jwt.verify(
       token,
@@ -23,15 +33,20 @@ const authMiddleware: express.RequestHandler = async (req, res, next) => {
       });
 
       if (!user) {
-        res.status(401).json({ error: "Unauthorized: User not found" });
-        return;
+        throw new UnauthorizedError("Unauthorized: User not found");
       }
+
+      return user.id;
     }
 
-    next();
+    throw new UnauthorizedError("Unauthorized: Invalid token payload");
   } catch (e) {
+    if (e instanceof UnauthorizedError) {
+      throw e;
+    }
+
     console.error("Token verification error:", e);
-    res.status(401).json({ error: "Unauthorized: Invalid token" });
+    throw new UnauthorizedError("Unauthorized: Invalid token");
   }
 };
 

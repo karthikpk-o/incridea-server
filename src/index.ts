@@ -35,7 +35,7 @@ app.use("/graphql", yoga.requestListener);
 app.post("/webhook/capture", razorpayCapture);
 app.use(
   "/uploadthing",
-  authMiddleware,
+  // authMiddleware,
   createRouteHandler({
     router: uploadRouter,
     config: { token: env.UPLOADTHING_SECRET },

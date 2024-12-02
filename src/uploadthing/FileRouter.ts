@@ -1,5 +1,5 @@
 import { createUploadthing, type FileRouter } from "uploadthing/express";
-import { context } from "../context";
+import authMiddleware from "./middleware";
 const f = createUploadthing();
 
 export const uploadRouter = {
@@ -13,10 +13,14 @@ export const uploadRouter = {
       maxFileSize: "4MB",
       maxFileCount: 1,
     },
-  }).onUploadComplete((data) => {
-    console.log(context);
-    console.log("upload completed", data);
-  }),
+  })
+    .middleware(async ({ req }) => {
+      const userDetail = await authMiddleware(req);
+      return { userId: userDetail };
+    })
+    .onUploadComplete(async (data) => {
+      console.log("upload completed", data.req);
+    }),
 
   easterEggUploader: f({
     image: {

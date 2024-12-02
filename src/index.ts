@@ -9,7 +9,6 @@ import { env } from "~/env";
 import { schema } from "~/schema";
 import { handler as razorpayCapture } from "~/webhook/capture";
 import { uploadRouter } from "./uploadthing/FileRouter";
-import authMiddleware from "./uploadthing/middleware";
 
 const yoga = createYoga({
   context,
@@ -35,7 +34,6 @@ app.use("/graphql", yoga.requestListener);
 app.post("/webhook/capture", razorpayCapture);
 app.use(
   "/uploadthing",
-  // authMiddleware,
   createRouteHandler({
     router: uploadRouter,
     config: { token: env.UPLOADTHING_SECRET },

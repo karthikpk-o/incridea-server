@@ -19,7 +19,7 @@ export const uploadRouter = {
       return { userId: userDetail };
     })
     .onUploadComplete(async (data) => {
-      console.log("upload completed", data.req);
+      console.log("event Image:", data.file.url);
     }),
 
   easterEggUploader: f({
@@ -27,18 +27,28 @@ export const uploadRouter = {
       maxFileCount: 1,
       maxFileSize: "4MB",
     },
-  }).onUploadComplete((data) => {
-    console.log("easter Egg uploaded");
-  }),
+  })
+    .middleware(async ({ req }) => {
+      const userDetail = await authMiddleware(req);
+      return { userId: userDetail };
+    })
+    .onUploadComplete((data) => {
+      console.log("easter Egg :", data.file.url);
+    }),
 
   idUploader: f({
     image: {
       maxFileCount: 1,
       maxFileSize: "4MB",
     },
-  }).onUploadComplete((data) => {
-    console.log("id uploaded");
-  }),
+  })
+    .middleware(async ({ req }) => {
+      const userDetail = await authMiddleware(req);
+      return { userId: userDetail };
+    })
+    .onUploadComplete((data) => {
+      console.log("id uploaded", data.file.url);
+    }),
 } satisfies FileRouter;
 
 export type OurFileRouter = typeof uploadRouter;

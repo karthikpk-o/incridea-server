@@ -10,7 +10,7 @@
     "**/*": "prettier --write --ignore-unknown"
   },
   "scripts": {
-    "dev": "tsx --watch src src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "type": "tsc --noEmit",
     "start": "tsx dist/src/index.js",
     "build": "prisma generate && tsx src/env.ts && tsc && cp -r src/templates dist/src",
@@ -20,23 +20,27 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@envelop/depth-limit": "^4.0.0",
-    "@graphql-tools/utils": "^10.6.1",
+    "@escape.tech/graphql-armor-block-field-suggestions": "^3.0.0",
+    "@escape.tech/graphql-armor-cost-limit": "^2.4.0",
+    "@escape.tech/graphql-armor-max-aliases": "^2.6.0",
+    "@escape.tech/graphql-armor-max-depth": "^2.4.0",
+    "@escape.tech/graphql-armor-max-directives": "^2.3.0",
+    "@escape.tech/graphql-armor-max-tokens": "^2.5.0",
     "@graphql-yoga/node": "^3.9.1",
     "@pothos/core": "^4.3.0",
     "@pothos/plugin-errors": "^4.2.0",
-    "@pothos/plugin-prisma": "^4.3.1",
+    "@pothos/plugin-prisma": "^4.4.0",
     "@pothos/plugin-relay": "^4.3.0",
     "@pothos/plugin-smart-subscriptions": "^4.1.1",
     "@prisma/client": "^6.0.0",
     "@t3-oss/env-core": "^0.11.1",
     "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
     "cloudinary": "^1.35.5",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
     "graphql": "^16.9.0",
-    "graphql-depth-limit": "^1.1.0",
     "graphql-scalars": "^1.24.0",
     "graphql-subscriptions": "^3.0.0",
     "graphql-yoga": "^5.10.4",
@@ -47,6 +51,7 @@
     "node-html-to-image": "^5.0.0",
     "nodemailer": "^6.9.16",
     "razorpay": "^2.9.5",
+    "uuid": "^11.0.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -54,7 +59,6 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
-    "@types/graphql-depth-limit": "^1.1.6",
     "@types/jsonwebtoken": "^9.0.7",
     "@types/multer": "^1.4.12",
     "@types/node-cron": "^3.0.11",
@@ -62,11 +66,8 @@
     "@types/uuid": "^10.0.0",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.10",
-    "nodemon": "^3.1.7",
     "prettier": "3.4.1",
     "prisma": "^6.0.0",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
   }

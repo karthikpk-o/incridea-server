@@ -12,9 +12,15 @@ export const secrets = {
 } as const;
 
 export function generateAccessToken(user: { id: any }) {
-  return jwt.sign({ userId: user.id }, secrets.JWT_ACCESS_SECRET, {
-    expiresIn: "1d",
-  });
+  return jwt.sign(
+    {
+      userId: user.id,
+    },
+    secrets.JWT_ACCESS_SECRET,
+    {
+      expiresIn: "1d",
+    },
+  );
 }
 
 export function generateRefreshToken(user: { id: any }, jti: any) {

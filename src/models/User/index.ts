@@ -95,7 +95,9 @@ builder.prismaObject("User", {
       type: Role,
     }),
     isVerified: t.exposeBoolean("isVerified"),
-    createdAt: t.expose("createdAt", { type: "Date" }),
+    createdAt: t.expose("createdAt", {
+      type: "DateTime",
+    }),
     phoneNumber: t.exposeString("phoneNumber", {
       nullable: true,
     }),

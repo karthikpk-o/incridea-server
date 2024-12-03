@@ -6,7 +6,7 @@ import RelayPlugin from "@pothos/plugin-relay";
 import SmartSubscriptionsPlugin, {
   subscribeOptionsFromIterator,
 } from "@pothos/plugin-smart-subscriptions";
-import { DateResolver, DateTimeResolver } from "graphql-scalars";
+import { DateTimeResolver } from "graphql-scalars";
 
 import { context } from "~/context";
 import { prisma } from "~/utils/db/prisma";
@@ -14,8 +14,10 @@ import { prisma } from "~/utils/db/prisma";
 export const builder = new SchemaBuilder<{
   DefaultFieldNullability: false;
   Scalars: {
-    Date: { Input: Date; Output: Date };
-    DateTime: { Input: Date; Output: Date };
+    DateTime: {
+      Input: Date;
+      Output: Date;
+    };
   };
   PrismaTypes: PrismaTypes;
   Context: ReturnType<typeof context>;
@@ -39,8 +41,7 @@ export const builder = new SchemaBuilder<{
   },
 });
 
-builder.addScalarType("Date", DateResolver, {});
-builder.addScalarType("DateTime", DateTimeResolver, {});
+builder.addScalarType("DateTime", DateTimeResolver);
 builder.queryType({});
 builder.mutationType({});
 builder.subscriptionType({});
@@ -54,10 +55,3 @@ builder.objectType(Error, {
     }),
   }),
 });
-
-// builder.objectType(Error, {
-//   name: "Error",
-//   fields: (t) => ({
-//     message: t.exposeString("message"),
-//   })
-// })

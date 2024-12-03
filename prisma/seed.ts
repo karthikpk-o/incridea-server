@@ -128,7 +128,7 @@ const main = async () => {
         collegeId: college.id,
       },
     }),
-  ];
+  ] as const;
 
   const team = await db.team.create({
     data: {
@@ -148,6 +148,7 @@ const main = async () => {
           id: event.id,
         },
       },
+      leaderId: teamMembers[0].id,
       TeamMembers: {
         createMany: {
           data: Array.from(teamMembers, (member) => ({

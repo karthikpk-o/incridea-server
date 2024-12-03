@@ -81,7 +81,7 @@ builder.queryField("totalRegistrations", (t) =>
   t.field({
     type: "Int",
     args: {
-      date: t.arg({ type: "Date", required: false }),
+      date: t.arg({ type: "DateTime", required: false }),
       last: t.arg({ type: "Int", required: false }),
     },
     resolve: async (root, args, ctx) => {

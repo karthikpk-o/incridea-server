@@ -14,9 +14,7 @@ builder.mutationField("createTeam", (t) =>
 
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
       if (
         user.role === "USER" ||
         user.role === "JUDGE" ||
@@ -29,9 +27,7 @@ builder.mutationField("createTeam", (t) =>
           id: Number(args.eventId),
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
+      if (!event) throw new Error("Event not found");
       // Non engineering college students can't register for more than 1 core event
       if (!(user.College?.type === "ENGINEERING")) {
         if (
@@ -40,18 +36,17 @@ builder.mutationField("createTeam", (t) =>
             user.College?.type as string,
             event.category,
           ))
-        ) {
+        )
           throw new Error("Not eligible to register");
-        }
       }
 
       // TODO: check if event started and if yes, throw error
       if (
         event.eventType === "INDIVIDUAL" ||
         event.eventType === "INDIVIDUAL_MULTIPLE_ENTRY"
-      ) {
+      )
         throw new Error("Event is individual");
-      }
+
       const isPaidEvent = event.fees > 0;
       if (event.eventType === "TEAM") {
         const registeredTeam = await ctx.prisma.team.findMany({
@@ -64,9 +59,7 @@ builder.mutationField("createTeam", (t) =>
             },
           },
         });
-        if (registeredTeam.length > 0) {
-          throw new Error("Already registered");
-        }
+        if (registeredTeam.length > 0) throw new Error("Already registered");
       }
       if (event.maxTeams && event.maxTeams > 0) {
         const totalTeams = await ctx.prisma.team.count({
@@ -572,12 +565,10 @@ builder.mutationField("organizerCreateTeam", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -586,14 +577,10 @@ builder.mutationField("organizerCreateTeam", (t) =>
           Organizers: true,
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      if (
-        event.Organizers.filter((org) => org.userId === user.id).length === 0
-      ) {
+      if (!event) throw new Error("Event not found");
+
+      if (event.Organizers.filter((org) => org.userId === user.id).length === 0)
         throw new Error("Not authorized");
-      }
 
       try {
         const team = await ctx.prisma.team.create({

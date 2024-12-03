@@ -19,7 +19,7 @@ const EventUpdateInput = builder.inputType("EventUpdateInput", {
     name: t.string({ required: false }),
     description: t.string({ required: false }),
     eventDate: t.field({
-      type: "Date",
+      type: "DateTime",
       required: false,
     }),
     eventType: t.field({

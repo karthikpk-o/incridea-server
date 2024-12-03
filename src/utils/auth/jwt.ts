@@ -1,8 +1,7 @@
+import { env } from "~/env";
 import jwt from "jsonwebtoken";
 
-import { env } from "~/env";
-
-export const AUTH_SECRET = env.AUTH_SECRET;
+const AUTH_SECRET = env.AUTH_SECRET;
 
 export const secrets = {
   JWT_ACCESS_SECRET: AUTH_SECRET + "access",
@@ -11,13 +10,19 @@ export const secrets = {
   JWT_PASSWORD_RESET_SECRET: AUTH_SECRET + "password-reset",
 } as const;
 
-export function generateAccessToken(user: { id: any }) {
-  return jwt.sign({ userId: user.id }, secrets.JWT_ACCESS_SECRET, {
-    expiresIn: "1d",
-  });
+function generateAccessToken(user: { id: any }) {
+  return jwt.sign(
+    {
+      userId: user.id,
+    },
+    secrets.JWT_ACCESS_SECRET,
+    {
+      expiresIn: "1d",
+    },
+  );
 }
 
-export function generateRefreshToken(user: { id: any }, jti: any) {
+function generateRefreshToken(user: { id: any }, jti: any) {
   return jwt.sign(
     {
       userId: user.id,

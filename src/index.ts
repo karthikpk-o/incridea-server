@@ -1,4 +1,3 @@
-import { useDepthLimit } from "@envelop/depth-limit";
 import bodyParser from "body-parser";
 import cors from "cors";
 import express from "express";
@@ -8,12 +7,56 @@ import { context } from "~/context";
 import { env } from "~/env";
 import { schema } from "~/schema";
 import { handler as razorpayCapture } from "~/webhook/capture";
+import { maxDirectivesPlugin } from "@escape.tech/graphql-armor-max-directives";
+import { costLimitPlugin } from "@escape.tech/graphql-armor-cost-limit";
+import { maxAliasesPlugin } from "@escape.tech/graphql-armor-max-aliases";
+import { maxDepthPlugin } from "@escape.tech/graphql-armor-max-depth";
+import { maxTokensPlugin } from "@escape.tech/graphql-armor-max-tokens";
+import { blockFieldSuggestionsPlugin } from "@escape.tech/graphql-armor-block-field-suggestions";
 import { uploadRouter } from "./uploadthing/FileRouter";
 
 const yoga = createYoga({
   context,
   schema,
-  plugins: [useDepthLimit({ maxDepth: 7 })], //max depth allowed to avoid infinite nested queries
+  plugins: [
+    blockFieldSuggestionsPlugin(),
+    maxDepthPlugin({
+      n: 10,
+      flattenFragments: true,
+      ...(env.NODE_ENV === "development" && {
+        onAccept: [(_, d) => console.log("maxDepth details: ", d)],
+        onReject: [(_, e) => console.log("maxDepth error: ", e)],
+      }),
+    }),
+    maxAliasesPlugin({
+      n: 5,
+      ...(env.NODE_ENV === "development" && {
+        onAccept: [(_, d) => console.log("maxAliases details: ", d)],
+        onReject: [(_, e) => console.log("maxAliases error: ", e)],
+      }),
+    }),
+    maxDirectivesPlugin({
+      n: 5,
+      ...(env.NODE_ENV === "development" && {
+        onAccept: [(_, d) => console.log("maxDirectives details: ", d)],
+        onReject: [(_, e) => console.log("maxDirectives error: ", e)],
+      }),
+    }),
+    maxTokensPlugin({
+      n: 250,
+      ...(env.NODE_ENV === "development" && {
+        onAccept: [(_, d) => console.log("maxTokens details: ", d)],
+        onReject: [(_, e) => console.log("maxTokens error: ", e)],
+      }),
+    }),
+    costLimitPlugin({
+      maxCost: 1000,
+      ...(env.NODE_ENV === "development" && {
+        onAccept: [(_, d) => console.log("costLimit details: ", d)],
+        onReject: [(_, e) => console.log("costLimit error: ", e)],
+      }),
+    }),
+  ],
 });
 
 const app = express();

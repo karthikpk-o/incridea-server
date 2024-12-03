@@ -18,6 +18,7 @@ import {
   addPasswordResetTokenToWhitelist,
   revokePasswordResetToken,
   findPasswordResetTokenByID,
+  revokeAllRefreshTokens,
 } from "~/services/auth.service";
 import {
   findUserByEmail,
@@ -178,7 +179,7 @@ builder.mutationField("refreshToken", (t) =>
       const savedRefreshToken = await findRefreshTokenById(
         payload?.jti as string,
       );
-      if (!savedRefreshToken || savedRefreshToken.revoked === true) {
+      if (!savedRefreshToken || savedRefreshToken.revoked) {
         throw new Error("Unauthorized");
       }
       const hashedToken = hashToken(args.refreshToken);
@@ -343,18 +344,18 @@ builder.mutationField("resetPassword", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const payload = jwt.verify(
         args.token,
-        secrets.JWT_PASSWORD_RESET_SECRET as string,
+        secrets.JWT_PASSWORD_RESET_SECRET,
       ) as any;
+
       const savedToken = await findPasswordResetTokenByID(
         payload?.jti as string,
       );
-      if (!savedToken || savedToken.revoked === true) {
+      if (!savedToken || savedToken.revoked === true)
         throw new Error("Invalid token");
-      }
+
       const user = await findUserById(payload.userId);
-      if (!user) {
-        throw new Error("Invalid token");
-      }
+      if (!user) throw new Error("Invalid token");
+
       const hashedPassword = await bcrypt.hash(args.password, 12);
       const updated_user = await ctx.prisma.user.update({
         ...query,
@@ -362,6 +363,9 @@ builder.mutationField("resetPassword", (t) =>
         data: { password: hashedPassword },
       });
       await revokePasswordResetToken(savedToken.id);
+
+      // revoke any refresh tokens, signing out user from all devices
+      await revokeAllRefreshTokens(user.id);
 
       return updated_user;
     },

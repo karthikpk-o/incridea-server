@@ -2,6 +2,7 @@ import { QuestionType } from "@prisma/client";
 
 import { builder } from "~/builder";
 import "~/models/Question/query";
+import "~/models/Question/mutations";
 
 builder.enumType(QuestionType, {
   name: "QuestionType",

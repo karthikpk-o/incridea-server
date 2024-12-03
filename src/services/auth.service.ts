@@ -43,10 +43,13 @@ export function revokeRefreshToken(id: string) {
   });
 }
 
-export function revokeTokens(userId: number) {
-  return prisma.refreshToken.deleteMany({
+export function revokeAllRefreshTokens(userId: number) {
+  return prisma.refreshToken.updateMany({
     where: {
-      userId,
+      userId: userId,
+    },
+    data: {
+      revoked: true,
     },
   });
 }

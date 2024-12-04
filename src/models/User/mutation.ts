@@ -5,9 +5,9 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 import { builder } from "~/builder";
+import { avatarList } from "~/constants";
 import { env } from "~/env";
 import { getSrcDir } from "~/global";
-import { avatarList } from "~/models/User";
 import {
   addVerificationTokenToWhitelist,
   addRefreshTokenToWhitelist,
@@ -71,12 +71,10 @@ builder.mutationField("signUp", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       // if user already exists throw error
       const existingUser = await findUserByEmail(args.data.email);
-      if (existingUser && !existingUser.isVerified) {
+      if (existingUser && !existingUser.isVerified)
         throw new Error("Please verify your email and Login");
-      }
-      if (existingUser) {
-        throw new Error("User already exists please login");
-      }
+
+      if (existingUser) throw new Error("User already exists please login");
 
       args.data.profileImage =
         avatarList[Math.floor(Math.random() * (avatarList.length - 1))]!.url;

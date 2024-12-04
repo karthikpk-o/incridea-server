@@ -5,7 +5,7 @@ builder.mutationField("createRound", (t) =>
     type: "Round",
     args: {
       eventId: t.arg.id({ required: true }),
-      date: t.arg({ type: "String", required: true }),
+      date: t.arg({ type: "DateTime", required: true }),
     },
     errors: {
       types: [Error],

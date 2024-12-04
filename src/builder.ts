@@ -7,6 +7,7 @@ import SmartSubscriptionsPlugin, {
   subscribeOptionsFromIterator,
 } from "@pothos/plugin-smart-subscriptions";
 import { DateTimeResolver } from "graphql-scalars";
+import { Avatar } from "~/constants";
 
 import { context } from "~/context";
 import { prisma } from "~/utils/db/prisma";
@@ -19,11 +20,20 @@ export const builder = new SchemaBuilder<{
       Output: Date;
     };
   };
+  Objects: {
+    Avatar: Avatar;
+  };
   PrismaTypes: PrismaTypes;
   Context: ReturnType<typeof context>;
 }>({
   defaultFieldNullability: false,
   plugins: [ErrorsPlugin, PrismaPlugin, RelayPlugin, SmartSubscriptionsPlugin],
+  errors: {
+    defaultTypes: [],
+  },
+  prisma: {
+    client: prisma,
+  },
   relay: {
     clientMutationId: "omit",
     cursorType: "String",
@@ -33,15 +43,16 @@ export const builder = new SchemaBuilder<{
       return ctx.pubsub.asyncIterableIterator(name);
     }),
   },
-  prisma: {
-    client: prisma,
-  },
-  errors: {
-    defaultTypes: [],
-  },
 });
 
 builder.addScalarType("DateTime", DateTimeResolver);
+builder.objectType("Avatar", {
+  fields: (t) => ({
+    id: t.exposeString("id"),
+    name: t.exposeString("name"),
+    url: t.exposeString("url"),
+  }),
+});
 builder.queryType({});
 builder.mutationType({});
 builder.subscriptionType({});

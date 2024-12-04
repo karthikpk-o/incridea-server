@@ -24,7 +24,7 @@ builder.mutationField("addOrganizer", (t) =>
       if (user.role !== "BRANCH_REP") throw new Error("No Permission");
       const branch = await ctx.prisma.branchRep.findUnique({
         where: {
-          userId: user.id as number,
+          userId: user.id,
         },
       });
       if (!branch) throw new Error(`No Branch Under ${user.name}`);
@@ -92,7 +92,7 @@ builder.mutationField("removeOrganizer", (t) =>
       if (user.role !== "BRANCH_REP") throw new Error("No Permission");
       const branch = await ctx.prisma.branchRep.findUnique({
         where: {
-          userId: user.id as number,
+          userId: user.id,
         },
       });
       if (!branch) throw new Error(`No Branch Under ${user.name}`);

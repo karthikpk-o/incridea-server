@@ -1,4 +1,4 @@
-import { QuestionType } from "@prisma/client";
+import { type QuestionType } from "@prisma/client";
 
 import { builder } from "~/builder";
 

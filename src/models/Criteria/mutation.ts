@@ -169,6 +169,7 @@ builder.mutationField("deleteCriteria", (t) =>
         });
         return deletedCriteria;
       } catch (error) {
+        console.log(error);
         throw new Error("Couldn't delete criteria");
       }
     },

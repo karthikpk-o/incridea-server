@@ -1,5 +1,3 @@
-import { resolve } from "path";
-
 import { builder } from "~/builder";
 
 builder.mutationField("createCollege", (t) =>

@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
+import { type Request, type Response } from "express";
 
-export async function uploader(req: Request, res: Response) {
+export function uploader(req: Request, res: Response) {
   try {
     if (!req.file) {
       res.status(400).json({ message: "No file uploaded" });
@@ -11,7 +11,7 @@ export async function uploader(req: Request, res: Response) {
       message: "File uploaded successfully",
       url: req.file.path,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.log(err);
     res.status(500).json("Internal Server Error");
   }

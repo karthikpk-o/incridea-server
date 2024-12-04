@@ -12,7 +12,7 @@ builder.queryField("users", (t) =>
       }),
     },
     resolve: (query, root, args, ctx, info) => {
-      const filter = args.contains || "";
+      const filter = args.contains ?? "";
       return ctx.prisma.user.findMany({
         where: {
           role: {

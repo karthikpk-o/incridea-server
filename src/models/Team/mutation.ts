@@ -47,7 +47,6 @@ builder.mutationField("createTeam", (t) =>
       )
         throw new Error("Event is individual");
 
-      const isPaidEvent = event.fees > 0;
       if (event.eventType === "TEAM") {
         const registeredTeam = await ctx.prisma.team.findMany({
           where: {
@@ -205,7 +204,7 @@ builder.mutationField("joinTeam", (t) =>
           id: Number(team.leaderId),
         },
       });
-      let ignore = [65, 66, 67, 68, 69];
+      const ignore = [65, 66, 67, 68, 69];
       if (user.collegeId !== leader?.collegeId && !ignore.includes(event.id)) {
         throw new Error("Team members should belong to same college");
       }
@@ -592,6 +591,7 @@ builder.mutationField("organizerCreateTeam", (t) =>
         });
         return team;
       } catch (e) {
+        console.log(e);
         throw new Error("Team already exists");
       }
     },
@@ -702,11 +702,11 @@ builder.mutationField("organizerAddTeamMember", (t) =>
       }
       if (!(user.College?.type === "ENGINEERING")) {
         if (
-          !canRegister(
+          !(await canRegister(
             participant.id,
             participant.College?.type as string,
             team.Event.category,
-          )
+          ))
         ) {
           throw new Error("Not eligible to register");
         }
@@ -745,7 +745,7 @@ builder.mutationField("organizerAddTeamMember", (t) =>
           },
         });
         console.log(leader?.College?.id, participant.College?.id);
-        let ignore = [65, 66, 67, 68, 69];
+        const ignore = [65, 66, 67, 68, 69];
         if (
           participant.College?.id !== leader?.College?.id &&
           !ignore.includes(team.Event.id)
@@ -889,7 +889,7 @@ builder.mutationField("organizerMarkAttendance", (t) =>
             },
           });
           // give xp to all team members
-          const xp = await ctx.prisma.xP.createMany({
+          await ctx.prisma.xP.createMany({
             data: teamMembers.map((userId) => ({
               userId,
               levelId: newLevel.id,
@@ -907,7 +907,7 @@ builder.mutationField("organizerMarkAttendance", (t) =>
           });
           if (users.length == 0) {
             // give xp to all team members
-            const xp = await ctx.prisma.xP.createMany({
+            await ctx.prisma.xP.createMany({
               data: teamMembers.map((userId) => ({
                 userId,
                 levelId: level.id,
@@ -924,7 +924,7 @@ builder.mutationField("organizerMarkAttendance", (t) =>
         });
         if (level) {
           // remove xp to all team members
-          const xp = await ctx.prisma.xP.deleteMany({
+          await ctx.prisma.xP.deleteMany({
             where: {
               userId: {
                 in: teamMembers,
@@ -1034,7 +1034,7 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
             },
           });
           // give xp to all team members
-          const xp = await ctx.prisma.xP.create({
+          await ctx.prisma.xP.create({
             data: {
               userId: Number(args.userId),
               levelId: newLevel.id,
@@ -1050,7 +1050,7 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
           });
           if (!users) {
             // give xp to all team members
-            const xp = await ctx.prisma.xP.create({
+            await ctx.prisma.xP.create({
               data: {
                 userId: Number(args.userId),
                 levelId: level.id,
@@ -1067,7 +1067,7 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
         });
         if (level) {
           // remove xp to all team members
-          const xp = await ctx.prisma.xP.deleteMany({
+          await ctx.prisma.xP.deleteMany({
             where: {
               userId: Number(args.userId),
               levelId: level.id,
@@ -1141,11 +1141,11 @@ builder.mutationField("organizerRegisterSolo", (t) =>
 
       if (!(user.College?.type === "ENGINEERING")) {
         if (
-          !canRegister(
+          !(await canRegister(
             participant.id,
             participant.College?.type as string,
             event.category,
-          )
+          ))
         ) {
           throw new Error("Not eligible to register");
         }
@@ -1175,7 +1175,7 @@ builder.mutationField("organizerRegisterSolo", (t) =>
       const team = await ctx.prisma.team.create({
         data: {
           eventId: Number(args.eventId),
-          name: args.userId as string,
+          name: args.userId,
           attended: true,
           confirmed: true,
           leaderId: Number(args.userId),
@@ -1274,7 +1274,10 @@ builder.mutationField("promoteToNextRound", (t) =>
         },
         ...query,
       });
-      ctx.pubsub.publish(`TEAM_UPDATED/${team.Event.id}-${args.roundNo}`, data);
+      await ctx.pubsub.publish(
+        `TEAM_UPDATED/${team.Event.id}-${args.roundNo}`,
+        data,
+      );
       return data;
     },
   }),

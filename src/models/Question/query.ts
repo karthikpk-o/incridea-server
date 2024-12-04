@@ -1,5 +1,3 @@
-import { error } from "console";
-
 import { builder } from "~/builder";
 
 builder.queryField("getAllquestions", (t) =>
@@ -24,6 +22,7 @@ builder.queryField("getAllquestions", (t) =>
 
         return questions;
       } catch (error) {
+        console.log(error);
         throw new Error("Something went wrong");
       }
     },

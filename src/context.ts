@@ -1,8 +1,8 @@
-import { YogaInitialContext } from "@graphql-yoga/node";
+import { type YogaInitialContext } from "@graphql-yoga/node";
+import { prisma } from "~/utils/db/prisma";
 import { initContextCache } from "@pothos/core";
 
 import { authenticateUser } from "~/utils/auth/authenticateUser";
-import { prisma } from "~/utils/db/prisma";
 
 import { PubSub } from "graphql-subscriptions";
 

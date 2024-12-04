@@ -37,7 +37,7 @@ const main = async () => {
     },
   });
 
-  const branchRep = await db.branchRep.create({
+  await db.branchRep.create({
     data: {
       Branch: {
         connect: {
@@ -130,7 +130,7 @@ const main = async () => {
     }),
   ] as const;
 
-  const team = await db.team.create({
+  await db.team.create({
     data: {
       name: "Test team",
       attended: false,
@@ -160,4 +160,4 @@ const main = async () => {
   });
 };
 
-main().finally(() => void null);
+main().catch(console.log);

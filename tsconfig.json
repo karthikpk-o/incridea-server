@@ -30,6 +30,13 @@
       "~/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts"],
+  "include": [
+    ".eslintrc.cjs",
+    "global.d.ts",
+    "**/*.ts",
+    "**/*.mjs",
+    "**/*.cjs",
+    "**/*.js"
+  ],
   "exclude": ["node_modules", "dist"]
 }

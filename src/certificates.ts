@@ -190,7 +190,7 @@ const sendEmailWithAttachment = async (
   text: string,
 ) => {
   try {
-    const info = await sendEmail({
+    await sendEmail({
       to: participantEmail,
       subject: subject,
       text: text,
@@ -291,12 +291,11 @@ async function sendParticipationCertificate() {
     (acc, val) => acc.concat(val),
     [],
   );
-  for (let i = 0; i < flattenedParticipationData.length; i++) {
-    const participant = flattenedParticipationData[i]!;
+  for (const participant of flattenedParticipationData) {
     try {
       await sendCertificate(
         participant.name,
-        participant.college || "OTHER",
+        participant.college ?? "OTHER",
         participant.eventName,
         participant.email,
       );
@@ -309,6 +308,7 @@ async function sendParticipationCertificate() {
         },
       });
     } catch (err) {
+      console.log(err);
       certificateSentError++;
       await prisma.certificateIssue.create({
         data: {
@@ -323,7 +323,7 @@ async function sendParticipationCertificate() {
     );
   }
 
-  await fs.writeFileSync(
+  fs.writeFileSync(
     "~/participation.json",
     JSON.stringify(flattenedParticipationData),
   );

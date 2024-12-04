@@ -117,8 +117,9 @@ export function revokePasswordResetToken(id: string) {
   });
 }
 
-//node-cron setup to delete revoked token every 12 hours
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 cron.schedule("0 */12 * * *", async () => {
+  //node-cron setup to delete revoked token every 12 hours
   await prisma.refreshToken.deleteMany({
     where: {
       revoked: true,

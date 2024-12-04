@@ -14,6 +14,47 @@ const EventCreateInput = builder.inputType("EventCreateInput", {
   }),
 });
 
+builder.mutationField("createEvent", (t) =>
+  t.prismaField({
+    type: "Event",
+    args: {
+      data: t.arg({
+        type: EventCreateInput,
+        required: true,
+      }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "BRANCH_REP") throw new Error("No Permission");
+      const branch = await ctx.prisma.branchRep.findUnique({
+        where: {
+          userId: user.id,
+        },
+      });
+      if (!branch) throw new Error(`No Branch Under ${user.name}`);
+
+      return ctx.prisma.event.create({
+        data: {
+          name: args.data.name,
+          description: args.data.description,
+          venue: args.data.venue,
+          ...(args.data.eventType ? { eventType: args.data.eventType } : {}),
+          Branch: {
+            connect: {
+              id: branch.branchId,
+            },
+          },
+        },
+        ...query,
+      });
+    },
+  }),
+);
+
 const EventUpdateInput = builder.inputType("EventUpdateInput", {
   fields: (t) => ({
     name: t.string({ required: false }),
@@ -38,52 +79,6 @@ const EventUpdateInput = builder.inputType("EventUpdateInput", {
     }),
   }),
 });
-
-builder.mutationField("createEvent", (t) =>
-  t.prismaField({
-    type: "Event",
-    args: {
-      data: t.arg({
-        type: EventCreateInput,
-        required: true,
-      }),
-    },
-    errors: {
-      types: [Error],
-    },
-    resolve: async (query, root, args, ctx, info) => {
-      const user = await ctx.user;
-      if (!user) throw new Error("Not authenticated");
-      if (user.role !== "BRANCH_REP") throw new Error("No Permission");
-      const branch = await ctx.prisma.branchRep.findUnique({
-        where: {
-          userId: user.id,
-        },
-      });
-      if (!branch) throw new Error(`No Branch Under ${user.name}`);
-      // filter all the null values
-      const data = Object.keys(args.data).reduce((acc: any, key) => {
-        if (args.data[key as keyof typeof args.data] !== null) {
-          acc[key] = args.data[key as keyof typeof args.data];
-        }
-        return acc;
-      }, {});
-
-      return ctx.prisma.event.create({
-        data: {
-          ...data,
-
-          Branch: {
-            connect: {
-              id: branch.branchId,
-            },
-          },
-        },
-        ...query,
-      });
-    },
-  }),
-);
 
 builder.mutationField("updateEvent", (t) =>
   t.prismaField({
@@ -140,18 +135,19 @@ builder.mutationField("updateEvent", (t) =>
       }
 
       // filter all the null values from the data
-      const data = Object.keys(args.data).reduce((acc: any, key) => {
-        if (args.data[key as keyof typeof args.data] !== null) {
-          acc[key] = args.data[key as keyof typeof args.data];
-        }
-        return acc;
-      }, {});
+      const data = Object.keys(args.data).reduce(
+        (acc, key) => {
+          const value = args.data[key as keyof typeof args.data];
+          if (value) acc[key] = value;
+          return acc;
+        },
+        {} as { [key: string]: string | number | Date },
+      );
 
       return ctx.prisma.event.update({
         where: {
           id: Number(args.id),
         },
-
         data: {
           ...data,
         },

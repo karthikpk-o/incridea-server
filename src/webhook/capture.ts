@@ -1,4 +1,6 @@
-import { Request, Response } from "express";
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { type Request, type Response } from "express";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
 
 import { env } from "~/env";
@@ -10,7 +12,7 @@ export async function handler(req: Request, res: Response) {
     return;
   }
 
-  const webhookSecret = env.RAZORPAY_WEBHOOK_SECRET as string;
+  const webhookSecret = env.RAZORPAY_WEBHOOK_SECRET;
   const webhookSignature = req.headers["x-razorpay-signature"] as string;
   if (
     !validateWebhookSignature(
@@ -49,7 +51,7 @@ export async function handler(req: Request, res: Response) {
             paymentData: req.body.payload.payment.entity.paymentData,
           },
         });
-        const updatedUser = await prisma.user.update({
+        await prisma.user.update({
           where: {
             id: paymentOrder.userId,
           },
@@ -70,7 +72,7 @@ export async function handler(req: Request, res: Response) {
             paymentData: req.body.payload.payment.entity.paymentData,
           },
         });
-        const updateTeam = await prisma.team.update({
+        await prisma.team.update({
           where: {
             id: updatedPaymentOrder.teamId,
           },

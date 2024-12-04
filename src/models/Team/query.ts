@@ -16,7 +16,7 @@ builder.queryField("teamsByRound", (t) =>
       contains: t.arg.string({ required: false }),
     },
     resolve: async (query, root, args, ctx, info) => {
-      const filter = args.contains || "";
+      const filter = args.contains ?? "";
       const user = await ctx.user;
       if (!user) throw new Error("Not Authenticated");
       if (user.role !== "JURY") {

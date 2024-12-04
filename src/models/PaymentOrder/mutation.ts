@@ -107,7 +107,7 @@ builder.mutationField("createPaymentOrder", (t) =>
               id: user.id,
             },
           },
-          orderId: response.id as string,
+          orderId: response.id,
         },
       });
     },
@@ -193,7 +193,7 @@ builder.mutationField("eventPaymentOrder", (t) =>
               id: team.id,
             },
           },
-          orderId: response.id as string,
+          orderId: response.id,
         },
       });
     },

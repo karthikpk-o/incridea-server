@@ -7,9 +7,9 @@ import SmartSubscriptionsPlugin, {
   subscribeOptionsFromIterator,
 } from "@pothos/plugin-smart-subscriptions";
 import { DateTimeResolver } from "graphql-scalars";
-import { Avatar } from "~/constants";
+import { type Avatar } from "~/constants";
 
-import { context } from "~/context";
+import { type context } from "~/context";
 import { prisma } from "~/utils/db/prisma";
 
 export const builder = new SchemaBuilder<{

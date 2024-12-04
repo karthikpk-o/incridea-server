@@ -1,4 +1,4 @@
-import { AccommodationBookingStatus, Gender, Status } from "@prisma/client";
+import { type AccommodationBookingStatus, type Gender } from "@prisma/client";
 
 import { builder } from "~/builder";
 import { checkIfAccommodationMember } from "~/models/UserInHotel/utils";

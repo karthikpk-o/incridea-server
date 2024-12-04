@@ -158,10 +158,13 @@ builder.mutationField("completeRound", (t) =>
           completed: true,
         },
       });
-      ctx.pubsub.publish(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`, {
-        eventId: args.eventId,
-        roundNo: args.roundNo,
-      });
+      await ctx.pubsub.publish(
+        `STATUS_UPDATE/${args.eventId}-${args.roundNo}`,
+        {
+          eventId: args.eventId,
+          roundNo: args.roundNo,
+        },
+      );
       return data;
     },
   }),
@@ -221,10 +224,13 @@ builder.mutationField("changeSelectStatus", (t) =>
         },
       });
       if (!data) throw new Error("No ROund FOund");
-      ctx.pubsub.publish(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`, {
-        eventId: args.eventId,
-        roundNo: args.roundNo,
-      });
+      await ctx.pubsub.publish(
+        `STATUS_UPDATE/${args.eventId}-${args.roundNo}`,
+        {
+          eventId: args.eventId,
+          roundNo: args.roundNo,
+        },
+      );
       return data;
     },
   }),

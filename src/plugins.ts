@@ -5,10 +5,10 @@ import { maxDepthPlugin } from "@escape.tech/graphql-armor-max-depth";
 import { maxDirectivesPlugin } from "@escape.tech/graphql-armor-max-directives";
 import { maxTokensPlugin } from "@escape.tech/graphql-armor-max-tokens";
 import { useDisableIntrospection } from "@graphql-yoga/plugin-disable-introspection";
-import { Plugin } from "graphql-yoga";
+import { type Plugin } from "graphql-yoga";
 import { env } from "~/env";
 
-const basePlugins: (Plugin | {})[] = [
+const basePlugins: (Plugin | object)[] = [
   maxDepthPlugin({
     n: 10,
     flattenFragments: true,
@@ -27,7 +27,7 @@ const basePlugins: (Plugin | {})[] = [
   }),
 ];
 
-const productionPlugins: (Plugin | {})[] = [
+const productionPlugins: (Plugin | object)[] = [
   useDisableIntrospection({
     isDisabled: (request) => {
       const authHeader = request.headers.get("Authorization");

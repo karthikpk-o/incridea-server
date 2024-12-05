@@ -1,5 +1,4 @@
 import { createEnv } from "@t3-oss/env-core";
-import { uploadthing } from "@t3-oss/env-core/presets";
 import * as dotenv from "dotenv";
 import { z } from "zod";
 
@@ -7,8 +6,6 @@ import { z } from "zod";
 dotenv.config();
 
 export const env = createEnv({
-  extends: [uploadthing()],
-
   /**
    * Specify your server-side environment variables schema here. This way you can ensure the app
    * isn't built with invalid env vars.
@@ -36,7 +33,7 @@ export const env = createEnv({
     RAZORPAY_KEY: z.string(),
     RAZORPAY_SECRET: z.string(),
     RAZORPAY_WEBHOOK_SECRET: z.string(),
-    UPLOADTHING_SECRET: z.string(),
+    UPLOADTHING_TOKEN: z.string(),
   },
 
   /**
@@ -75,7 +72,7 @@ export const env = createEnv({
     RAZORPAY_KEY: process.env.RAZORPAY_KEY,
     RAZORPAY_SECRET: process.env.RAZORPAY_SECRET,
     RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
-    UPLOADTHING_SECRET: process.env.UPLOADTHING_SECRET,
+    UPLOADTHING_TOKEN: process.env.UPLOADTHING_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

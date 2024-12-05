@@ -1,6 +1,6 @@
 import { type EventCategory } from "@prisma/client";
 
-import { prisma } from "~/utils/db/prisma";
+import { prisma } from "~/utils/db";
 
 export async function canRegister(
   userId: number,

@@ -1,7 +1,7 @@
 import cron from "node-cron";
 
 import { hashToken } from "~/utils/auth/hashToken";
-import { prisma } from "~/utils/db/prisma";
+import { prisma } from "~/utils/db";
 
 // used when we create a refresh token.
 export function addRefreshTokenToWhitelist({

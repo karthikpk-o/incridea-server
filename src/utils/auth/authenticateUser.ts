@@ -2,29 +2,33 @@ import { type YogaInitialContext } from "@graphql-yoga/node";
 import { type PrismaClient } from "@prisma/client";
 import jwt, { type JwtPayload } from "jsonwebtoken";
 
-import { secrets } from "~/utils/auth/jwt";
+import { accessTokenZ, secrets } from "~/utils/auth/jwt";
 
-export async function authenticateUser(
+const authenticateUser = async (
   prisma: PrismaClient,
   request: YogaInitialContext["request"],
-) {
-  const header = request.headers.get("authorization");
-  if (!header) return null;
+) => {
+  const authHeader = request.headers.get("authorization");
+  if (!authHeader) return null;
+
+  const token = authHeader.replace("Bearer ", "");
+  if (!token) return null;
 
   try {
-    const token = header.split(" ")[1];
-    if (!token) return null;
-
     const payload = jwt.verify(token, secrets.JWT_ACCESS_SECRET) as JwtPayload;
+
+    const { success, data: typedPayload } = accessTokenZ.safeParse(payload);
+    if (!success) return null;
 
     return await prisma.user.findUnique({
       where: {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-        id: payload.userId,
+        id: typedPayload.userId,
       },
       include: { College: true },
     });
   } catch (error) {
     console.log(error);
   }
-}
+};
+
+export { authenticateUser };

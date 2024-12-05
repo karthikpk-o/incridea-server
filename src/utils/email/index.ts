@@ -1,4 +1,4 @@
-import { createTransport, SendMailOptions } from "nodemailer";
+import { createTransport, type SendMailOptions } from "nodemailer";
 
 import { env } from "~/env";
 import { prisma } from "~/utils/db/prisma";
@@ -41,13 +41,12 @@ const sendEmail = async (
     },
   });
 
-  console.log("Rejected emails", info.rejected);
-  console.log("Pending emails", info.pending);
-
   const failed = info.rejected.concat(info.pending).filter(Boolean);
 
   if (failed.length > 0)
-    throw new Error(`Email(s) (${failed.join(", ")}) could not be sent`);
+    throw new Error(
+      `Email(s) (${failed.map((m) => (typeof m == "string" ? m : m.address)).join(", ")}) could not be sent`,
+    );
 };
 
 export { sendEmail };

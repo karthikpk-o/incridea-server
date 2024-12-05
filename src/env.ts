@@ -20,6 +20,9 @@ export const env = createEnv({
     DATABASE_URL: z.string().url(),
     FRONTEND_URL: z.string().url(),
     AUTH_SECRET: z.string(),
+    // This is a shared secret between the server and the client.
+    // It's used to introspect graphql schema.
+    SCHEMA_TOKEN: z.string(),
     PORT: z.coerce.number().default(4000),
     SMTP_HOST: z.string(),
     SMTP_PORT: z.coerce.number(),
@@ -58,6 +61,7 @@ export const env = createEnv({
     DATABASE_URL: process.env.DATABASE_URL,
     FRONTEND_URL: process.env.FRONTEND_URL,
     AUTH_SECRET: process.env.AUTH_SECRET,
+    SCHEMA_TOKEN: process.env.SCHEMA_TOKEN,
     PORT: process.env.PORT,
     SMTP_HOST: process.env.SMTP_HOST,
     SMTP_PORT: process.env.SMTP_PORT,

@@ -100,13 +100,14 @@ builder.mutationField("deleteJudge", (t) =>
           },
           ...query,
         });
-        const deletedUser = await ctx.prisma.user.delete({
+        await ctx.prisma.user.delete({
           where: {
             id: Number(args.userId),
           },
         });
         return deletedJudge;
       } catch (err) {
+        console.log(err);
         throw new Error("Judge not found");
       }
     },

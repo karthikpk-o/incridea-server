@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
+import fs from "fs";
 
-const db = new PrismaClient();
+const prisma = new PrismaClient();
 
 // async function main() {
 //   const events = await prisma.event.findMany({
@@ -131,44 +132,46 @@ const db = new PrismaClient();
 //   });
 // }
 
-// async function totalReg() {
-//   const roadiesParticipants = await prisma.team.findMany({
-//     where: {
-//       eventId: 70,
-//     },
-//     include: {
-//       TeamMembers: {
-//         include: {
-//           User: true,
-//         },
-//       },
-//     },
-//   });
+async function totalReg() {
+  const roadiesParticipants = await prisma.team.findMany({
+    where: {
+      eventId: 70,
+    },
+    include: {
+      TeamMembers: {
+        include: {
+          User: true,
+        },
+      },
+    },
+  });
 
-//   let colValues = "teamId,teamName,userId,userName,email,phoneNumber";
-//   roadiesParticipants.map((team) => {
-//     team.TeamMembers.map((user, idx) => {
-//       if (idx === 0) {
-//         const line = `${team.id},${team.name},${`INC24-${user.User.id
-//           .toString()
-//           .padStart(4, "0")
-//           .toString()}`}, ${user.User.name}, ${user.User.email}, ${
-//           user.User.phoneNumber
-//         }`;
-//         colValues += "\n" + line;
-//       } else {
-//         const line = `,,${`INC24-${user.User.id
-//           .toString()
-//           .padStart(4, "0")
-//           .toString()}`}, ${user.User.name}, ${user.User.email}, ${
-//           user.User.phoneNumber
-//         }`;
-//         colValues += "\n" + line;
-//       }
-//     });
-//   });
-//   fs.writeFileSync("bgmi.csv", colValues);
-// }
+  let colValues = "teamId,teamName,userId,userName,email,phoneNumber";
+  roadiesParticipants.map((team) => {
+    team.TeamMembers.map((user, idx) => {
+      if (idx === 0) {
+        const line = `${team.id},${team.name},${`INC24-${user.User.id
+          .toString()
+          .padStart(4, "0")
+          .toString()}`}, ${user.User.name}, ${user.User.email}, ${
+          user.User.phoneNumber
+        }`;
+        colValues += "\n" + line;
+      } else {
+        const line = `,,${`INC24-${user.User.id
+          .toString()
+          .padStart(4, "0")
+          .toString()}`}, ${user.User.name}, ${user.User.email}, ${
+          user.User.phoneNumber
+        }`;
+        colValues += "\n" + line;
+      }
+    });
+  });
+  fs.writeFileSync("bgmi.csv", colValues);
+}
+
+totalReg().catch(console.log);
 
 // totalReg().finally(() => {
 //   console.log("done");

@@ -14,31 +14,6 @@ const EventCreateInput = builder.inputType("EventCreateInput", {
   }),
 });
 
-const EventUpdateInput = builder.inputType("EventUpdateInput", {
-  fields: (t) => ({
-    name: t.string({ required: false }),
-    description: t.string({ required: false }),
-    eventDate: t.field({
-      type: "Date",
-      required: false,
-    }),
-    eventType: t.field({
-      type: EventType,
-      required: false,
-    }),
-    fees: t.int({ required: false }),
-    minTeamSize: t.int({ required: false }),
-    maxTeamSize: t.int({ required: false }),
-    maxTeams: t.int({ required: false }),
-    venue: t.string({ required: false }),
-    image: t.string({ required: false }),
-    category: t.field({
-      type: EventCategory,
-      required: false,
-    }),
-  }),
-});
-
 builder.mutationField("createEvent", (t) =>
   t.prismaField({
     type: "Event",
@@ -61,18 +36,13 @@ builder.mutationField("createEvent", (t) =>
         },
       });
       if (!branch) throw new Error(`No Branch Under ${user.name}`);
-      // filter all the null values
-      const data = Object.keys(args.data).reduce((acc: any, key) => {
-        if (args.data[key as keyof typeof args.data] !== null) {
-          acc[key] = args.data[key as keyof typeof args.data];
-        }
-        return acc;
-      }, {});
 
       return ctx.prisma.event.create({
         data: {
-          ...data,
-
+          name: args.data.name,
+          description: args.data.description,
+          venue: args.data.venue,
+          ...(args.data.eventType ? { eventType: args.data.eventType } : {}),
           Branch: {
             connect: {
               id: branch.branchId,
@@ -84,6 +54,31 @@ builder.mutationField("createEvent", (t) =>
     },
   }),
 );
+
+const EventUpdateInput = builder.inputType("EventUpdateInput", {
+  fields: (t) => ({
+    name: t.string({ required: false }),
+    description: t.string({ required: false }),
+    eventDate: t.field({
+      type: "DateTime",
+      required: false,
+    }),
+    eventType: t.field({
+      type: EventType,
+      required: false,
+    }),
+    fees: t.int({ required: false }),
+    minTeamSize: t.int({ required: false }),
+    maxTeamSize: t.int({ required: false }),
+    maxTeams: t.int({ required: false }),
+    venue: t.string({ required: false }),
+    image: t.string({ required: false }),
+    category: t.field({
+      type: EventCategory,
+      required: false,
+    }),
+  }),
+});
 
 builder.mutationField("updateEvent", (t) =>
   t.prismaField({
@@ -140,18 +135,19 @@ builder.mutationField("updateEvent", (t) =>
       }
 
       // filter all the null values from the data
-      const data = Object.keys(args.data).reduce((acc: any, key) => {
-        if (args.data[key as keyof typeof args.data] !== null) {
-          acc[key] = args.data[key as keyof typeof args.data];
-        }
-        return acc;
-      }, {});
+      const data = Object.keys(args.data).reduce(
+        (acc, key) => {
+          const value = args.data[key as keyof typeof args.data];
+          if (value) acc[key] = value;
+          return acc;
+        },
+        {} as { [key: string]: string | number | Date },
+      );
 
       return ctx.prisma.event.update({
         where: {
           id: Number(args.id),
         },
-
         data: {
           ...data,
         },

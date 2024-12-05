@@ -175,7 +175,7 @@ builder.queryField("getTotalScores", (t) =>
           totalScore,
           judgeScore,
           teamId: team.id,
-          criteriaType: criteria?.type || CriteriaType.NUMBER,
+          criteriaType: criteria?.type ?? CriteriaType.NUMBER,
         };
       });
       return Promise.all(total_scores);

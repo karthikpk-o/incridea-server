@@ -1,5 +1,5 @@
 import { builder } from "~/builder";
-import { avatarList } from "~/models/User";
+import { avatarList } from "~/constants";
 
 builder.queryField("users", (t) =>
   t.prismaConnection({
@@ -12,7 +12,7 @@ builder.queryField("users", (t) =>
       }),
     },
     resolve: (query, root, args, ctx, info) => {
-      const filter = args.contains || "";
+      const filter = args.contains ?? "";
       return ctx.prisma.user.findMany({
         where: {
           role: {
@@ -81,7 +81,7 @@ builder.queryField("totalRegistrations", (t) =>
   t.field({
     type: "Int",
     args: {
-      date: t.arg({ type: "Date", required: false }),
+      date: t.arg({ type: "DateTime", required: false }),
       last: t.arg({ type: "Int", required: false }),
     },
     resolve: async (root, args, ctx) => {
@@ -125,13 +125,11 @@ builder.queryField("totalRegistrations", (t) =>
 
 builder.queryField("getAvatars", (t) =>
   t.field({
-    type: "String",
-
+    type: ["Avatar"],
     resolve: async (root, args, ctx) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-
-      return JSON.stringify(avatarList);
+      return avatarList;
     },
   }),
 );

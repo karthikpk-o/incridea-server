@@ -1,13 +1,13 @@
 import bcrypt from "bcryptjs";
 import fs from "fs";
-import jwt from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 import { builder } from "~/builder";
+import { avatarList } from "~/constants";
 import { env } from "~/env";
 import { getSrcDir } from "~/global";
-import { avatarList } from "~/models/User";
 import {
   addVerificationTokenToWhitelist,
   addRefreshTokenToWhitelist,
@@ -71,12 +71,10 @@ builder.mutationField("signUp", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       // if user already exists throw error
       const existingUser = await findUserByEmail(args.data.email);
-      if (existingUser && !existingUser.isVerified) {
+      if (existingUser && !existingUser.isVerified)
         throw new Error("Please verify your email and Login");
-      }
-      if (existingUser) {
-        throw new Error("User already exists please login");
-      }
+
+      if (existingUser) throw new Error("User already exists please login");
 
       args.data.profileImage =
         avatarList[Math.floor(Math.random() * (avatarList.length - 1))]!.url;
@@ -174,18 +172,19 @@ builder.mutationField("refreshToken", (t) =>
     resolve: async (root, args, ctx) => {
       const payload = jwt.verify(
         args.refreshToken,
-        secrets.JWT_REFRESH_SECRET as string,
-      ) as any;
-      const savedRefreshToken = await findRefreshTokenById(
-        payload?.jti as string,
-      );
-      if (!savedRefreshToken || savedRefreshToken.revoked) {
+        secrets.JWT_REFRESH_SECRET,
+      ) as JwtPayload;
+      if (!payload.jti) throw new Error("Unauthorized");
+
+      const savedRefreshToken = await findRefreshTokenById(payload.jti);
+      if (!savedRefreshToken || savedRefreshToken.revoked)
         throw new Error("Unauthorized");
-      }
+
       const hashedToken = hashToken(args.refreshToken);
       if (hashedToken !== savedRefreshToken.hashedToken) {
         throw new Error("Unauthorized");
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = await findUserById(payload.userId);
       if (!user) {
         throw new Error("Unauthorized");
@@ -263,14 +262,13 @@ builder.mutationField("verifyEmail", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const payload = jwt.verify(
         args.token,
-        secrets.JWT_VERIFICATION_SECRET as string,
-      ) as any;
-      const savedToken = await findVerificationTokenByID(
-        payload?.jti as string,
-      );
-      if (!savedToken || savedToken.revoked === true) {
+        secrets.JWT_VERIFICATION_SECRET,
+      ) as JwtPayload;
+      if (!payload.jti) throw new Error("Invalid token");
+      const savedToken = await findVerificationTokenByID(payload.jti);
+      if (!savedToken || savedToken.revoked === true)
         throw new Error("Invalid token");
-      }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = await findUserById(payload.userId);
       if (!user) {
         throw new Error("Invalid token");
@@ -345,14 +343,13 @@ builder.mutationField("resetPassword", (t) =>
       const payload = jwt.verify(
         args.token,
         secrets.JWT_PASSWORD_RESET_SECRET,
-      ) as any;
-
-      const savedToken = await findPasswordResetTokenByID(
-        payload?.jti as string,
-      );
+      ) as JwtPayload;
+      if (!payload.jti) throw new Error("Invalid token");
+      const savedToken = await findPasswordResetTokenByID(payload.jti);
       if (!savedToken || savedToken.revoked === true)
         throw new Error("Invalid token");
 
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = await findUserById(payload.userId);
       if (!user) throw new Error("Invalid token");
 

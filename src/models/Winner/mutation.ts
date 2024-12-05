@@ -118,7 +118,7 @@ builder.mutationField("createWinner", (t) =>
         });
         if (xp.length == 0) {
           //give xp points to all team members
-          const userXp = await ctx.prisma.xP.createMany({
+          await ctx.prisma.xP.createMany({
             data: teamMembers.map((userId) => ({
               userId,
               levelId: levelExists.id,
@@ -140,7 +140,7 @@ builder.mutationField("createWinner", (t) =>
           },
         });
         //give xp points to all team members
-        const userXp = await ctx.prisma.xP.createMany({
+        await ctx.prisma.xP.createMany({
           data: teamMembers.map((userId) => ({
             userId,
             levelId: level.id,
@@ -236,7 +236,7 @@ builder.mutationField("deleteWinner", (t) =>
         (member) => member.userId,
       );
       if (level) {
-        const xp = await ctx.prisma.xP.deleteMany({
+        await ctx.prisma.xP.deleteMany({
           where: {
             userId: {
               in: teamMembers,
@@ -244,7 +244,7 @@ builder.mutationField("deleteWinner", (t) =>
             levelId: level.id,
           },
         });
-        const data = await ctx.prisma.level.delete({
+        await ctx.prisma.level.delete({
           where: {
             id: level.id,
           },

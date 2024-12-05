@@ -113,7 +113,7 @@ builder.queryField("getAllQuizSubmissions", (t) =>
         throw new Error("Not authorized");
       }
 
-      let quizSubmissions: {
+      const quizSubmissions: {
         options: Option[] | null;
         userId: string;
         qType: string;
@@ -147,17 +147,13 @@ builder.queryField("getAllQuizSubmissions", (t) =>
         },
       });
 
-      let mcq = mcqSubmissions.map((item) => {
-        let optionsArr = item?.Options?.Question?.options?.map((item) => {
+      const mcq = mcqSubmissions.map((item) => {
+        const optionsArr = item?.Options?.Question?.options?.map((item) => {
           return {
             id: item?.id,
             answer: item?.value,
           };
         });
-
-        {
-        }
-        [];
 
         return {
           options: optionsArr,
@@ -195,7 +191,7 @@ builder.queryField("getAllQuizSubmissions", (t) =>
         },
       });
 
-      let fitb = fitbSubmissions.map((item) => {
+      const fitb = fitbSubmissions.map((item) => {
         return {
           options: null,
           userId: item?.teamId?.toString(),
@@ -229,7 +225,7 @@ builder.queryField("getAllQuizSubmissions", (t) =>
         },
       });
 
-      let la = laSubmissions.map((item) => {
+      const la = laSubmissions.map((item) => {
         return {
           options: null,
           userId: item?.teamId?.toString(),
@@ -304,6 +300,7 @@ builder.queryField("getQuizByEvent", (t) =>
         }
         return data;
       } catch (error) {
+        console.log(error);
         throw new Error("Something went wrong");
       }
     },
@@ -325,7 +322,7 @@ builder.queryField("getSubmissionByUser", (t) =>
     },
     resolve: async (root, args, ctx, info) => {
       try {
-        let quizSubmissions: {
+        const quizSubmissions: {
           options: Option[] | null;
           userId: string;
           qType: string;
@@ -359,17 +356,13 @@ builder.queryField("getSubmissionByUser", (t) =>
           },
         });
 
-        let mcq = mcqSubmissions.map((item) => {
-          let optionsArr = item?.Options?.Question?.options?.map((item) => {
+        const mcq = mcqSubmissions.map((item) => {
+          const optionsArr = item?.Options?.Question?.options?.map((item) => {
             return {
               id: item?.id,
               answer: item?.value,
             };
           });
-
-          {
-          }
-          [];
 
           return {
             options: optionsArr,
@@ -413,7 +406,7 @@ builder.queryField("getSubmissionByUser", (t) =>
           },
         });
 
-        let fitb = fitbSubmissions.map((item) => {
+        const fitb = fitbSubmissions.map((item) => {
           return {
             options: null,
             userId: item?.teamId?.toString(),
@@ -448,7 +441,7 @@ builder.queryField("getSubmissionByUser", (t) =>
           },
         });
 
-        let la = laSubmissions.map((item) => {
+        const la = laSubmissions.map((item) => {
           return {
             options: null,
             userId: item?.teamId?.toString(),
@@ -469,6 +462,7 @@ builder.queryField("getSubmissionByUser", (t) =>
 
         return quizSubmissions;
       } catch (error) {
+        console.log(error);
         throw new Error("Something went wrong");
       }
     },

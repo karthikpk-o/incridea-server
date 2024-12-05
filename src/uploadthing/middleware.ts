@@ -1,7 +1,7 @@
-import jwt, { JwtPayload } from "jsonwebtoken";
+import jwt, { type JwtPayload } from "jsonwebtoken";
 import { secrets } from "~/utils/auth/jwt";
 import { prisma } from "~/utils/db/prisma";
-import express from "express";
+import type express from "express";
 
 class UnauthorizedError extends Error {
   statusCode: number;
@@ -15,7 +15,7 @@ class UnauthorizedError extends Error {
 
 const authMiddleware = async (req: express.Request) => {
   const authHeader = req.headers.authorization;
-  const token = authHeader?.split(" ")[1];
+  const token = authHeader?.replace("Bearer", "");
 
   if (!token) {
     throw new UnauthorizedError("Unauthorized: No token provided");
@@ -24,12 +24,12 @@ const authMiddleware = async (req: express.Request) => {
   try {
     const tokenPayload = jwt.verify(
       token,
-      secrets.JWT_ACCESS_SECRET as string,
+      secrets.JWT_ACCESS_SECRET,
     ) as JwtPayload;
 
     if (tokenPayload.userId) {
       const user = await prisma.user.findUnique({
-        where: { id: tokenPayload.userId },
+        where: { id: tokenPayload.userId as number },
       });
 
       if (!user) {

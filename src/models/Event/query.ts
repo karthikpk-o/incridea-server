@@ -12,7 +12,7 @@ builder.queryField("events", (t) =>
       }),
     },
     resolve: async (query, root, args, ctx, info) => {
-      const filter = args.contains || "";
+      const filter = args.contains ?? "";
       return await ctx.prisma.event.findMany({
         where: {
           OR: [

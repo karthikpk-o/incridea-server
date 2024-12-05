@@ -10,7 +10,7 @@ export const secrets = {
   JWT_PASSWORD_RESET_SECRET: AUTH_SECRET + "password-reset",
 } as const;
 
-function generateAccessToken(user: { id: any }) {
+function generateAccessToken(user: { id: number }) {
   return jwt.sign(
     {
       userId: user.id,
@@ -22,7 +22,7 @@ function generateAccessToken(user: { id: any }) {
   );
 }
 
-function generateRefreshToken(user: { id: any }, jti: any) {
+function generateRefreshToken(user: { id: number }, jti: string) {
   return jwt.sign(
     {
       userId: user.id,
@@ -35,7 +35,7 @@ function generateRefreshToken(user: { id: any }, jti: any) {
   );
 }
 
-export function generateTokens(user: { id: any }, jti: any) {
+export function generateTokens(user: { id: number }, jti: string) {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user, jti);
 
@@ -45,7 +45,7 @@ export function generateTokens(user: { id: any }, jti: any) {
   };
 }
 
-export function generateVerificationToken(user: { id: any }, jti: any) {
+export function generateVerificationToken(user: { id: number }, jti: string) {
   return jwt.sign(
     {
       userId: user.id,
@@ -55,10 +55,10 @@ export function generateVerificationToken(user: { id: any }, jti: any) {
     {
       expiresIn: "1d",
     },
-  ) as string;
+  );
 }
 
-export function generatePasswordResetToken(user: { id: any }, jti: any) {
+export function generatePasswordResetToken(user: { id: number }, jti: string) {
   return jwt.sign(
     {
       userId: user.id,

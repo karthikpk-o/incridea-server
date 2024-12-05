@@ -1,4 +1,4 @@
-import { AccommodationBookingStatus, Gender, Status } from "@prisma/client";
+import { type AccommodationBookingStatus, type Gender } from "@prisma/client";
 
 import { builder } from "~/builder";
 import { checkIfAccommodationMember } from "~/models/UserInHotel/utils";
@@ -10,8 +10,8 @@ builder.mutationField("addAccommodationRequest", (t) =>
       gender: t.arg({ type: "String", required: true }),
       hotelId: t.arg({ type: "Int", required: true }),
       IdCard: t.arg({ type: "String", required: true }),
-      checkIn: t.arg({ type: "String", required: true }),
-      checkOut: t.arg({ type: "String", required: true }),
+      checkIn: t.arg({ type: "DateTime", required: true }),
+      checkOut: t.arg({ type: "DateTime", required: true }),
       // ac: t.arg({ type: "Boolean", required: true }),
     },
     errors: {

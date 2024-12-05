@@ -1,5 +1,5 @@
-import { PluginConfig } from "@trivago/prettier-plugin-sort-imports";
-import { Config } from "prettier";
+import { type PluginConfig } from "@trivago/prettier-plugin-sort-imports";
+import { type Config } from "prettier";
 
 const importConfig: PluginConfig = {
   importOrder: [

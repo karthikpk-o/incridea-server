@@ -14,7 +14,7 @@ export const uploadRouter = {
       const userDetail = await authMiddleware(req);
       return { userId: userDetail };
     })
-    .onUploadComplete(async (data) => {
+    .onUploadComplete((data) => {
       console.log("event Image:", data.file.url);
     }),
 

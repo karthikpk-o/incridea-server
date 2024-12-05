@@ -4,7 +4,6 @@ import "~/models/Card";
 import "~/models/College";
 import "~/models/Criteria";
 import "~/models/Event";
-import "~/models/Event";
 import "~/models/FITBSubmission";
 import "~/models/Hotel";
 import "~/models/Judge";

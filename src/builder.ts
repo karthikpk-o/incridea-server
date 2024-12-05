@@ -6,22 +6,34 @@ import RelayPlugin from "@pothos/plugin-relay";
 import SmartSubscriptionsPlugin, {
   subscribeOptionsFromIterator,
 } from "@pothos/plugin-smart-subscriptions";
-import { DateResolver, DateTimeResolver } from "graphql-scalars";
+import { DateTimeResolver } from "graphql-scalars";
+import { type Avatar } from "~/constants";
 
-import { context } from "~/context";
+import { type context } from "~/context";
 import { prisma } from "~/utils/db/prisma";
 
 export const builder = new SchemaBuilder<{
   DefaultFieldNullability: false;
   Scalars: {
-    Date: { Input: Date; Output: Date };
-    DateTime: { Input: Date; Output: Date };
+    DateTime: {
+      Input: Date;
+      Output: Date;
+    };
+  };
+  Objects: {
+    Avatar: Avatar;
   };
   PrismaTypes: PrismaTypes;
   Context: ReturnType<typeof context>;
 }>({
   defaultFieldNullability: false,
   plugins: [ErrorsPlugin, PrismaPlugin, RelayPlugin, SmartSubscriptionsPlugin],
+  errors: {
+    defaultTypes: [],
+  },
+  prisma: {
+    client: prisma,
+  },
   relay: {
     clientMutationId: "omit",
     cursorType: "String",
@@ -31,16 +43,16 @@ export const builder = new SchemaBuilder<{
       return ctx.pubsub.asyncIterableIterator(name);
     }),
   },
-  prisma: {
-    client: prisma,
-  },
-  errors: {
-    defaultTypes: [],
-  },
 });
 
-builder.addScalarType("Date", DateResolver, {});
-builder.addScalarType("DateTime", DateTimeResolver, {});
+builder.addScalarType("DateTime", DateTimeResolver);
+builder.objectType("Avatar", {
+  fields: (t) => ({
+    id: t.exposeString("id"),
+    name: t.exposeString("name"),
+    url: t.exposeString("url"),
+  }),
+});
 builder.queryType({});
 builder.mutationType({});
 builder.subscriptionType({});
@@ -54,10 +66,3 @@ builder.objectType(Error, {
     }),
   }),
 });
-
-// builder.objectType(Error, {
-//   name: "Error",
-//   fields: (t) => ({
-//     message: t.exposeString("message"),
-//   })
-// })

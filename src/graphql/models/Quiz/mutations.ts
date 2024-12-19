@@ -5,11 +5,11 @@ builder.mutationField("createQuiz", (t) =>
     type: "Quiz",
     args: {
       name: t.arg({ type: "String", required: true }),
-      description: t.arg({ type: "String", required: true }),
+      description: t.arg({ type: "String" }), //check
       roundId: t.arg({ type: "String", required: true }),
       eventId: t.arg({ type: "String", required: true }),
-      startTime: t.arg({ type: "String", required: true }),
-      endTime: t.arg({ type: "String", required: true }),
+      // startTime: t.arg({ type: "String", required: true}), //check
+      endTime: t.arg({ type: "String" }), //check
     },
     errors: {
       types: [Error],
@@ -29,8 +29,8 @@ builder.mutationField("createQuiz", (t) =>
         data: {
           name: args.name,
           description: args.description,
-          startTime: new Date(args.startTime),
-          endTime: new Date(args.endTime),
+          // startTime: new Date(args.startTime),
+          // endTime: new Date(args.endTime),
           Round: {
             connect: {
               eventId_roundNo: {
@@ -42,6 +42,19 @@ builder.mutationField("createQuiz", (t) =>
         },
         ...query,
       });
+
+      await ctx.prisma.round.update({
+        where: {
+          eventId_roundNo: {
+            eventId: Number(args.eventId),
+            roundNo: Number(args.roundId),
+          },
+        },
+        data: {
+          quizId: data.id ?? "",
+        },
+      });
+
       return data;
     },
   }),
@@ -60,13 +73,13 @@ builder.mutationField("updateQuizStatus", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       //Get user from context
-      const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      // const user = await ctx.user;
+      // if (!user) {
+      //   throw new Error("Not authenticated");
+      // }
 
-      if (user.role !== "ORGANIZER")
-        throw new Error("Not allowed to perform this action");
+      // if (user.role !== "ORGANIZER")
+      //   throw new Error("Not allowed to perform this action");
 
       //create accommodation request
       const data = await ctx.prisma.quiz.update({

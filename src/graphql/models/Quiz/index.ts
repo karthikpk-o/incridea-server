@@ -17,11 +17,11 @@ builder.prismaObject("Quiz", {
     }),
     startTime: t.expose("startTime", {
       type: "DateTime",
-      nullable: false,
+      nullable: true, //check
     }),
     endTime: t.expose("endTime", {
       type: "DateTime",
-      nullable: false,
+      nullable: true, //check
     }),
     round: t.relation("Round"),
     questions: t.relation("Questions"),

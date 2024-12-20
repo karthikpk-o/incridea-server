@@ -8,8 +8,8 @@ builder.mutationField("createQuiz", (t) =>
       description: t.arg({ type: "String" }), //check
       roundId: t.arg({ type: "String", required: true }),
       eventId: t.arg({ type: "String", required: true }),
-      // startTime: t.arg({ type: "String", required: true}), //check
-      endTime: t.arg({ type: "String" }), //check
+      startTime: t.arg({ type: "String", required: true }),
+      endTime: t.arg({ type: "String", required: true }),
     },
     errors: {
       types: [Error],
@@ -29,8 +29,8 @@ builder.mutationField("createQuiz", (t) =>
         data: {
           name: args.name,
           description: args.description,
-          // startTime: new Date(args.startTime),
-          // endTime: new Date(args.endTime),
+          startTime: new Date(args.startTime),
+          endTime: new Date(args.endTime),
           Round: {
             connect: {
               eventId_roundNo: {

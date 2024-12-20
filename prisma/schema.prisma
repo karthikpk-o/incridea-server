@@ -375,8 +375,8 @@ model Quiz {
   Round        Round      @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
   name         String
   description  String?
-  startTime    DateTime?
-  endTime      DateTime?
+  startTime    DateTime
+  endTime      DateTime
   allowAttempts Boolean    @default(false)
   password     String?
   Questions    Question[]
@@ -400,6 +400,8 @@ model Question {
   negativePoints Int            @default(0)
   questionType   QuestionType   @default(MCQ)
   image          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt  
 
   @@index([quizId])
 }

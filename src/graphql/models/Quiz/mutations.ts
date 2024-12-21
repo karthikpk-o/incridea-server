@@ -24,9 +24,25 @@ builder.mutationField("createQuiz", (t) =>
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
-      //create accommodation request
-      const data = await ctx.prisma.quiz.create({
-        data: {
+      const round = await ctx.prisma.round.findUnique({
+        where: {
+          eventId_roundNo: {
+            eventId: Number(args.eventId),
+            roundNo: Number(args.roundId),
+          },
+        },
+      });
+
+      if (!round) {
+        throw new Error("Round not found");
+      }
+
+      const data = await ctx.prisma.quiz.upsert({
+        where: {
+          eventId: Number(args.eventId),
+          roundId: Number(args.roundId),
+        },
+        create: {
           name: args.name,
           description: args.description,
           startTime: new Date(args.startTime),
@@ -39,6 +55,12 @@ builder.mutationField("createQuiz", (t) =>
               },
             },
           },
+        },
+        update: {
+          name: args.name,
+          description: args.description,
+          startTime: new Date(args.startTime),
+          endTime: new Date(args.endTime),
         },
         ...query,
       });

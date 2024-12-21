@@ -2,7 +2,7 @@ import { type QuestionType } from "@prisma/client";
 
 import { builder } from "~/graphql/builder";
 
-const OptionsType = builder.inputType("OptionsCreateInput", {
+const OptionsType = builder.inputType("OptionsCreateInput2", {
   fields: (t) => ({
     value: t.string({ required: true }),
     isAnswer: t.boolean({ required: true }),
@@ -70,3 +70,34 @@ builder.mutationField("createQuestion", (t) =>
     },
   }),
 );
+
+// builder.mutationField("deleteQuestionsByQuizId", (t) =>
+//   t.prismaField({
+//     type: "Question",
+//     args: {
+//       quizId: t.arg({ type: "String", required: true }),
+//     },
+//     errors: {
+//       types: [Error],
+//     },
+//     resolve: async (query, root, args, ctx, info) => {
+//       // Get user from context
+//       const user = await ctx.user;
+//       if (!user) {
+//         throw new Error("Not authenticated");
+//       }
+
+//       if (user.role !== "ORGANIZER")
+//         throw new Error("Not allowed to perform this action");
+
+//       // Delete questions by quizId
+//       const deleteResult = await ctx.prisma.question.deleteMany({
+//         where: {
+//           quizId: args.quizId,
+//         },
+//       });
+
+//       return deleteResult;
+//     },
+//   })
+// );

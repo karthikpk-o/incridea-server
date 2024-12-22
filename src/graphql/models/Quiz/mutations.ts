@@ -35,7 +35,6 @@ builder.mutationField("createQuiz", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      //Get user from context
       const user = await ctx.user;
       if (!user) {
         throw new Error("Not authenticated");

@@ -27,7 +27,6 @@ builder.mutationField("createQuestion", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      //Get user from context
       const user = await ctx.user;
       if (!user) {
         throw new Error("Not authenticated");
@@ -36,13 +35,6 @@ builder.mutationField("createQuestion", (t) =>
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
-      //create accommodation request
-      // let temp = [{ id: "" }];
-      // if (args.options) {
-      //   temp = args.options?.split(",").map((option) => ({
-      //     id: option,
-      //   }));
-      // }
       const data = await ctx.prisma.question.create({
         data: {
           question: args.question,
@@ -70,34 +62,3 @@ builder.mutationField("createQuestion", (t) =>
     },
   }),
 );
-
-// builder.mutationField("deleteQuestionsByQuizId", (t) =>
-//   t.prismaField({
-//     type: "Question",
-//     args: {
-//       quizId: t.arg({ type: "String", required: true }),
-//     },
-//     errors: {
-//       types: [Error],
-//     },
-//     resolve: async (query, root, args, ctx, info) => {
-//       // Get user from context
-//       const user = await ctx.user;
-//       if (!user) {
-//         throw new Error("Not authenticated");
-//       }
-
-//       if (user.role !== "ORGANIZER")
-//         throw new Error("Not allowed to perform this action");
-
-//       // Delete questions by quizId
-//       const deleteResult = await ctx.prisma.question.deleteMany({
-//         where: {
-//           quizId: args.quizId,
-//         },
-//       });
-
-//       return deleteResult;
-//     },
-//   })
-// );

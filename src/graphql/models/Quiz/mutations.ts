@@ -58,8 +58,10 @@ builder.mutationField("createQuiz", (t) =>
 
       const data = await ctx.prisma.quiz.upsert({
         where: {
-          eventId: Number(args.eventId),
-          roundId: Number(args.roundId),
+          eventId_roundId: {
+            eventId: Number(args.eventId),
+            roundId: Number(args.roundId),
+          },
         },
         create: {
           name: args.name,

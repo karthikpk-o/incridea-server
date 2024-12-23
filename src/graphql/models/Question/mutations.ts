@@ -1,5 +1,3 @@
-import { type QuestionType } from "@prisma/client";
-
 import { builder } from "~/graphql/builder";
 
 const OptionsType = builder.inputType("OptionsCreateInput2", {
@@ -52,7 +50,6 @@ builder.mutationField("createQuestion", (t) =>
               isAnswer: option.isAnswer,
             })),
           },
-          questionType: args.type as QuestionType,
           description: args.description,
           isCode: args.isCode ?? false,
         },

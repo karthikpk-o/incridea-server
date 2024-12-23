@@ -1,12 +1,6 @@
-import { QuestionType } from "@prisma/client";
-
 import { builder } from "~/graphql/builder";
 import "~/graphql/models/Question/query";
 import "~/graphql/models/Question/mutations";
-
-builder.enumType(QuestionType, {
-  name: "QuestionType",
-});
 
 builder.prismaObject("Question", {
   fields: (t) => ({
@@ -31,10 +25,6 @@ builder.prismaObject("Question", {
       type: "String",
       nullable: true,
     }),
-    questionType: t.expose("questionType", {
-      type: QuestionType,
-    }),
     options: t.relation("options"),
-    LASubmissions: t.relation("LASubmissions"),
   }),
 });

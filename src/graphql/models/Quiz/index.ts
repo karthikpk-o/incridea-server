@@ -27,7 +27,10 @@ builder.prismaObject("Quiz", {
       type: "DateTime",
       nullable: false,
     }),
-    round: t.relation("Round"),
     questions: t.relation("Questions"),
+    password: t.expose("password", {
+      type: "String",
+      nullable: false,
+    }),
   }),
 });

@@ -26,5 +26,9 @@ builder.prismaObject("Question", {
       nullable: true,
     }),
     options: t.relation("options"),
+    createdAt: t.expose("createdAt", {
+      type: "DateTime",
+      nullable: false,
+    }),
   }),
 });

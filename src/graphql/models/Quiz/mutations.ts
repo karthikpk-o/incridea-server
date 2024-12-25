@@ -18,6 +18,7 @@ const QuestionsType = builder.inputType("QuestionsCreateInput", {
     negativePoints: t.int({ required: false }),
     image: t.string({ required: false }),
     mode: t.string({ required: false }),
+    createdAt: t.string({ required: false }),
   }),
 });
 
@@ -226,6 +227,7 @@ builder.mutationField("updateQuiz", (t) =>
               points: q.points ?? 20,
               negativePoints: q.negativePoints ?? 0,
               image: q.image,
+              createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
               Quiz: { connect: { id: args.quizId } },
               options: {
                 create: q.options?.map((option) => ({

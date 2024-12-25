@@ -147,6 +147,7 @@ builder.mutationField("createQuiz", (t) =>
       startTime: t.arg({ type: "String", required: true }),
       endTime: t.arg({ type: "String", required: true }),
       password: t.arg({ type: "String", required: true }),
+      allowAttempts: t.arg({ type: "Boolean", required: true }),
     },
     errors: {
       types: [Error],
@@ -173,13 +174,20 @@ builder.mutationField("createQuiz", (t) =>
         throw new Error("Round not found");
       }
 
-      const data = await ctx.prisma.quiz.create({
-        data: {
+      const data = await ctx.prisma.quiz.upsert({
+        where: {
+          eventId_roundId: {
+            eventId: Number(args.eventId),
+            roundId: Number(args.roundId),
+          },
+        },
+        create: {
           name: args.name,
           description: args.description,
           startTime: new Date(args.startTime),
           endTime: new Date(args.endTime),
           password: args.password,
+          allowAttempts: false,
           Round: {
             connect: {
               eventId_roundNo: {
@@ -188,6 +196,14 @@ builder.mutationField("createQuiz", (t) =>
               },
             },
           },
+        },
+        update: {
+          name: args.name,
+          description: args.description,
+          startTime: new Date(args.startTime),
+          endTime: new Date(args.endTime),
+          password: args.password,
+          allowAttempts: args.allowAttempts,
         },
         ...query,
       });

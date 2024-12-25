@@ -32,5 +32,6 @@ builder.prismaObject("Quiz", {
       type: "String",
       nullable: false,
     }),
+    allowAttempts: t.exposeBoolean("allowAttempts"),
   }),
 });

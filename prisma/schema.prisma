@@ -371,7 +371,7 @@ model Quiz {
   eventId      Int
   Round        Round      @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
   name         String
-  description  String?
+  description  String?    @db.Text
   startTime    DateTime
   endTime      DateTime
   allowAttempts Boolean    @default(false)
@@ -389,7 +389,7 @@ model Question {
   quizId         String
   Quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
   question       String
-  description    String?
+  description    String?        @db.Text
   isCode         Boolean        @default(false)
   options        Options[]
   points         Int

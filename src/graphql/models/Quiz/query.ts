@@ -334,7 +334,6 @@ builder.queryField("getSubmissionByUser", (t) =>
 //         if (!event.Organizers.find((o) => o.userId === user.id)) {
 //           throw new Error("Not authorized");
 //         }
-
 //         const data = await ctx.prisma.quiz.findMany({
 //           where: {
 //             eventId: Number(args.eventId),
@@ -354,5 +353,43 @@ builder.queryField("getSubmissionByUser", (t) =>
 //         throw new Error("Something went wrong");
 //       }
 //     },
-//   }),
+//   })
 // );
+
+builder.queryField("getQuizById", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      quizId: t.arg({
+        type: "String",
+        required: true,
+      }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      try {
+        const user = await ctx.user;
+        if (!user) {
+          throw new Error("Not authenticated");
+        }
+
+        const quiz = await ctx.prisma.quiz.findUnique({
+          where: {
+            id: args.quizId,
+          },
+        });
+
+        if (!quiz) {
+          throw new Error("Quiz not found");
+        }
+
+        return quiz;
+      } catch (error) {
+        console.log(error);
+        throw new Error("Something went wrong");
+      }
+    },
+  }),
+);

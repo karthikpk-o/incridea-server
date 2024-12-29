@@ -136,7 +136,8 @@ model Team {
   Score             Scores[]
   Winner            Winners?
   Comments          Comments[]
-  QuizSubmissions    QuizSubmission[]
+  QuizSubmissions   QuizSubmission[]
+  score             Int                 @default(0)
 
   @@unique([name, eventId])
   @@index([eventId, roundNo])
@@ -342,12 +343,12 @@ model CertificateIssue {
 }
 
 model Options {
-  id              String           @id @default(cuid())
-  questionId      String
-  Question        Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  value           String
-  isAnswer        Boolean          @default(false)
-  Submissions     QuizSubmission[]
+  id          String           @id @default(cuid())
+  questionId  String
+  Question    Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value       String
+  isAnswer    Boolean          @default(false)
+  Submissions QuizSubmission[]
 
   @@index([questionId])
 }
@@ -366,37 +367,37 @@ model QuizSubmission {
 }
 
 model Quiz {
-  id           String     @id @default(cuid())
-  roundId      Int        
-  eventId      Int
-  Round        Round      @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
-  name         String
-  description  String?    @db.Text
-  startTime    DateTime
-  endTime      DateTime
+  id            String     @id @default(cuid())
+  roundId       Int
+  eventId       Int
+  Round         Round      @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
+  name          String
+  description   String?    @db.Text
+  startTime     DateTime
+  endTime       DateTime
   allowAttempts Boolean    @default(false)
-  password     String
-  Questions    Question[]
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  password      String
+  Questions     Question[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   @@unique([eventId, roundId])
   @@index([roundId])
 }
 
 model Question {
-  id             String         @id @default(cuid())
+  id             String    @id @default(cuid())
   quizId         String
-  Quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  Quiz           Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
   question       String
-  description    String?        @db.Text
-  isCode         Boolean        @default(false)
+  description    String?   @db.Text
+  isCode         Boolean   @default(false)
   options        Options[]
   points         Int
-  negativePoints Int            @default(0)
+  negativePoints Int       @default(0)
   image          String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt  
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
   @@index([quizId])
 }

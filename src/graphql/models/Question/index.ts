@@ -19,8 +19,6 @@ builder.prismaObject("Question", {
       type: "Boolean",
       nullable: false,
     }),
-    point: t.exposeInt("points"),
-    negativePoint: t.exposeInt("negativePoints"),
     image: t.expose("image", {
       type: "String",
       nullable: true,

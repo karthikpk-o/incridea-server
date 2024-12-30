@@ -376,6 +376,8 @@ model Quiz {
   startTime     DateTime
   endTime       DateTime
   allowAttempts Boolean    @default(false)
+  points        Int        @default(1)
+  qualifyNext   Int        @default(5)
   password      String
   Questions     Question[]
   createdAt     DateTime   @default(now())
@@ -393,8 +395,6 @@ model Question {
   description    String?   @db.Text
   isCode         Boolean   @default(false)
   options        Options[]
-  points         Int
-  negativePoints Int       @default(0)
   image          String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

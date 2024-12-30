@@ -13,8 +13,6 @@ builder.mutationField("createQuestion", (t) =>
     args: {
       quizId: t.arg({ type: "String", required: true }),
       question: t.arg({ type: "String", required: true }),
-      points: t.arg({ type: "Int", required: true }),
-      negativePoint: t.arg({ type: "Int", required: false }),
       type: t.arg({ type: "String", required: false }),
       image: t.arg({ type: "String", required: false }),
       options: t.arg({ type: [OptionsType], required: false }),
@@ -41,9 +39,7 @@ builder.mutationField("createQuestion", (t) =>
               id: args.quizId,
             },
           },
-          points: args.points,
           image: args.image,
-          negativePoints: args.negativePoint ?? 0,
           options: {
             create: args.options?.map((option) => ({
               value: option.value,

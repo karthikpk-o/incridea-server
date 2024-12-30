@@ -32,6 +32,8 @@ builder.prismaObject("Quiz", {
       type: "String",
       nullable: false,
     }),
+    points: t.exposeInt("points"),
+    qualifyNext: t.exposeInt("qualifyNext"),
     allowAttempts: t.exposeBoolean("allowAttempts"),
   }),
 });

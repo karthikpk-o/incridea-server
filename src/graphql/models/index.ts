@@ -22,3 +22,4 @@ import "~/graphql/models/User";
 import "~/graphql/models/UserInHotel";
 import "~/graphql/models/Winner";
 import "~/graphql/models/XP";
+import "~/graphql/models/QuizScore";

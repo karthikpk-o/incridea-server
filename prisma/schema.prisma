@@ -138,6 +138,7 @@ model Team {
   Comments          Comments[]
   QuizSubmissions   QuizSubmission[]
   score             Int                 @default(0)
+  QuizScores        QuizScore[]
 
   @@unique([name, eventId])
   @@index([eventId, roundNo])
@@ -366,6 +367,18 @@ model QuizSubmission {
   @@index([optionId])
 }
 
+model QuizScore {
+  id     String @id @default(cuid())
+  teamId Int
+  Team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  quizId String
+  Quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score  Int    @default(0)
+
+  @@index([quizId])
+  @@index([teamId])
+}
+
 model Quiz {
   id            String     @id @default(cuid())
   roundId       Int
@@ -382,6 +395,7 @@ model Quiz {
   Questions     Question[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
+    QuizScores    QuizScore[]
 
   @@unique([eventId, roundId])
   @@index([roundId])

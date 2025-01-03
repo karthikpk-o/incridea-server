@@ -199,6 +199,8 @@ builder.queryField("attemptQuiz", (t) =>
 
       if (!team) throw new Error("You have not registered for this event");
 
+      if (!team.confirmed) throw new Error("Your team has not been confirmed");
+
       if (team.roundNo !== quiz.Round.roundNo)
         throw new Error("You have not qualified for this round");
 

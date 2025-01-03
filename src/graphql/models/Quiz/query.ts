@@ -341,3 +341,39 @@ builder.queryField("getQuizById", (t) =>
     },
   }),
 );
+
+builder.queryField("verifyQuizPassword", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      quizId: t.arg({ type: "String", required: true }),
+      password: t.arg({ type: "String", required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "PARTICIPANT")
+        throw new Error("Not allowed to attempt the quiz");
+
+      const quiz = await ctx.prisma.quiz.findUnique({
+        where: {
+          id: args.quizId,
+        },
+      });
+
+      if (!quiz) {
+        throw new Error("Quiz not found");
+      }
+
+      if (quiz.password === args.password) {
+        return quiz;
+      } else {
+        throw new Error("Invalid password");
+      }
+    },
+  }),
+);

@@ -32,6 +32,7 @@ builder.prismaObject("Quiz", {
       type: "String",
       nullable: false,
     }),
+    quizScores: t.relation("QuizScores"),
     points: t.exposeInt("points"),
     qualifyNext: t.exposeInt("qualifyNext"),
     allowAttempts: t.exposeBoolean("allowAttempts"),

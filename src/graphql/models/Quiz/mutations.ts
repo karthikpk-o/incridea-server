@@ -206,33 +206,3 @@ builder.mutationField("updateQuizStatus", (t) =>
     },
   }),
 );
-
-builder.mutationField("verifyQuizPassword", (t) =>
-  t.prismaField({
-    type: "Quiz",
-    args: {
-      quizId: t.arg({ type: "String", required: true }),
-      password: t.arg({ type: "String", required: true }),
-    },
-    errors: {
-      types: [Error],
-    },
-    resolve: async (query, root, args, ctx, info) => {
-      const quiz = await ctx.prisma.quiz.findUnique({
-        where: {
-          id: args.quizId,
-        },
-      });
-
-      if (!quiz) {
-        throw new Error("Quiz not found");
-      }
-
-      if (quiz.password === args.password) {
-        return quiz;
-      } else {
-        throw new Error("Invalid password");
-      }
-    },
-  }),
-);

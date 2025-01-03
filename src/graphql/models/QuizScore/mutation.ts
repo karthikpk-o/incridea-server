@@ -55,15 +55,6 @@ builder.mutationField("submitQuiz", (t) =>
         }
       }
 
-      const markAttendence = await ctx.prisma.team.update({
-        where: {
-          id: args.teamId,
-        },
-        data: {
-          attended: true,
-        },
-      });
-
       const quizScore = await ctx.prisma.quizScore.create({
         data: {
           quizId: args.quizId,

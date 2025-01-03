@@ -299,63 +299,6 @@ builder.queryField("getSubmissionByUser", (t) =>
   }),
 );
 
-// builder.queryField("getQuizByEvent", (t) =>
-//   t.prismaField({
-//     type: ["Quiz"],
-//     args: {
-//       eventId: t.arg({
-//         type: "Int",
-//         required: true,
-//       }),
-//     },
-//     errors: {
-//       types: [Error],
-//     },
-//     resolve: async (query, root, args, ctx, info) => {
-//       try {
-//         const user = await ctx.user;
-//         if (!user) {
-//           throw new Error("Not authenticated");
-//         }
-//         if (user.role !== "ORGANIZER") {
-//           throw new Error("Not authorized");
-//         }
-//         const event = await ctx.prisma.event.findUnique({
-//           where: {
-//             id: Number(args.eventId),
-//           },
-//           include: {
-//             Organizers: true,
-//           },
-//         });
-//         if (!event) {
-//           throw new Error("Event not found");
-//         }
-//         if (!event.Organizers.find((o) => o.userId === user.id)) {
-//           throw new Error("Not authorized");
-//         }
-//         const data = await ctx.prisma.quiz.findMany({
-//           where: {
-//             eventId: Number(args.eventId),
-//           },
-//           include: {
-//             Round: true,
-//           },
-//           ...query,
-//         });
-//         console.log(data);
-//         if (!data) {
-//           throw new Error("There is no quiz in this event");
-//         }
-//         return data;
-//       } catch (error) {
-//         console.log(error);
-//         throw new Error("Something went wrong");
-//       }
-//     },
-//   })
-// );
-
 builder.queryField("getQuizById", (t) =>
   t.prismaField({
     type: "Quiz",
@@ -375,9 +318,14 @@ builder.queryField("getQuizById", (t) =>
           throw new Error("Not authenticated");
         }
 
+        if (!(user.role === "ORGANIZER" || user.role === "PARTICIPANT")) {
+          throw new Error("Not authorized");
+        }
+
         const quiz = await ctx.prisma.quiz.findUnique({
           where: {
             id: args.quizId,
+            allowAttempts: user.role === "ORGANIZER" ? false : true,
           },
         });
 
@@ -389,6 +337,42 @@ builder.queryField("getQuizById", (t) =>
       } catch (error) {
         console.log(error);
         throw new Error("Something went wrong");
+      }
+    },
+  }),
+);
+
+builder.queryField("verifyQuizPassword", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      quizId: t.arg({ type: "String", required: true }),
+      password: t.arg({ type: "String", required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "PARTICIPANT")
+        throw new Error("Not allowed to attempt the quiz");
+
+      const quiz = await ctx.prisma.quiz.findUnique({
+        where: {
+          id: args.quizId,
+        },
+      });
+
+      if (!quiz) {
+        throw new Error("Quiz not found");
+      }
+
+      if (quiz.password === args.password) {
+        return quiz;
+      } else {
+        throw new Error("Invalid password");
       }
     },
   }),

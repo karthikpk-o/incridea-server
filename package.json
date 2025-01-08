@@ -63,6 +63,7 @@
     "node-html-to-image": "^5.0.0",
     "nodemailer": "^6.9.16",
     "razorpay": "^2.9.5",
+    "twilio": "^5.4.0",
     "uploadthing": "^7.3.0",
     "uuid": "^11.0.3",
     "zod": "^3.23.8"

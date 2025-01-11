@@ -1,7 +1,7 @@
-import { Twilio } from "twilio";
+import Twilio from "twilio";
 import { env } from "~/env";
 
-const client = new Twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
+const client = Twilio(env.TWILIO_ACCOUNT_SID, env.TWILIO_AUTH_TOKEN);
 
 export const sendWhatsAppMessage = async (
   to: string,

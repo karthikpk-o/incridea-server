@@ -374,44 +374,45 @@ model QuizScore {
   quizId String
   Quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
   score  Int    @default(0)
+  timeTaken Int?
 
   @@index([quizId])
   @@index([teamId])
 }
 
 model Quiz {
-  id            String     @id @default(cuid())
+  id            String      @id @default(cuid())
   roundId       Int
   eventId       Int
-  Round         Round      @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
+  Round         Round       @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
   name          String
-  description   String?    @db.Text
+  description   String?     @db.Text
   startTime     DateTime
   endTime       DateTime
-  allowAttempts Boolean    @default(false)
-  points        Int        @default(1)
-  qualifyNext   Int        @default(5)
+  allowAttempts Boolean     @default(false)
+  points        Int         @default(1)
+  qualifyNext   Int         @default(5)
   password      String
   Questions     Question[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-    QuizScores    QuizScore[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  QuizScores    QuizScore[]
 
   @@unique([eventId, roundId])
   @@index([roundId])
 }
 
 model Question {
-  id             String    @id @default(cuid())
-  quizId         String
-  Quiz           Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  question       String
-  description    String?   @db.Text
-  isCode         Boolean   @default(false)
-  options        Options[]
-  image          String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  quizId      String
+  Quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question    String
+  description String?   @db.Text
+  isCode      Boolean   @default(false)
+  options     Options[]
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([quizId])
 }

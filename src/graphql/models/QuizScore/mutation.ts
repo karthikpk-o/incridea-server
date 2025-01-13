@@ -15,6 +15,7 @@ builder.mutationField("submitQuiz", (t) =>
       teamId: t.arg.int({ required: true }),
       quizId: t.arg.string({ required: true }),
       selectedAnswers: t.arg({ type: [OptionsType], required: true }),
+      timeTaken: t.arg.int({ required: true }),
     },
     errors: {
       types: [Error],
@@ -60,6 +61,7 @@ builder.mutationField("submitQuiz", (t) =>
           quizId: args.quizId,
           teamId: args.teamId,
           score: points,
+          timeTaken: args.timeTaken,
         },
       });
 

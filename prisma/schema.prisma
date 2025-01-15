@@ -374,7 +374,7 @@ model QuizScore {
   quizId String
   Quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
   score  Int    @default(0)
-  timeTaken Int?
+  timeTaken Float
 
   @@index([quizId])
   @@index([teamId])

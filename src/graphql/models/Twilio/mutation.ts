@@ -1,13 +1,11 @@
 import { builder } from "~/graphql/builder";
 import { sendWhatsAppMessage } from "~/services/twilio.service";
 
-builder.mutationField("sendWhatsAppNotification", (t) =>
+builder.mutationField("sendEventRegistrationReminder", (t) =>
   t.field({
     type: "Boolean",
     args: {
-      recipientId: t.arg.id({ required: true }),
-      contentSid: t.arg.string({ required: true }),
-      contentVariables: t.arg.string({ required: true }),
+      eventId: t.arg.id({ required: true }),
     },
     resolve: async (root, args, ctx) => {
       try {
@@ -19,22 +17,45 @@ builder.mutationField("sendWhatsAppNotification", (t) =>
           throw new Error("Not authorized to send WhatsApp notifications");
         }
 
-        const recipient = await ctx.prisma.user.findUnique({
-          where: { id: Number(args.recipientId) },
+        const event = await ctx.prisma.event.findUnique({
+          where: { id: Number(args.eventId) },
+          include: {
+            Teams: {
+              include: {
+                TeamMembers: {
+                  include: {
+                    User: true,
+                  },
+                },
+              },
+            },
+          },
         });
-        if (!recipient) {
-          throw new Error("Recipient not found");
+
+        if (!event) {
+          throw new Error("Event not found");
         }
 
-        await sendWhatsAppMessage(
-          recipient.phoneNumber,
-          args.contentSid,
-          args.contentVariables,
-        );
+        for (const team of event.Teams) {
+          for (const member of team.TeamMembers) {
+            const contentVariables = JSON.stringify({
+              "1": member.User.name,
+              "2": event.name,
+            });
+            await sendWhatsAppMessage(
+              member.User.phoneNumber!,
+              "HX154ff0082b3bd18082e22c5301927562",
+              contentVariables,
+            );
+          }
+        }
         return true;
       } catch (error) {
-        console.error("Error in sendWhatsAppNotification mutation:", error);
-        throw new Error("Unexpected error.");
+        console.error(
+          "Error in sendEventRegistrationReminder mutation:",
+          error,
+        );
+        throw new Error(`Unexpected error: ${(error as Error).message}`);
       }
     },
   }),
@@ -45,8 +66,6 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
     type: "Boolean",
     args: {
       eventId: t.arg.id({ required: true }),
-      contentSid: t.arg.string({ required: true }),
-      contentVariables: t.arg.string({ required: true }),
     },
     resolve: async (root, args, ctx) => {
       try {
@@ -58,19 +77,41 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
           throw new Error("Not authorized to send WhatsApp notifications");
         }
 
-        const winners = await ctx.prisma.winners.findMany({
-          where: { eventId: Number(args.eventId) },
+        const event = await ctx.prisma.event.findUnique({
+          where: { id: Number(args.eventId) },
           include: {
-            Team: { include: { TeamMembers: { include: { User: true } } } },
+            Winner: {
+              include: {
+                Team: {
+                  include: {
+                    TeamMembers: {
+                      include: {
+                        User: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
         });
 
-        for (const winner of winners) {
+        if (!event) {
+          throw new Error("Event not found");
+        }
+
+        for (const winner of event.Winner) {
           for (const member of winner.Team.TeamMembers) {
+            const contentVariables = JSON.stringify({
+              "1": member.User.name,
+              "2": winner.Team.name,
+              "3": winner.type,
+              "4": event.name,
+            });
             await sendWhatsAppMessage(
-              member.User.phoneNumber,
-              args.contentSid,
-              args.contentVariables,
+              member.User.phoneNumber!,
+              "HX902d67cec04bbd3d3f9f0eb0c64a752a",
+              contentVariables,
             );
           }
         }
@@ -80,7 +121,7 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
           "Error in sendWinnerWhatsAppNotification mutation:",
           error,
         );
-        throw new Error(`Unexpected error: ${error.message}`);
+        throw new Error(`Unexpected error: ${(error as Error).message}`);
       }
     },
   }),

@@ -48,6 +48,10 @@ builder.queryField("getQuizScores", (t) =>
         throw new Error("Not authenticated");
       }
 
+      if (user.role !== "ORGANIZER") {
+        throw new Error("Not authorized");
+      }
+
       const quiz = await ctx.prisma.quiz.findFirst({
         where: {
           id: args.quizId,
@@ -61,8 +65,17 @@ builder.queryField("getQuizScores", (t) =>
       const data = await ctx.prisma.quizScore.findMany({
         where: {
           quizId: args.quizId,
+          Team: {
+            attended: true,
+            confirmed: true,
+          },
+          Quiz: {
+            Round: { completed: false },
+          },
         },
       });
+
+      if (!(data.length > 0)) throw new Error("Round is completed");
 
       return data;
     },

@@ -1,4 +1,5 @@
 import { builder } from "~/graphql/builder";
+import { prisma } from "~/utils/db";
 
 const OptionsType = builder.inputType("SelectedOptions", {
   fields: (t) => ({
@@ -15,7 +16,7 @@ builder.mutationField("submitQuiz", (t) =>
       teamId: t.arg.int({ required: true }),
       quizId: t.arg.string({ required: true }),
       selectedAnswers: t.arg({ type: [OptionsType], required: true }),
-      timeTaken: t.arg.int({ required: true }),
+      timeTaken: t.arg.float({ required: true }),
     },
     errors: {
       types: [Error],
@@ -66,6 +67,75 @@ builder.mutationField("submitQuiz", (t) =>
       });
 
       return quizScore;
+    },
+  }),
+);
+
+builder.mutationField("promoteQuizParticipants", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      teams: t.arg({ type: ["Int"], required: true }),
+      quizId: t.arg.string({ required: true }),
+      eventId: t.arg.int({ required: true }),
+      roundId: t.arg.int({ required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+
+      if (user.role !== "ORGANIZER") {
+        throw new Error("Not allowed to perform this action");
+      }
+
+      await prisma.$transaction(async () => {
+        for (const teamId of args.teams) {
+          await ctx.prisma.team
+            .update({
+              where: {
+                id: teamId,
+              },
+              data: {
+                roundNo: {
+                  increment: 1,
+                },
+              },
+            })
+            .then(async () => {
+              await ctx.prisma.round.update({
+                where: {
+                  eventId_roundNo: {
+                    eventId: args.eventId,
+                    roundNo: args.roundId,
+                  },
+                },
+                data: {
+                  completed: true,
+                },
+              });
+            })
+            .catch((err) => {
+              throw new Error("Error promoting teams");
+            });
+        }
+      });
+
+      const quiz = await ctx.prisma.quiz.findFirst({
+        where: {
+          id: args.quizId,
+        },
+      });
+
+      if (!quiz) {
+        throw new Error("Quiz not found");
+      }
+
+      return quiz;
     },
   }),
 );

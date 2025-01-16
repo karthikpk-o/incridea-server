@@ -8,6 +8,7 @@ builder.prismaObject("QuizScore", {
     teamId: t.exposeInt("teamId"),
     quizId: t.exposeString("quizId"),
     score: t.exposeInt("score"),
+    timeTaken: t.exposeFloat("timeTaken"),
     team: t.relation("Team"),
     quiz: t.relation("Quiz"),
   }),

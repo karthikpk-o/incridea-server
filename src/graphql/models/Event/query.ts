@@ -163,3 +163,49 @@ builder.queryField("completedEvents", (t) =>
     },
   }),
 );
+
+class EventRegistrationsCount {
+  internalRegistrations: number;
+  externalRegistrations: number;
+  constructor(internalRegistrations: number, externalRegistrations: number) {
+    this.internalRegistrations = internalRegistrations;
+    this.externalRegistrations = externalRegistrations;
+  }
+}
+
+builder.objectType(EventRegistrationsCount, {
+  name: "EventRegistrationsCount",
+  fields: (t) => ({
+    internalRegistrations: t.exposeInt("internalRegistrations"),
+    externalRegistrations: t.exposeInt("externalRegistrations"),
+  }),
+});
+
+builder.queryField("eventRegistrationsCount", (t) =>
+  t.field({
+    type: EventRegistrationsCount,
+    args: {
+      eventId: t.arg({
+        type: "ID",
+        required: true,
+      }),
+    },
+    resolve: async (root, args, ctx, info) => {
+      const externalRegistrations = await ctx.prisma.team.count({
+        where: {
+          eventId: Number(args.eventId),
+          collegeId: { not: 1 },
+        },
+      });
+
+      const internalRegistrations = await ctx.prisma.team.count({
+        where: {
+          eventId: Number(args.eventId),
+          collegeId: 1,
+        },
+      });
+
+      return { internalRegistrations, externalRegistrations };
+    },
+  }),
+);

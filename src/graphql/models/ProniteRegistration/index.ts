@@ -2,6 +2,7 @@ import { ProniteDay } from "@prisma/client";
 
 import { builder } from "~/graphql/builder";
 import "~/graphql/models/ProniteRegistration/mutation";
+import "~/graphql/models/ProniteRegistration/query";
 
 builder.enumType(ProniteDay, {
   name: "ProniteDay",

@@ -52,6 +52,7 @@
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
+    "date-fns": "^4.1.0",
     "dotenv": "^16.4.7",
     "express": "^4.21.1",
     "graphql": "^16.9.0",
@@ -63,6 +64,7 @@
     "node-html-to-image": "^5.0.0",
     "nodemailer": "^6.9.16",
     "razorpay": "^2.9.5",
+    "twilio": "^5.4.0",
     "uploadthing": "^7.3.0",
     "uuid": "^11.0.3",
     "zod": "^3.23.8"

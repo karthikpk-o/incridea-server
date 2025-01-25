@@ -368,12 +368,12 @@ model QuizSubmission {
 }
 
 model QuizScore {
-  id     String @id @default(cuid())
-  teamId Int
-  Team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  quizId String
-  Quiz   Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  score  Int    @default(0)
+  id        String @id @default(cuid())
+  teamId    Int
+  Team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  quizId    String
+  Quiz      Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score     Int    @default(0)
   timeTaken Float
 
   @@index([quizId])
@@ -393,6 +393,7 @@ model Quiz {
   points        Int         @default(1)
   qualifyNext   Int         @default(5)
   password      String
+  completed     Boolean     @default(false)
   Questions     Question[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

@@ -1,5 +1,6 @@
 import { utapi } from ".";
 import { type RequestHandler } from "express";
+import { authenticateUser } from "./authenticateUser";
 
 type DeleteResult = {
   success: boolean;
@@ -12,11 +13,22 @@ type DeleteFileRequestBody = {
 };
 
 export const deleteFileByUrl: RequestHandler<
-  object,
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  {},
   DeleteResult,
   DeleteFileRequestBody
 > = async (req, res) => {
   const { url } = req.body;
+
+  const user = await authenticateUser(req, res);
+
+  if (!user) {
+    res.status(401).json({
+      success: false,
+      message: "Unauthorized access",
+    });
+    return;
+  }
 
   if (typeof url !== "string") {
     res.status(400).json({
@@ -47,6 +59,7 @@ export const deleteFileByUrl: RequestHandler<
       details: deleteDetails,
     });
   } catch (error) {
+    console.error("Error deleting file:", error);
     res.status(500).json({
       success: false,
       message: "Failed to delete file",

@@ -19,5 +19,5 @@ app.use("/uploadthing", uploadThingHandler);
 app.post("/uploadrthing/delete", deleteFileByUrl);
 
 app.listen(env.PORT, () =>
-  console.log(`🚀 Server ready at: http://localhost:4000/gr aphql`),
+  console.log(`🚀 Server ready at: http://localhost:4000/graphql`),
 );

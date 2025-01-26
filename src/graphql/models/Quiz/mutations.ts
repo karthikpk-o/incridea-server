@@ -206,3 +206,36 @@ builder.mutationField("updateQuizStatus", (t) =>
     },
   }),
 );
+
+builder.mutationField("endQuiz", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      quizId: t.arg({ type: "String", required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+
+      if (user.role !== "ORGANIZER")
+        throw new Error("Not allowed to perform this action");
+
+      const data = await ctx.prisma.quiz.update({
+        where: {
+          id: args.quizId,
+        },
+        data: {
+          completed: true,
+          allowAttempts: false,
+        },
+        ...query,
+      });
+      return data;
+    },
+  }),
+);

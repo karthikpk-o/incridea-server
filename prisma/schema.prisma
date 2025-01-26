@@ -137,7 +137,6 @@ model Team {
   Winner            Winners?
   Comments          Comments[]
   QuizSubmissions   QuizSubmission[]
-  score             Int                 @default(0)
   QuizScores        QuizScore[]
 
   @@unique([name, eventId])

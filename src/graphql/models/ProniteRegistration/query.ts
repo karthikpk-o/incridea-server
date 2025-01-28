@@ -17,7 +17,7 @@ const proniteCount = builder.objectType(ProniteRegistrationCounts, {
   }),
 });
 
-builder.queryField("proniteRegistrations", (t) =>
+builder.queryField("getProniteRegistrations", (t) =>
   t.field({
     type: proniteCount,
     resolve: async (root, args, ctx, info) => {

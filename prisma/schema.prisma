@@ -136,10 +136,8 @@ model Team {
   Score             Scores[]
   Winner            Winners?
   Comments          Comments[]
-  mcqSubmissions    MCQSubmission[]
-  fitbSubmissions   FITBSubmission[]
-  laSubmissions     LASubmission[]
-
+  QuizSubmissions   QuizSubmission[]
+  QuizScores        QuizScore[]
   @@unique([name, eventId])
   @@index([eventId, roundNo])
 }
@@ -344,18 +342,17 @@ model CertificateIssue {
 }
 
 model Options {
-  id              String           @id @default(cuid())
-  questionId      String
-  Question        Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  value           String
-  isAnswer        Boolean          @default(false)
-  MCQSubmissions  MCQSubmission[]
-  FITBSubmissions FITBSubmission[]
+  id          String           @id @default(cuid())
+  questionId  String
+  Question    Question         @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value       String
+  isAnswer    Boolean          @default(false)
+  Submissions QuizSubmission[]
 
   @@index([questionId])
 }
 
-model MCQSubmission {
+model QuizSubmission {
   id        String   @id @default(cuid())
   teamId    Int
   Team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -368,66 +365,55 @@ model MCQSubmission {
   @@index([optionId])
 }
 
+model QuizScore {
+  id        String @id @default(cuid())
+  teamId    Int
+  Team      Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  quizId    String
+  Quiz      Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  score     Int    @default(0)
+  timeTaken Float
+
+  @@index([quizId])
+  @@index([teamId])
+}
+
 model Quiz {
-  id            String     @id @default(cuid())
-  roundId       Int        @unique
+  id            String      @id @default(cuid())
+  roundId       Int
   eventId       Int
-  Round         Round      @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
+  Round         Round       @relation(fields: [eventId, roundId], references: [eventId, roundNo], onDelete: Cascade)
   name          String
-  description   String?
+  description   String?     @db.Text
   startTime     DateTime
   endTime       DateTime
-  allowAttempts Boolean    @default(false)
-  password      String?
+  allowAttempts Boolean     @default(false)
+  points        Int         @default(1)
+  qualifyNext   Int         @default(5)
+  password      String
+  completed     Boolean     @default(false)
   Questions     Question[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  QuizScores    QuizScore[]
 
   @@unique([eventId, roundId])
   @@index([roundId])
 }
 
 model Question {
-  id             String         @id @default(cuid())
-  quizId         String
-  Quiz           Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
-  question       String
-  options        Options[]
-  LASubmissions  LASubmission[]
-  points         Int
-  negativePoints Int            @default(0)
-  questionType   QuestionType
-  image          String?
+  id          String    @id @default(cuid())
+  quizId      String
+  Quiz        Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  question    String
+  description String?   @db.Text
+  isCode      Boolean   @default(false)
+  options     Options[]
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   @@index([quizId])
-}
-
-model FITBSubmission {
-  id        String   @id @default(cuid())
-  teamId    Int
-  Team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  optionId  String
-  Options   Options  @relation(fields: [optionId], references: [id], onDelete: Cascade)
-  value     String
-  isRight   Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@index([teamId])
-  @@index([optionId])
-}
-
-model LASubmission {
-  id         String         @id @default(cuid())
-  teamId     Int
-  Team       Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  questionId String
-  Question   Question       @relation(fields: [questionId], references: [id], onDelete: Cascade)
-  value      String
-  isRight    LAAnswerStatus @default(PENDING)
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
-
-  @@index([teamId])
-  @@index([questionId])
 }
 
 model Level {
@@ -574,10 +560,4 @@ enum DayType {
   Day2
   Day3
   Day4
-}
-
-enum QuestionType {
-  MCQ
-  FITB
-  LA
 }

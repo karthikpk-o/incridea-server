@@ -102,6 +102,13 @@ builder.queryField("getTotalRegistrations", (t) =>
       last: t.arg({ type: "Int", required: false }),
     },
     resolve: async (root, args, ctx) => {
+      const user = await ctx.user;
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+      if (user.role !== "JURY" && user.role !== "ADMIN") {
+        throw new Error("Not authorized");
+      }
       let dateFilter = {};
 
       if (args.date) {

@@ -139,7 +139,7 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
       if (!user) {
         throw new Error("Not authenticated");
       }
-      if (user.role !== "JURY") {
+      if (user.role !== "JURY" && user.role !== "ADMIN") {
         throw new Error("Not authorized");
       }
 

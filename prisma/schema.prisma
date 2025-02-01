@@ -138,7 +138,6 @@ model Team {
   Comments          Comments[]
   QuizSubmissions   QuizSubmission[]
   QuizScores        QuizScore[]
-
   @@unique([name, eventId])
   @@index([eventId, roundNo])
 }

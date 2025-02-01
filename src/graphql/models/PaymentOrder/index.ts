@@ -2,6 +2,7 @@ import { PaymentType, Status } from "@prisma/client";
 
 import { builder } from "~/graphql/builder";
 import "~/graphql/models/PaymentOrder/mutation";
+import "~/graphql/models/PaymentOrder/query";
 
 builder.enumType(PaymentType, {
   name: "PaymentType",

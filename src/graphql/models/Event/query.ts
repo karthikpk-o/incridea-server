@@ -185,6 +185,13 @@ builder.queryField("getEventStatus", (t) =>
   t.field({
     type: [EventStatus],
     resolve: async (root, args, ctx) => {
+      const user = await ctx.user;
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+      if (user.role !== "JURY" && user.role !== "ADMIN") {
+        throw new Error("Not authorized");
+      }
       const events = await ctx.prisma.event.findMany({
         where: {
           published: true,

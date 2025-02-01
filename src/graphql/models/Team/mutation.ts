@@ -700,7 +700,7 @@ builder.mutationField("organizerAddTeamMember", (t) =>
       ) {
         throw new Error("Not authorized");
       }
-      if (!(user.College?.type === "ENGINEERING")) {
+      if (!(participant.College?.type === "ENGINEERING")) {
         if (
           !(await canRegister(
             participant.id,

@@ -78,6 +78,7 @@ model College {
   updatedAt DateTime    @updatedAt
   Users     User[]
   type      CollegeType @default(ENGINEERING)
+  championshipPoints Int @default(0)
 }
 
 model Branch {
@@ -112,6 +113,7 @@ model Event {
   Teams            Team[]
   Rounds           Round[]
   category         EventCategory      @default(TECHNICAL)
+  tier             EventTier          @default(GOLD)
   Winner           Winners[]
   CertificateIssue CertificateIssue[]
   Level            Level[]
@@ -535,6 +537,13 @@ enum EventCategory {
   NON_TECHNICAL
   CORE
   SPECIAL
+}
+
+enum EventTier {
+    DIAMOND
+    GOLD
+    SILVER
+    BRONZE
 }
 
 enum CollegeType {

@@ -163,3 +163,73 @@ builder.queryField("completedEvents", (t) =>
     },
   }),
 );
+
+class EventStatusClass {
+  name: string;
+  status: string;
+  constructor(name: string, status: string) {
+    this.name = name;
+    this.status = status;
+  }
+}
+
+const EventStatus = builder.objectType(EventStatusClass, {
+  name: "EventStatus",
+  fields: (t) => ({
+    eventName: t.exposeString("name"),
+    status: t.exposeString("status"),
+  }),
+});
+
+builder.queryField("getEventStatus", (t) =>
+  t.field({
+    type: [EventStatus],
+    resolve: async (root, args, ctx) => {
+      const events = await ctx.prisma.event.findMany({
+        where: {
+          published: true,
+        },
+        include: {
+          Rounds: { orderBy: { roundNo: "asc" } },
+          Winner: true,
+        },
+      });
+
+      const today = new Date();
+
+      const eventStatuses = events.map((event) => {
+        const isCompleted = event.Winner.length > 0;
+
+        if (isCompleted) {
+          return new EventStatusClass(event.name, "COMPLETED");
+        }
+
+        const ongoingRound = event.Rounds.find(
+          (round) =>
+            round.date &&
+            round.date.getTime() <= today.getTime() &&
+            !round.completed,
+        );
+
+        if (ongoingRound) {
+          return new EventStatusClass(
+            event.name,
+            `ROUND ${ongoingRound.roundNo} ONGOING`,
+          );
+        }
+
+        const yetToStartRound = event.Rounds.find(
+          (round) => round.date && round.date.getTime() > today.getTime(),
+        );
+
+        if (yetToStartRound) {
+          return new EventStatusClass(event.name, "YET_TO_START");
+        }
+
+        return new EventStatusClass(event.name, "COMPLETED");
+      });
+
+      return eventStatuses;
+    },
+  }),
+);

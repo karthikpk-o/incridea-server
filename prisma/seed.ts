@@ -19,6 +19,7 @@ const main = async () => {
     data: {
       email: "test@incridea.in",
       name: "Test",
+      phoneNumber: "1234567890",
       password: await bcrypt.hash("asdfghjkl;'", 12),
       isVerified: true,
       role: "ADMIN",
@@ -112,6 +113,7 @@ const main = async () => {
       data: {
         email: "user1@incridea.in",
         name: "User 1",
+        phoneNumber: "1234567890",
         password: await bcrypt.hash("asdfghjkl;'", 12),
         isVerified: true,
         role: "PARTICIPANT",
@@ -122,6 +124,7 @@ const main = async () => {
       data: {
         email: "user2@incridea.in",
         name: "User 2",
+        phoneNumber: "1234567890",
         password: await bcrypt.hash("asdfghjkl;'", 12),
         isVerified: true,
         role: "PARTICIPANT",

@@ -40,6 +40,7 @@ builder.mutationField("createJudge", (t) =>
             create: {
               name: args.name,
               email: args.email,
+              phoneNumber: "0000000000",
               password: bcrypt.hashSync(args.password, 12),
               role: "JUDGE",
               isVerified: true,

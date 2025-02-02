@@ -153,7 +153,7 @@ async function sendParticipationCertificate() {
       certificateSentSuccess++;
       await prisma.certificateIssue.create({
         data: {
-          EventId: participant.eventId,
+          eventId: participant.eventId,
           userId: participant.userId,
           issued: true,
         },
@@ -163,7 +163,7 @@ async function sendParticipationCertificate() {
       certificateSentError++;
       await prisma.certificateIssue.create({
         data: {
-          EventId: participant.eventId,
+          eventId: participant.eventId,
           userId: participant.userId,
           issued: false,
         },

@@ -1,10 +1,11 @@
-import { Request, Response } from "express";
-import { HTTPError } from "./utils/error";
-import { PrismaClient } from "@prisma/client";
+import { Router } from "express";
+import { prisma } from "~/utils/db";
+import { HTTPError } from "~/utils/error";
 
-const prisma = new PrismaClient();
+const router = Router();
 
-export async function fetchPublishedEvents(_: Request, res: Response) {
+// TODO(Omkar): ADD AUTH
+router.get("/events", async (req, res) => {
   try {
     const events = await prisma.event.findMany({
       where: {
@@ -17,21 +18,19 @@ export async function fetchPublishedEvents(_: Request, res: Response) {
       },
     });
     res.status(200).send({ events });
-  } catch (err: unknown) {
+  } catch (err) {
     console.log(err);
     res.status(500).send({ msg: "Error Fetching Events" });
   }
-}
+});
 
-export async function issueCertificate(req: Request, res: Response) {
+router.post("/:eid", async (req, res) => {
   try {
-    const { eid } = req.params;
-
-    const EventId = parseInt(eid!);
+    const eventId = parseInt(req.params.eid);
 
     const teams = await prisma.team.findMany({
       where: {
-        eventId: EventId,
+        eventId: eventId,
         attended: true,
       },
       select: {
@@ -43,15 +42,13 @@ export async function issueCertificate(req: Request, res: Response) {
       },
     });
 
-    if (teams.length === 0) {
-      throw new HTTPError(404, "No Teams Found");
-    }
+    if (teams.length === 0) throw new HTTPError(404, "No Teams Found");
 
     const participants = teams.flatMap((team) => {
       return team.TeamMembers.map((member) => {
         return {
           userId: member.userId,
-          EventId,
+          eventId: eventId,
         };
       });
     });
@@ -62,7 +59,7 @@ export async function issueCertificate(req: Request, res: Response) {
     });
 
     res.status(200).send({ msg: "Certificates Issued" });
-  } catch (err: unknown) {
+  } catch (err) {
     console.log(err);
     if (err instanceof HTTPError) {
       res.status(err.status).send({ msg: err.message });
@@ -70,15 +67,14 @@ export async function issueCertificate(req: Request, res: Response) {
     }
     res.status(500).send({ msg: "Error Issuing Certificates" });
   }
-}
+});
 
-export async function getParticipants(req: Request, res: Response) {
-  const { eid } = req.params;
+router.get("/event/:eid/participants", async (req, res) => {
   try {
-    const eventId = parseInt(eid!);
+    const eventId = parseInt(req.params.eid);
     const users = await prisma.certificateIssue.findMany({
       where: {
-        EventId: eventId,
+        eventId: eventId,
       },
       select: {
         User: {
@@ -113,14 +109,14 @@ export async function getParticipants(req: Request, res: Response) {
     console.log(err);
     res.status(500).send({ msg: "Error Fetching Users" });
   }
-}
+});
 
-export async function markAsSent(req: Request, res: Response) {
-  const { cid } = req.params;
+router.put("/mark-as-sent/:cid", async (req, res) => {
   try {
+    const cid = parseInt(req.params.cid);
     await prisma.certificateIssue.update({
       where: {
-        id: parseInt(cid!),
+        id: cid,
       },
       data: {
         issued: true,
@@ -131,4 +127,6 @@ export async function markAsSent(req: Request, res: Response) {
     console.log(err);
     res.status(500).send({ msg: "Error Marking as Sent" });
   }
-}
+});
+
+export { router as certificateRouter };

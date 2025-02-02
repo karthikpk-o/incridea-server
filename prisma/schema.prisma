@@ -50,7 +50,7 @@ model User {
   updatedAt           DateTime              @updatedAt
   collegeId           Int?                  @default(1)
   College             College?              @relation(fields: [collegeId], references: [id], onDelete: SetNull)
-  phoneNumber         String?
+  phoneNumber         String
   totalXp             Int                   @default(0)
   UserInHotel         UserInHotel?
   VerificationToken   VerificationToken[]
@@ -71,14 +71,14 @@ model User {
 }
 
 model College {
-  id        Int         @id @default(autoincrement())
-  name      String
-  details   String?
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-  Users     User[]
-  type      CollegeType @default(ENGINEERING)
-  championshipPoints Int @default(0)
+  id                 Int         @id @default(autoincrement())
+  name               String
+  details            String?
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+  Users              User[]
+  type               CollegeType @default(ENGINEERING)
+  championshipPoints Int         @default(0)
 }
 
 model Branch {
@@ -140,22 +140,24 @@ model Team {
   Comments          Comments[]
   QuizSubmissions   QuizSubmission[]
   QuizScores        QuizScore[]
+
   @@unique([name, eventId])
   @@index([eventId, roundNo])
 }
 
 model Round {
-  eventId      Int
-  roundNo      Int        @default(1)
-  Event        Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  completed    Boolean    @default(false)
-  Judges       Judge[]
-  date         DateTime?
-  Criteria     Criteria[]
-  Comments     Comments[]
-  quizId       String?
-  Quiz         Quiz?
-  selectStatus Boolean    @default(false)
+  eventId          Int
+  roundNo          Int        @default(1)
+  Event            Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  quizId           String?
+  Quiz             Quiz?
+  completed        Boolean    @default(false)
+  notificationSent Boolean    @default(false)
+  selectStatus     Boolean    @default(false)
+  date             DateTime?
+  Judges           Judge[]
+  Criteria         Criteria[]
+  Comments         Comments[]
 
   @@id([eventId, roundNo])
   @@unique([eventId, roundNo])
@@ -283,13 +285,14 @@ model Comments {
 }
 
 model Winners {
-  id      Int        @id @default(autoincrement())
-  teamId  Int        @unique
-  Team    Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  eventId Int
-  Event   Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  type    WinnerType
-  Level   Level[]
+  id               Int        @id @default(autoincrement())
+  teamId           Int        @unique
+  Team             Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  eventId          Int
+  notificationSent Boolean    @default(false)
+  Event            Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  type             WinnerType
+  Level            Level[]
 
   @@unique([eventId, type])
   @@index([teamId])
@@ -540,10 +543,10 @@ enum EventCategory {
 }
 
 enum EventTier {
-    DIAMOND
-    GOLD
-    SILVER
-    BRONZE
+  DIAMOND
+  GOLD
+  SILVER
+  BRONZE
 }
 
 enum CollegeType {

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 
 builder.mutationField("notifyParticipants", (t) =>
   t.field({
-    type: "Boolean",
+    type: "String",
     args: {
       eventId: t.arg.id({ required: true }),
       roundNo: t.arg.int({ required: true }),
@@ -50,6 +50,10 @@ builder.mutationField("notifyParticipants", (t) =>
           throw new Error("Round not found");
         }
 
+        if (round.notificationSent) {
+          return "Notification already sent for this round";
+        }
+
         const formattedDate = round.date
           ? format(new Date(round.date), "MMMM do, yyyy h:mm a")
           : "TBD";
@@ -77,10 +81,23 @@ builder.mutationField("notifyParticipants", (t) =>
             );
           }
         }
-        return true;
+
+        await ctx.prisma.round.update({
+          where: {
+            eventId_roundNo: {
+              eventId: Number(args.eventId),
+              roundNo: args.roundNo,
+            },
+          },
+          data: {
+            notificationSent: true,
+          },
+        });
+
+        return "Notification sent successfully";
       } catch (error) {
         console.error("Error in notifyParticipants mutation:", error);
-        throw new Error(`Unexpected error: ${(error as Error).message}`);
+        return "Failed to send notification. Please try again.";
       }
     },
   }),
@@ -88,7 +105,7 @@ builder.mutationField("notifyParticipants", (t) =>
 
 builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
   t.field({
-    type: "Boolean",
+    type: "String",
     args: {
       eventId: t.arg.id({ required: true }),
     },
@@ -125,6 +142,17 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
           throw new Error("Event not found");
         }
 
+        const notificationSent = await ctx.prisma.winners.findFirst({
+          where: {
+            eventId: Number(args.eventId),
+            notificationSent: true,
+          },
+        });
+
+        if (notificationSent) {
+          return "Notification already sent for this event winners";
+        }
+
         const EventName = event.name;
 
         for (const winner of event.Winner) {
@@ -142,14 +170,20 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
               contentVariables,
             );
           }
+
+          await ctx.prisma.winners.updateMany({
+            where: { eventId: Number(args.eventId) },
+            data: { notificationSent: true },
+          });
         }
-        return true;
+
+        return "Notification sent successfully";
       } catch (error) {
         console.error(
           "Error in sendWinnerWhatsAppNotification mutation:",
           error,
         );
-        throw new Error(`Unexpected error: ${(error as Error).message}`);
+        return "Failed to send notification. Please try again.";
       }
     },
   }),

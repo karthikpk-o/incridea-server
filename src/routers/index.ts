@@ -1,15 +1,56 @@
 import { Router } from "express";
 import { prisma } from "~/utils/db";
 import { HTTPError } from "~/utils/error";
+import bcrypt from "bcryptjs";
 
 const router = Router();
 
-// TODO(Omkar): ADD AUTH
-router.get("/events", async (req, res) => {
+router.post("/auth/event-org/login", async (req, res) => {
   try {
+    const { email, password } = req.body;
+    console.log(password);
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        password: true,
+        role: true,
+      },
+    });
+    if (!user) throw new HTTPError(404, "User Not Found");
+
+    if (user.role !== "ORGANIZER")
+      throw new HTTPError(401, "Not an event organizer");
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) throw new HTTPError(401, "Invalid Password");
+
+    res.status(200).send({ user_id: user.id });
+  } catch (err: unknown) {
+    console.log(err);
+    if (err instanceof HTTPError) {
+      res.status(err.status).send({ msg: err.message });
+      return;
+    }
+    res.status(500).send({ msg: "Error Logging In" });
+  }
+});
+
+router.get("/events/organizer", async (req, res) => {
+  try {
+    const idStr = req.headers["authorization"]?.split(" ")[1];
+    if (!idStr) throw new HTTPError(401, "Unauthorized");
+    const userId = parseInt(idStr);
+
     const events = await prisma.event.findMany({
       where: {
         published: true,
+        Organizers: {
+          some: {
+            userId,
+          },
+        },
       },
       select: {
         id: true,
@@ -24,10 +65,34 @@ router.get("/events", async (req, res) => {
   }
 });
 
-router.post("/:eid", async (req, res) => {
+router.post("/issue-certificates", async (req, res) => {
   try {
-    const eventId = parseInt(req.params.eid);
+    const { eventId } = req.body;
+    const idStr = req.headers["authorization"]?.split(" ")[1];
+    if (!idStr) throw new HTTPError(401, "Unauthorized");
+    const userId = parseInt(idStr);
 
+    const EventId = parseInt(eventId!);
+
+    const event = await prisma.event.findUnique({
+      where: {
+        id: EventId,
+      },
+      select: {
+        Organizers: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      throw new HTTPError(404, "Event Not Found");
+    }
+    if (event.Organizers.filter((org) => org.userId === userId).length === 0) {
+      throw new HTTPError(401, "Unauthorized");
+    }
     const teams = await prisma.team.findMany({
       where: {
         eventId: eventId,
@@ -72,6 +137,30 @@ router.post("/:eid", async (req, res) => {
 router.get("/event/:eid/participants", async (req, res) => {
   try {
     const eventId = parseInt(req.params.eid);
+    const idStr = req.headers["authorization"]?.split(" ")[1];
+    if (!idStr) throw new HTTPError(401, "Unauthorized");
+    const userId = parseInt(idStr);
+
+    const event = await prisma.event.findUnique({
+      where: {
+        id: eventId,
+      },
+      select: {
+        Organizers: {
+          select: {
+            userId: true,
+          },
+        },
+      },
+    });
+
+    if (!event) {
+      throw new HTTPError(404, "Event Not Found");
+    }
+
+    if (!event.Organizers.find((org) => org.userId === userId))
+      throw new HTTPError(401, "Unauthorized");
+
     const users = await prisma.certificateIssue.findMany({
       where: {
         eventId: eventId,

@@ -21,7 +21,9 @@ const wsServer = new WebSocketServer({
 
 useServer(
   {
+    // @ts-expect-error refer docss https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#graphql-over-websocket-protocol-via-graphql-ws
     execute: (args) => args.rootValue.execute(args),
+    // @ts-expect-error refer docss https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#graphql-over-websocket-protocol-via-graphql-ws
     subscribe: (args) => args.rootValue.subscribe(args),
     onSubscribe: async (ctx, _id, params) => {
       const { schema, execute, subscribe, contextFactory, parse, validate } =

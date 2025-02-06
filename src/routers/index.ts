@@ -2,16 +2,26 @@ import { Router } from "express";
 import { prisma } from "~/utils/db";
 import { HTTPError } from "~/utils/error";
 import bcrypt from "bcryptjs";
+import { z } from "zod";
 
 const router = Router();
 
 router.post("/auth/event-org/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log(password);
+    const { success, data, error } = z
+      .object({
+        email: z.string(),
+        password: z.string(),
+      })
+      .safeParse(req.body);
+
+    if (!success)
+      throw new HTTPError(400, "Invalid Request Body: " + error.toString());
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: {
+        email: data.email,
+      },
       select: {
         id: true,
         password: true,
@@ -23,11 +33,11 @@ router.post("/auth/event-org/login", async (req, res) => {
     if (user.role !== "ORGANIZER")
       throw new HTTPError(401, "Not an event organizer");
 
-    const valid = await bcrypt.compare(password, user.password);
+    const valid = await bcrypt.compare(data.password, user.password);
     if (!valid) throw new HTTPError(401, "Invalid Password");
 
     res.status(200).send({ user_id: user.id });
-  } catch (err: unknown) {
+  } catch (err) {
     console.log(err);
     if (err instanceof HTTPError) {
       res.status(err.status).send({ msg: err.message });
@@ -39,8 +49,9 @@ router.post("/auth/event-org/login", async (req, res) => {
 
 router.get("/events/organizer", async (req, res) => {
   try {
-    const idStr = req.headers["authorization"]?.split(" ")[1];
+    const idStr = req.headers.authorization?.split(" ")[1];
     if (!idStr) throw new HTTPError(401, "Unauthorized");
+
     const userId = parseInt(idStr);
 
     const events = await prisma.event.findMany({
@@ -58,6 +69,7 @@ router.get("/events/organizer", async (req, res) => {
         description: true,
       },
     });
+
     res.status(200).send({ events });
   } catch (err) {
     console.log(err);
@@ -67,16 +79,23 @@ router.get("/events/organizer", async (req, res) => {
 
 router.post("/issue-certificates", async (req, res) => {
   try {
-    const { eventId } = req.body;
-    const idStr = req.headers["authorization"]?.split(" ")[1];
-    if (!idStr) throw new HTTPError(401, "Unauthorized");
-    const userId = parseInt(idStr);
+    const { success, data, error } = z
+      .object({
+        eventId: z.number(),
+      })
+      .safeParse(req.body);
 
-    const EventId = parseInt(eventId!);
+    if (!success)
+      throw new HTTPError(400, "Invalid Request Body: " + error.toString());
+
+    const idStr = req.headers.authorization?.split(" ")[1];
+    if (!idStr) throw new HTTPError(401, "Unauthorized");
+
+    const userId = parseInt(idStr);
 
     const event = await prisma.event.findUnique({
       where: {
-        id: EventId,
+        id: data.eventId,
       },
       select: {
         Organizers: {
@@ -87,15 +106,14 @@ router.post("/issue-certificates", async (req, res) => {
       },
     });
 
-    if (!event) {
-      throw new HTTPError(404, "Event Not Found");
-    }
-    if (event.Organizers.filter((org) => org.userId === userId).length === 0) {
+    if (!event) throw new HTTPError(404, "Event Not Found");
+
+    if (event.Organizers.filter((org) => org.userId === userId).length === 0)
       throw new HTTPError(401, "Unauthorized");
-    }
+
     const teams = await prisma.team.findMany({
       where: {
-        eventId: eventId,
+        eventId: data.eventId,
         attended: true,
       },
       select: {
@@ -113,7 +131,7 @@ router.post("/issue-certificates", async (req, res) => {
       return team.TeamMembers.map((member) => {
         return {
           userId: member.userId,
-          eventId: eventId,
+          eventId: data.eventId,
         };
       });
     });
@@ -137,8 +155,10 @@ router.post("/issue-certificates", async (req, res) => {
 router.get("/event/:eid/participants", async (req, res) => {
   try {
     const eventId = parseInt(req.params.eid);
-    const idStr = req.headers["authorization"]?.split(" ")[1];
+
+    const idStr = req.headers.authorization?.split(" ")[1];
     if (!idStr) throw new HTTPError(401, "Unauthorized");
+
     const userId = parseInt(idStr);
 
     const event = await prisma.event.findUnique({
@@ -154,9 +174,7 @@ router.get("/event/:eid/participants", async (req, res) => {
       },
     });
 
-    if (!event) {
-      throw new HTTPError(404, "Event Not Found");
-    }
+    if (!event) throw new HTTPError(404, "Event Not Found");
 
     if (!event.Organizers.find((org) => org.userId === userId))
       throw new HTTPError(401, "Unauthorized");
@@ -182,6 +200,7 @@ router.get("/event/:eid/participants", async (req, res) => {
         id: true,
       },
     });
+
     res.status(200).send({
       participants: users.map((user) => {
         return {
@@ -194,7 +213,7 @@ router.get("/event/:eid/participants", async (req, res) => {
         };
       }),
     });
-  } catch (err: unknown) {
+  } catch (err) {
     console.log(err);
     res.status(500).send({ msg: "Error Fetching Users" });
   }
@@ -203,6 +222,7 @@ router.get("/event/:eid/participants", async (req, res) => {
 router.put("/mark-as-sent/:cid", async (req, res) => {
   try {
     const cid = parseInt(req.params.cid);
+
     await prisma.certificateIssue.update({
       where: {
         id: cid,
@@ -211,8 +231,9 @@ router.put("/mark-as-sent/:cid", async (req, res) => {
         issued: true,
       },
     });
+
     res.status(200).send({ msg: "Marked as Sent" });
-  } catch (err: unknown) {
+  } catch (err) {
     console.log(err);
     res.status(500).send({ msg: "Error Marking as Sent" });
   }

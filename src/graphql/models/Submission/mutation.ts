@@ -12,26 +12,30 @@ builder.mutationField("createSubmission", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      return ctx.prisma.submission.upsert({
-        where: {
-          userId_cardId: {
+      if (!user) throw new Error("Not authenticated");
+
+      try {
+        return ctx.prisma.submission.upsert({
+          where: {
+            userId_cardId: {
+              userId: user.id,
+              cardId: args.cardId,
+            },
+          },
+
+          create: {
             userId: user.id,
             cardId: args.cardId,
+            image: args.image,
           },
-        },
-
-        create: {
-          userId: user.id,
-          cardId: args.cardId,
-          image: args.image,
-        },
-        update: {
-          image: args.image,
-        },
-      });
+          update: {
+            image: args.image,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Failed to create submission");
+      }
     },
   }),
 );

@@ -1,31 +1,53 @@
-import bodyParser from "body-parser";
-import cors from "cors";
-import express from "express";
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { env } from "~/env";
-import { handler as razorpayCapture } from "~/razorpay/webhook";
-import { uploadThingHandler } from "~/uploadthing";
+
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/use/ws";
+import { app } from "~/app";
 import { yoga } from "~/graphql";
-import { deleteFileByUrl } from "./uploadthing/delete";
-import { certificateRouter } from "~/routers";
 
-const app = express();
+const httpServer = app.listen(env.PORT, () =>
+  console.log(`🚀 Server ready at: http://localhost:4000/graphql`),
+);
 
-app.use(cors({ origin: env.FRONTEND_URL }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+const wsServer = new WebSocketServer({
+  server: httpServer,
+  path: yoga.graphqlEndpoint,
+});
 
-app.use(certificateRouter);
-app.use("/", express.static("public"));
+useServer(
+  {
+    execute: (args) => args.rootValue.execute(args),
+    subscribe: (args) => args.rootValue.subscribe(args),
+    onSubscribe: async (ctx, _id, params) => {
+      const { schema, execute, subscribe, contextFactory, parse, validate } =
+        yoga.getEnveloped({
+          ...ctx,
+          req: ctx.extra.request,
+          socket: ctx.extra.socket,
+          params,
+        });
 
-app.use("/graphql", yoga.requestListener);
+      const args = {
+        schema,
+        operationName: params.operationName,
+        document: parse(params.query),
+        variableValues: params.variables,
+        contextValue: await contextFactory(),
+        rootValue: {
+          execute,
+          subscribe,
+        },
+      };
 
-app.post("/webhook/capture", razorpayCapture);
-
-app.use("/uploadthing", uploadThingHandler);
-app.post("/uploadthing/delete", deleteFileByUrl);
-
-app.use("/certificate", certificateRouter);
-
-app.listen(env.PORT, () =>
-  console.log(`🚀 Server ready at: http://localhost:4000/graphql`)
+      const errors = validate(args.schema, args.document);
+      if (errors.length) return errors;
+      return args;
+    },
+  },
+  wsServer,
 );

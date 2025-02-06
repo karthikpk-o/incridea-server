@@ -39,10 +39,7 @@ builder.mutationField("createQuiz", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
+      if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
@@ -54,10 +51,9 @@ builder.mutationField("createQuiz", (t) =>
           },
         },
       });
-
       if (!round) throw new Error("Round not found");
 
-      const data = await ctx.prisma.quiz.upsert({
+      return await ctx.prisma.quiz.upsert({
         where: {
           eventId_roundId: {
             eventId: Number(args.eventId),
@@ -90,8 +86,6 @@ builder.mutationField("createQuiz", (t) =>
         },
         ...query,
       });
-
-      return data;
     },
   }),
 );
@@ -108,14 +102,10 @@ builder.mutationField("updateQuiz", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
+      if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
-      console.log(args.questions);
       for (const q of args.questions) {
         if (q.mode === "new") {
           await ctx.prisma.question.create({
@@ -125,7 +115,11 @@ builder.mutationField("updateQuiz", (t) =>
               isCode: q.isCode ?? false,
               image: q.image,
               createdAt: q.createdAt ? new Date(q.createdAt) : new Date(),
-              Quiz: { connect: { id: args.quizId } },
+              Quiz: {
+                connect: {
+                  id: args.quizId,
+                },
+              },
               options: {
                 create: q.options?.map((option) => ({
                   value: option.value,
@@ -136,7 +130,9 @@ builder.mutationField("updateQuiz", (t) =>
           });
         } else if (q.mode === "edit") {
           await ctx.prisma.question.update({
-            where: { id: q.id ? q.id : "" },
+            where: {
+              id: q.id ? q.id : "",
+            },
             data: {
               question: q.question,
               description: q.description,
@@ -165,9 +161,7 @@ builder.mutationField("updateQuiz", (t) =>
         ...query,
       });
 
-      if (!data) {
-        throw new Error("Quiz not found");
-      }
+      if (!data) throw new Error("Quiz not found");
 
       return data;
     },
@@ -186,23 +180,24 @@ builder.mutationField("updateQuizStatus", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
+      if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
-      const data = await ctx.prisma.quiz.update({
-        where: {
-          id: args.quizId,
-        },
-        data: {
-          allowAttempts: args.allowAttempts,
-        },
-        ...query,
-      });
-      return data;
+      try {
+        return await ctx.prisma.quiz.update({
+          where: {
+            id: args.quizId,
+          },
+          data: {
+            allowAttempts: args.allowAttempts,
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't update quiz status");
+      }
     },
   }),
 );
@@ -218,24 +213,25 @@ builder.mutationField("endQuiz", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
+      if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
-      const data = await ctx.prisma.quiz.update({
-        where: {
-          id: args.quizId,
-        },
-        data: {
-          completed: true,
-          allowAttempts: false,
-        },
-        ...query,
-      });
-      return data;
+      try {
+        return await ctx.prisma.quiz.update({
+          where: {
+            id: args.quizId,
+          },
+          data: {
+            completed: true,
+            allowAttempts: false,
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't end quiz");
+      }
     },
   }),
 );

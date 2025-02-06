@@ -21,22 +21,16 @@ builder.mutationField("submitQuiz", (t) =>
     errors: {
       types: [Error],
     },
-
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
 
       const quiz = await ctx.prisma.quiz.findFirst({
         where: {
           id: args.quizId,
         },
       });
-
-      if (!quiz) {
-        throw new Error("Quiz not found");
-      }
+      if (!quiz) throw new Error("Quiz not found");
 
       let points = 0;
 
@@ -52,12 +46,10 @@ builder.mutationField("submitQuiz", (t) =>
             id: answer.id,
           },
         });
-        if (ans?.isAnswer) {
-          points = points + quiz.points;
-        }
+        if (ans?.isAnswer) points += quiz.points;
       }
 
-      const quizScore = await ctx.prisma.quizScore.create({
+      return await ctx.prisma.quizScore.create({
         data: {
           quizId: args.quizId,
           teamId: args.teamId,
@@ -65,8 +57,6 @@ builder.mutationField("submitQuiz", (t) =>
           timeTaken: args.timeTaken,
         },
       });
-
-      return quizScore;
     },
   }),
 );
@@ -85,44 +75,34 @@ builder.mutationField("promoteQuizParticipants", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
-      if (user.role !== "ORGANIZER") {
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
-      }
 
-      await prisma.$transaction(async () => {
+      await prisma.$transaction(async (db) => {
         for (const teamId of args.teams) {
-          await ctx.prisma.team
-            .update({
-              where: {
-                id: teamId,
+          await db.team.update({
+            where: {
+              id: teamId,
+            },
+            data: {
+              roundNo: {
+                increment: 1,
               },
-              data: {
-                roundNo: {
-                  increment: 1,
-                },
-              },
-            })
-            .then(async () => {
-              await ctx.prisma.round.update({
-                where: {
-                  eventId_roundNo: {
-                    eventId: args.eventId,
-                    roundNo: args.roundId,
-                  },
-                },
-                data: {
-                  completed: true,
-                },
-              });
-            })
-            .catch((err) => {
-              throw new Error("Error promoting teams");
-            });
+            },
+          });
         }
+        await db.round.update({
+          where: {
+            eventId_roundNo: {
+              eventId: args.eventId,
+              roundNo: args.roundId,
+            },
+          },
+          data: {
+            completed: true,
+          },
+        });
       });
 
       const quiz = await ctx.prisma.quiz.findFirst({
@@ -131,9 +111,7 @@ builder.mutationField("promoteQuizParticipants", (t) =>
         },
       });
 
-      if (!quiz) {
-        throw new Error("Quiz not found");
-      }
+      if (!quiz) throw new Error("Quiz not found");
 
       return quiz;
     },

@@ -22,23 +22,30 @@ builder.queryField("getProniteRegistrations", (t) =>
     type: proniteCount,
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JURY" && user.role !== "ADMIN") {
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "JURY" && user.role !== "ADMIN")
         throw new Error("Not authorized");
+
+      try {
+        const day1Count = await ctx.prisma.proniteRegistration.count({
+          where: {
+            proniteDay: "Day1",
+          },
+        });
+
+        const day2Count = await ctx.prisma.proniteRegistration.count({
+          where: {
+            proniteDay: "Day2",
+          },
+        });
+
+        return { day1Count, day2Count };
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't fetch pronite registrations",
+        );
       }
-      const day1Count = await ctx.prisma.proniteRegistration.count({
-        where: {
-          proniteDay: "Day1",
-        },
-      });
-      const day2Count = await ctx.prisma.proniteRegistration.count({
-        where: {
-          proniteDay: "Day2",
-        },
-      });
-      return { day1Count, day2Count };
     },
   }),
 );

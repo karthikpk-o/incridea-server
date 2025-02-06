@@ -11,19 +11,24 @@ builder.queryField("getRoundStatus", (t) =>
       types: [Error],
     },
     smartSubscription: true,
-    subscribe: (subscriptions, parent, args, info) => {
+    subscribe: (subscriptions, parent, args, ctx) => {
       subscriptions.register(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`);
     },
     resolve: async (query, root, args, ctx, info) => {
-      return ctx.prisma.round.findUniqueOrThrow({
-        where: {
-          eventId_roundNo: {
-            eventId: Number(args.eventId),
-            roundNo: Number(args.roundNo),
+      try {
+        return ctx.prisma.round.findUniqueOrThrow({
+          where: {
+            eventId_roundNo: {
+              eventId: Number(args.eventId),
+              roundNo: Number(args.roundNo),
+            },
           },
-        },
-        ...query,
-      });
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch round status");
+      }
     },
   }),
 );

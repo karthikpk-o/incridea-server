@@ -47,6 +47,7 @@ const sendEmail = async (
     throw new Error(
       `Email(s) (${failed.map((m) => (typeof m == "string" ? m : m.address)).join(", ")}) could not be sent`,
     );
+  else console.log(`Email sent successfully to: ${mailOptions.to as string}`);
 };
 
 export { sendEmail };

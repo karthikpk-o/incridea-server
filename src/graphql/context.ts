@@ -5,6 +5,7 @@ import { initContextCache } from "@pothos/core";
 import { authenticateUser } from "~/utils/auth/authenticateUser";
 
 import { PubSub } from "graphql-subscriptions";
+import { createPubSub } from "graphql-yoga";
 
 const yogaContext = ({ request: req }: YogaInitialContext) => {
   return {
@@ -12,7 +13,7 @@ const yogaContext = ({ request: req }: YogaInitialContext) => {
     prisma,
     user: authenticateUser(prisma, req),
     req,
-    pubsub: new PubSub(),
+    pubsub: createPubSub(),
   };
 };
 

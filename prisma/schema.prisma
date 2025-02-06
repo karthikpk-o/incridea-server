@@ -44,16 +44,18 @@ model VerificationToken {
 }
 
 model User {
-  id              Int     @id @default(autoincrement())
-  name            String
-  email           String  @unique
-  profileImage    String?
-  isVerified      Boolean @default(false)
-  password        String  @db.Text
-  phoneNumber     String
-  totalXp         Int     @default(0)
-  notificationObj Json?
-  role            Role    @default(USER)
+  id                Int     @id @default(autoincrement())
+  name              String
+  email             String  @unique
+  profileImage      String?
+  isVerified        Boolean @default(false)
+  password          String  @db.Text
+  phoneNumber       String
+  totalXp           Int     @default(0)
+  notificationObj   Json?
+  role              Role    @default(USER)
+  stoneVisibilities String  @default("111111")
+  captureUpdated    Boolean @default(false)
 
   collegeId Int?     @default(1)
   College   College? @relation(fields: [collegeId], references: [id], onDelete: SetNull)

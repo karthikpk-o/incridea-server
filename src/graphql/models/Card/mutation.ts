@@ -18,12 +18,18 @@ builder.mutationField("createCard", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
-      return ctx.prisma.card.create({
-        data: {
-          clue: args.clue,
-          day: args.day,
-        },
-      });
+
+      try {
+        return ctx.prisma.card.create({
+          data: {
+            clue: args.clue,
+            day: args.day,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create card");
+      }
     },
   }),
 );
@@ -43,21 +49,28 @@ builder.mutationField("updateCard", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
+
       const card = await ctx.prisma.card.findUnique({
         where: {
           id: Number(args.id),
         },
       });
       if (!card) throw new Error("No such card");
-      return ctx.prisma.card.update({
-        where: {
-          id: Number(args.id),
-        },
-        data: {
-          clue: args.clue,
-          day: args.day,
-        },
-      });
+
+      try {
+        return ctx.prisma.card.update({
+          where: {
+            id: Number(args.id),
+          },
+          data: {
+            clue: args.clue,
+            day: args.day,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't update card");
+      }
     },
   }),
 );
@@ -75,17 +88,24 @@ builder.mutationField("deleteCard", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
+
       const card = await ctx.prisma.card.findUnique({
         where: {
           id: Number(args.id),
         },
       });
       if (!card) throw new Error("No such card");
-      return ctx.prisma.card.delete({
-        where: {
-          id: Number(args.id),
-        },
-      });
+
+      try {
+        return ctx.prisma.card.delete({
+          where: {
+            id: Number(args.id),
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete card");
+      }
     },
   }),
 );

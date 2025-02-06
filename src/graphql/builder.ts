@@ -7,7 +7,7 @@ import SmartSubscriptionsPlugin, {
   subscribeOptionsFromIterator,
 } from "@pothos/plugin-smart-subscriptions";
 import { DateTimeResolver } from "graphql-scalars";
-import { type Avatar } from "~/constants";
+import { type Avatar } from "~/constants/type";
 
 import { type YogaContext } from "~/graphql/context";
 import { prisma } from "~/utils/db";
@@ -38,10 +38,18 @@ const builder = new SchemaBuilder<{
     clientMutationId: "omit",
     cursorType: "String",
   },
+  // smartSubscriptions: {
+  //   ...subscribeOptionsFromIterator((name, ctx) => {
+  //     return ctx.pubsub.asyncIterableIterator(name);
+  //   }),
+  // },
   smartSubscriptions: {
-    ...subscribeOptionsFromIterator((name, ctx) => {
-      return ctx.pubsub.asyncIterableIterator(name);
-    }),
+    subscribe: () => {
+      console.log("Subscribed");
+    },
+    unsubscribe: () => {
+      console.log("Unsubscribed");
+    },
   },
 });
 

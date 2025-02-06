@@ -5,7 +5,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 
 import { builder } from "~/graphql/builder";
-import { avatarList } from "~/constants";
+import { CONSTANT } from "~/constants";
 import { env } from "~/env";
 import { getSrcDir } from "~/global";
 import {
@@ -77,7 +77,9 @@ builder.mutationField("signUp", (t) =>
       if (existingUser) throw new Error("User already exists please login");
 
       args.data.profileImage =
-        avatarList[Math.floor(Math.random() * (avatarList.length - 1))]!.url;
+        CONSTANT.AVATARS[
+          Math.floor(Math.random() * (CONSTANT.AVATARS.length - 1))
+        ]!.url;
       const user = await createUserByEmailAndPassword(args.data);
       return user;
     },
@@ -270,13 +272,13 @@ builder.mutationField("verifyEmail", (t) =>
         throw new Error("Invalid token");
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = await findUserById(payload.userId);
-      if (!user) {
-        throw new Error("Invalid token");
-      }
+      if (!user) throw new Error("Invalid token");
+
       const verified_user = await ctx.prisma.user.update({
         where: { id: user.id },
         data: { isVerified: true },
       });
+
       await revokeVerificationToken(savedToken.id);
 
       return verified_user;
@@ -372,21 +374,52 @@ builder.mutationField("resetPassword", (t) =>
 builder.mutationField("updateProfileImage", (t) =>
   t.prismaField({
     type: "User",
-    errors: {
-      types: [Error],
-    },
     args: {
       imageURL: t.arg.string({ required: true }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
+
       return await ctx.prisma.user.update({
         where: { id: user.id },
         data: { profileImage: args.imageURL },
       });
+    },
+  }),
+);
+
+builder.mutationField("updateStoneVisibilities", (t) =>
+  t.prismaField({
+    type: "User",
+    args: {
+      stoneVisibilities: t.arg.string({ required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      try {
+        return ctx.prisma.user.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            stoneVisibilities: args.stoneVisibilities,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't update stone visibilities",
+        );
+      }
     },
   }),
 );

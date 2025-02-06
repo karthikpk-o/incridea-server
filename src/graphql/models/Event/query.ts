@@ -1,9 +1,9 @@
 import { builder } from "~/graphql/builder";
 
-// with pagination and filtering
 builder.queryField("events", (t) =>
   t.prismaConnection({
     type: "Event",
+    // with pagination and filtering
     cursor: "id",
     args: {
       contains: t.arg({
@@ -13,28 +13,32 @@ builder.queryField("events", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const filter = args.contains ?? "";
-      return await ctx.prisma.event.findMany({
-        where: {
-          OR: [
-            {
-              name: {
-                contains: filter,
+      try {
+        return await ctx.prisma.event.findMany({
+          where: {
+            OR: [
+              {
+                name: {
+                  contains: filter,
+                },
               },
-            },
-            {
-              description: {
-                contains: filter,
+              {
+                description: {
+                  contains: filter,
+                },
               },
-            },
-          ],
-        },
-        ...query,
-      });
+            ],
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch events");
+      }
     },
   }),
 );
 
-//Events By ID
 builder.queryField("eventById", (t) =>
   t.prismaField({
     type: "Event",
@@ -45,12 +49,17 @@ builder.queryField("eventById", (t) =>
       }),
     },
     resolve: async (query, root, args, ctx, info) => {
-      return await ctx.prisma.event.findUniqueOrThrow({
-        where: {
-          id: Number(args.id),
-        },
-        ...query,
-      });
+      try {
+        return await ctx.prisma.event.findUniqueOrThrow({
+          where: {
+            id: Number(args.id),
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch event");
+      }
     },
   }),
 );
@@ -63,34 +72,38 @@ builder.queryField("registeredEvents", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
+      if (!user) throw new Error("Not authenticated");
+
+      try {
+        return ctx.prisma.event.findMany({
+          where: {
+            Teams: {
+              some: {
+                TeamMembers: {
+                  some: {
+                    userId: user.id,
+                  },
+                },
+              },
+            },
+          },
+          ...query,
+          include: {
+            Teams: {
+              where: {
+                TeamMembers: {
+                  some: {
+                    userId: user.id,
+                  },
+                },
+              },
+            },
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch events");
       }
-      return ctx.prisma.event.findMany({
-        where: {
-          Teams: {
-            some: {
-              TeamMembers: {
-                some: {
-                  userId: user.id,
-                },
-              },
-            },
-          },
-        },
-        ...query,
-        include: {
-          Teams: {
-            where: {
-              TeamMembers: {
-                some: {
-                  userId: user.id,
-                },
-              },
-            },
-          },
-        },
-      });
     },
   }),
 );
@@ -99,46 +112,55 @@ builder.queryField("publishedEvents", (t) =>
   t.prismaField({
     type: ["Event"],
     resolve: async (query, root, args, ctx, info) => {
-      const core_event = await ctx.prisma.event.findMany({
-        where: {
-          AND: [
-            {
-              published: true,
-            },
-            {
-              category: "CORE",
-            },
-          ],
-        },
-        orderBy: {
-          name: "asc",
-        },
-        ...query,
-      });
-      const non_core_event = await ctx.prisma.event.findMany({
-        where: {
-          AND: [
-            {
-              published: true,
-            },
-            {
-              NOT: {
+      // FIXME(Omkar): Is this a redundant DB query
+      try {
+        const core_event = await ctx.prisma.event.findMany({
+          where: {
+            AND: [
+              {
+                published: true,
+              },
+              {
                 category: "CORE",
               },
-            },
-          ],
-        },
-        orderBy: {
-          name: "asc",
-        },
-        ...query,
-      });
-      return [...core_event, ...non_core_event];
+            ],
+          },
+          orderBy: {
+            name: "asc",
+          },
+          ...query,
+        });
+        const non_core_event = await ctx.prisma.event.findMany({
+          where: {
+            AND: [
+              {
+                published: true,
+              },
+              {
+                NOT: {
+                  category: "CORE",
+                },
+              },
+            ],
+          },
+          orderBy: {
+            name: "asc",
+          },
+          ...query,
+        });
+        return [...core_event, ...non_core_event];
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't fetch published events",
+        );
+      }
     },
   }),
 );
 
 //completed events by checking if winners are present or not
+// FIXME(Omkar): add event status in DB and merge with published field
 builder.queryField("completedEvents", (t) =>
   t.prismaField({
     type: ["Event"],
@@ -146,24 +168,32 @@ builder.queryField("completedEvents", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      const eventIds = await ctx.prisma.winners.findMany({
-        select: {
-          eventId: true,
-        },
-      });
-      const events = await ctx.prisma.event.findMany({
-        where: {
-          id: {
-            in: eventIds.map((event) => event.eventId),
+      try {
+        const eventIds = await ctx.prisma.winners.findMany({
+          select: {
+            eventId: true,
           },
-        },
-        ...query,
-      });
-      return events;
+        });
+        const events = await ctx.prisma.event.findMany({
+          where: {
+            id: {
+              in: eventIds.map((event) => event.eventId),
+            },
+          },
+          ...query,
+        });
+        return events;
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't fetch completed events",
+        );
+      }
     },
   }),
 );
 
+// FIXME(Omkar): add event status in DB and merge with published field
 class EventStatusClass {
   name: string;
   status: string;
@@ -184,59 +214,61 @@ const EventStatus = builder.objectType(EventStatusClass, {
 builder.queryField("getEventStatus", (t) =>
   t.field({
     type: [EventStatus],
+    errors: {
+      types: [Error],
+    },
     resolve: async (root, args, ctx) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JURY" && user.role !== "ADMIN") {
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "JURY" && user.role !== "ADMIN")
         throw new Error("Not authorized");
-      }
-      const events = await ctx.prisma.event.findMany({
-        where: {
-          published: true,
-        },
-        include: {
-          Rounds: { orderBy: { roundNo: "asc" } },
-          Winner: true,
-        },
-      });
 
-      const today = new Date();
+      try {
+        const events = await ctx.prisma.event.findMany({
+          where: {
+            published: true,
+          },
+          include: {
+            Rounds: { orderBy: { roundNo: "asc" } },
+            Winner: true,
+          },
+        });
 
-      const eventStatuses = events.map((event) => {
-        const isCompleted = event.Winner.length > 0;
+        const today = new Date();
 
-        if (isCompleted) {
-          return new EventStatusClass(event.name, "COMPLETED");
-        }
+        const eventStatuses = events.map((event) => {
+          const isCompleted = event.Winner.length > 0;
 
-        const ongoingRound = event.Rounds.find(
-          (round) =>
-            round.date &&
-            round.date.getTime() <= today.getTime() &&
-            !round.completed,
-        );
+          if (isCompleted) return new EventStatusClass(event.name, "COMPLETED");
 
-        if (ongoingRound) {
-          return new EventStatusClass(
-            event.name,
-            `ROUND ${ongoingRound.roundNo} ONGOING`,
+          const ongoingRound = event.Rounds.find(
+            (round) =>
+              round.date &&
+              round.date.getTime() <= today.getTime() &&
+              !round.completed,
           );
-        }
 
-        const yetToStartRound = event.Rounds.find(
-          (round) => round.date && round.date.getTime() > today.getTime(),
-        );
+          if (ongoingRound)
+            return new EventStatusClass(
+              event.name,
+              `ROUND ${ongoingRound.roundNo} ONGOING`,
+            );
 
-        if (yetToStartRound) {
-          return new EventStatusClass(event.name, "YET_TO_START");
-        }
+          const yetToStartRound = event.Rounds.find(
+            (round) => round.date && round.date.getTime() > today.getTime(),
+          );
 
-        return new EventStatusClass(event.name, "COMPLETED");
-      });
+          if (yetToStartRound)
+            return new EventStatusClass(event.name, "YET_TO_START");
 
-      return eventStatuses;
+          return new EventStatusClass(event.name, "COMPLETED");
+        });
+
+        return eventStatuses;
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch event status");
+      }
     },
   }),
 );

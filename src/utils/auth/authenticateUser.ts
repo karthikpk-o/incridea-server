@@ -8,6 +8,8 @@ const authenticateUser = async (
   prisma: PrismaClient,
   request: YogaInitialContext["request"],
 ) => {
+  if (!request) return null;
+
   const authHeader = request.headers.get("authorization");
   if (!authHeader) return null;
 
@@ -24,7 +26,9 @@ const authenticateUser = async (
       where: {
         id: typedPayload.userId,
       },
-      include: { College: true },
+      include: {
+        College: true,
+      },
     });
   } catch (error) {
     console.log(error);

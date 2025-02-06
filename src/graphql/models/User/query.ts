@@ -1,5 +1,5 @@
 import { builder } from "~/graphql/builder";
-import { avatarList } from "~/constants";
+import { CONSTANT } from "~/constants";
 
 builder.queryField("users", (t) =>
   t.prismaConnection({
@@ -159,7 +159,23 @@ builder.queryField("getAvatars", (t) =>
     resolve: async (root, args, ctx) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      return avatarList;
+
+      return CONSTANT.AVATARS;
+    },
+  }),
+);
+
+builder.queryField("getStoneVisibilities", (t) =>
+  t.field({
+    type: "String",
+    errors: {
+      types: [Error],
+    },
+    resolve: async (root, args, ctx) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      return user.stoneVisibilities;
     },
   }),
 );

@@ -19,6 +19,7 @@ builder.mutationField("createJudge", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -28,37 +29,40 @@ builder.mutationField("createJudge", (t) =>
         },
       });
       if (!event) throw new Error("Event not found");
-      if (!event.Organizers.find((o) => o.userId === user.id)) {
+      if (!event.Organizers.find((o) => o.userId === user.id))
         throw new Error("Not authorized");
-      }
-      if (!args.email.endsWith("@incridea.in"))
-        throw new Error("Email should end with @incridea.in");
-      //Creates a new judge credential
-      const judge = await ctx.prisma.judge.create({
-        data: {
-          User: {
-            create: {
-              name: args.name,
-              email: args.email,
-              phoneNumber: "0000000000",
-              password: bcrypt.hashSync(args.password, 12),
-              role: "JUDGE",
-              isVerified: true,
-            },
-          },
 
-          Round: {
-            connect: {
-              eventId_roundNo: {
-                eventId: Number(args.eventId),
-                roundNo: Number(args.roundNo),
+      if (!args.email.endsWith("@incridea.in"))
+        throw new Error("Judge email should end with @incridea.in");
+
+      try {
+        return await ctx.prisma.judge.create({
+          data: {
+            User: {
+              create: {
+                name: args.name,
+                email: args.email,
+                phoneNumber: "0000000000",
+                password: await bcrypt.hash(args.password, 12),
+                role: "JUDGE",
+                isVerified: true,
+              },
+            },
+            Round: {
+              connect: {
+                eventId_roundNo: {
+                  eventId: Number(args.eventId),
+                  roundNo: Number(args.roundNo),
+                },
               },
             },
           },
-        },
-        ...query,
-      });
-      return judge;
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create judge");
+      }
     },
   }),
 );
@@ -78,6 +82,7 @@ builder.mutationField("deleteJudge", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -87,29 +92,31 @@ builder.mutationField("deleteJudge", (t) =>
         },
       });
       if (!event) throw new Error("Event not found");
-      if (!event.Organizers.find((o) => o.userId === user.id)) {
+      if (!event.Organizers.find((o) => o.userId === user.id))
         throw new Error("Not authorized");
-      }
+
       try {
-        const deletedJudge = await ctx.prisma.judge.delete({
-          where: {
-            userId_eventId_roundNo: {
-              userId: Number(args.userId),
-              eventId: Number(args.eventId),
-              roundNo: Number(args.roundNo),
+        return await ctx.prisma.$transaction(async (db) => {
+          const judge = await db.judge.delete({
+            where: {
+              userId_eventId_roundNo: {
+                userId: Number(args.userId),
+                eventId: Number(args.eventId),
+                roundNo: Number(args.roundNo),
+              },
             },
-          },
-          ...query,
+            ...query,
+          });
+          await db.user.delete({
+            where: {
+              id: Number(args.userId),
+            },
+          });
+          return judge;
         });
-        await ctx.prisma.user.delete({
-          where: {
-            id: Number(args.userId),
-          },
-        });
-        return deletedJudge;
       } catch (err) {
         console.log(err);
-        throw new Error("Judge not found");
+        throw new Error("Something went wrong! Couldn't delete judge");
       }
     },
   }),

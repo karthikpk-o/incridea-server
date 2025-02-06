@@ -24,34 +24,35 @@ builder.mutationField("createQuestion", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-
+      if (!user) throw new Error("Not authenticated");
       if (user.role !== "ORGANIZER")
         throw new Error("Not allowed to perform this action");
 
-      const data = await ctx.prisma.question.create({
-        data: {
-          question: args.question,
-          Quiz: {
-            connect: {
-              id: args.quizId,
+      try {
+        return await ctx.prisma.question.create({
+          data: {
+            question: args.question,
+            Quiz: {
+              connect: {
+                id: args.quizId,
+              },
             },
+            image: args.image,
+            options: {
+              create: args.options?.map((option) => ({
+                value: option.value,
+                isAnswer: option.isAnswer,
+              })),
+            },
+            description: args.description,
+            isCode: args.isCode ?? false,
           },
-          image: args.image,
-          options: {
-            create: args.options?.map((option) => ({
-              value: option.value,
-              isAnswer: option.isAnswer,
-            })),
-          },
-          description: args.description,
-          isCode: args.isCode ?? false,
-        },
-        ...query,
-      });
-      return data;
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create question");
+      }
     },
   }),
 );

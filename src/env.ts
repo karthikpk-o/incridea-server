@@ -37,6 +37,8 @@ export const env = createEnv({
     TWILIO_ACCOUNT_SID: z.string(),
     TWILIO_AUTH_TOKEN: z.string(),
     TWILIO_WHATSAPP_NUMBER: z.string(),
+    CAPTURE_INCRIDEA_URL: z.string().url(),
+    CAPTURE_INCRIDEA_SECRET: z.string(),
   },
 
   /**
@@ -79,6 +81,8 @@ export const env = createEnv({
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
     TWILIO_WHATSAPP_NUMBER: process.env.TWILIO_WHATSAPP_NUMBER,
+    CAPTURE_INCRIDEA_URL: process.env.CAPTURE_INCRIDEA_URL,
+    CAPTURE_INCRIDEA_SECRET: process.env.CAPTURE_INCRIDEA_SECRET,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -12,12 +12,9 @@ builder.mutationField("createRound", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -27,24 +24,28 @@ builder.mutationField("createRound", (t) =>
           Rounds: true,
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      if (!event.Organizers.find((o) => o.userId === user.id)) {
+      if (!event) throw new Error("Event not found");
+      if (!event.Organizers.find((o) => o.userId === user.id))
         throw new Error("Not authorized");
-      }
+
       const roundNumber = event.Rounds.length + 1;
-      return ctx.prisma.round.create({
-        data: {
-          roundNo: roundNumber,
-          date: new Date(args.date),
-          Event: {
-            connect: {
-              id: Number(args.eventId),
+
+      try {
+        return ctx.prisma.round.create({
+          data: {
+            roundNo: roundNumber,
+            date: new Date(args.date),
+            Event: {
+              connect: {
+                id: Number(args.eventId),
+              },
             },
           },
-        },
-      });
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create round");
+      }
     },
   }),
 );
@@ -60,12 +61,9 @@ builder.mutationField("deleteRound", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const lastRound = await ctx.prisma.round.findFirst({
         where: {
           eventId: Number(args.eventId),
@@ -74,9 +72,8 @@ builder.mutationField("deleteRound", (t) =>
           roundNo: "desc",
         },
       });
-      if (!lastRound) {
-        throw new Error("No rounds found");
-      }
+      if (!lastRound) throw new Error("No rounds found");
+
       const round = await ctx.prisma.round.findUnique({
         where: {
           eventId_roundNo: {
@@ -92,25 +89,27 @@ builder.mutationField("deleteRound", (t) =>
           },
         },
       });
-      if (!round) {
-        throw new Error("Round not found");
-      }
-      if (!round.Event.Organizers.find((o) => o.userId === user.id)) {
+      if (!round) throw new Error("Round not found");
+      if (!round.Event.Organizers.find((o) => o.userId === user.id))
         throw new Error("Not authorized");
-      }
-      return ctx.prisma.round.delete({
-        where: {
-          eventId_roundNo: {
-            eventId: Number(args.eventId),
-            roundNo: lastRound.roundNo,
+
+      try {
+        return ctx.prisma.round.delete({
+          where: {
+            eventId_roundNo: {
+              eventId: Number(args.eventId),
+              roundNo: lastRound.roundNo,
+            },
           },
-        },
-      });
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete round");
+      }
     },
   }),
 );
 
-// judge mark round as completed
 builder.mutationField("completeRound", (t) =>
   t.prismaField({
     type: "Round",
@@ -123,12 +122,9 @@ builder.mutationField("completeRound", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JUDGE") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
       const round = await ctx.prisma.round.findUnique({
         where: {
           eventId_roundNo: {
@@ -140,32 +136,34 @@ builder.mutationField("completeRound", (t) =>
           Judges: true,
         },
       });
-      if (!round) {
-        throw new Error("Round not found");
-      }
+      if (!round) throw new Error("Round not found");
+
       const judge = round.Judges.find((j) => j.userId === user.id);
-      if (!judge) {
-        throw new Error("Not authorized");
-      }
-      const data = await ctx.prisma.round.update({
-        where: {
-          eventId_roundNo: {
-            eventId: Number(args.eventId),
-            roundNo: args.roundNo,
+      if (!judge) throw new Error("Not authorized");
+
+      try {
+        const data = await ctx.prisma.round.update({
+          where: {
+            eventId_roundNo: {
+              eventId: Number(args.eventId),
+              roundNo: args.roundNo,
+            },
           },
-        },
-        data: {
-          completed: true,
-        },
-      });
-      await ctx.pubsub.publish(
-        `STATUS_UPDATE/${args.eventId}-${args.roundNo}`,
-        {
+          data: {
+            completed: true,
+          },
+        });
+
+        ctx.pubsub.publish(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`, {
           eventId: args.eventId,
           roundNo: args.roundNo,
-        },
-      );
-      return data;
+        });
+
+        return data;
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't complete round");
+      }
     },
   }),
 );
@@ -182,12 +180,8 @@ builder.mutationField("changeSelectStatus", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not Authenticated");
-      }
-      if (user.role != "JUDGE") {
-        throw new Error("Not Authorized");
-      }
+      if (!user) throw new Error("Not Authenticated");
+      if (user.role != "JUDGE") throw new Error("Not Authorized");
 
       const isJudge = await ctx.prisma.judge.findUnique({
         where: {
@@ -198,9 +192,8 @@ builder.mutationField("changeSelectStatus", (t) =>
           },
         },
       });
-      if (!isJudge) {
-        throw new Error("Not Authorized");
-      }
+      if (!isJudge) throw new Error("Not Authorized");
+
       const round = await ctx.prisma.round.findUnique({
         where: {
           eventId_roundNo: {
@@ -209,29 +202,32 @@ builder.mutationField("changeSelectStatus", (t) =>
           },
         },
       });
-      if (!round) {
-        throw new Error("Round not found");
-      }
-      const data = await ctx.prisma.round.update({
-        where: {
-          eventId_roundNo: {
-            eventId: Number(args.eventId),
-            roundNo: args.roundNo,
+      if (!round) throw new Error("Round not found");
+
+      try {
+        const data = await ctx.prisma.round.update({
+          where: {
+            eventId_roundNo: {
+              eventId: Number(args.eventId),
+              roundNo: args.roundNo,
+            },
           },
-        },
-        data: {
-          selectStatus: !round.selectStatus,
-        },
-      });
-      if (!data) throw new Error("No ROund FOund");
-      await ctx.pubsub.publish(
-        `STATUS_UPDATE/${args.eventId}-${args.roundNo}`,
-        {
+          data: {
+            selectStatus: !round.selectStatus,
+          },
+        });
+        if (!data) throw new Error("No Round Found");
+
+        ctx.pubsub.publish(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`, {
           eventId: args.eventId,
           roundNo: args.roundNo,
-        },
-      );
-      return data;
+        });
+
+        return data;
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't change select status");
+      }
     },
   }),
 );

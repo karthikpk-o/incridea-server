@@ -15,23 +15,25 @@ builder.queryField("getScore", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (!["JUDGE", "JURY"].includes(user.role)) {
+      if (!user) throw new Error("Not authenticated");
+      if (!["JUDGE", "JURY"].includes(user.role))
         throw new Error("Not authorized");
-      }
-      const data = await ctx.prisma.scores.findUniqueOrThrow({
-        where: {
-          teamId_criteriaId_judgeId: {
-            teamId: Number(args.teamId),
-            criteriaId: Number(args.criteriaId),
-            judgeId: user.id,
+
+      try {
+        return await ctx.prisma.scores.findUniqueOrThrow({
+          where: {
+            teamId_criteriaId_judgeId: {
+              teamId: Number(args.teamId),
+              criteriaId: Number(args.criteriaId),
+              judgeId: user.id,
+            },
           },
-        },
-        ...query,
-      });
-      return data;
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch the score");
+      }
     },
   }),
 );
@@ -49,24 +51,26 @@ builder.queryField("getComment", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (!["JUDGE", "JURY"].includes(user.role)) {
+      if (!user) throw new Error("Not authenticated");
+      if (!["JUDGE", "JURY"].includes(user.role))
         throw new Error("Not authorized");
-      }
-      const data = await ctx.prisma.comments.findUniqueOrThrow({
-        where: {
-          teamId_eventId_roundNo_judgeId: {
-            teamId: Number(args.teamId),
-            eventId: Number(args.eventId),
-            roundNo: Number(args.roundNo),
-            judgeId: user.id,
+
+      try {
+        return await ctx.prisma.comments.findUniqueOrThrow({
+          where: {
+            teamId_eventId_roundNo_judgeId: {
+              teamId: Number(args.teamId),
+              eventId: Number(args.eventId),
+              roundNo: Number(args.roundNo),
+              judgeId: user.id,
+            },
           },
-        },
-        ...query,
-      });
-      return data;
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch the comment");
+      }
     },
   }),
 );
@@ -111,12 +115,10 @@ builder.queryField("getTotalScores", (t) =>
     },
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (!["JUDGE", "JURY"].includes(user.role)) {
+      if (!user) throw new Error("Not authenticated");
+      if (!["JUDGE", "JURY"].includes(user.role))
         throw new Error("Not authorized");
-      }
+
       if (user.role == "JUDGE") {
         // check if the judge is assigned to the event
         const judge = await ctx.prisma.judge.findUnique({
@@ -128,22 +130,23 @@ builder.queryField("getTotalScores", (t) =>
             },
           },
         });
-        if (!judge) {
-          throw new Error("Not authorized");
-        }
+        if (!judge) throw new Error("Not authorized");
       }
+
       const teams = await ctx.prisma.team.findMany({
         where: {
           roundNo: Number(args.roundNo),
           eventId: Number(args.eventId),
         },
       });
+
       const judges = await ctx.prisma.judge.findMany({
         where: {
           eventId: Number(args.eventId),
           roundNo: Number(args.roundNo),
         },
       });
+
       const criteria = await ctx.prisma.criteria.findFirst({
         where: {
           eventId: Number(args.eventId),
@@ -165,12 +168,14 @@ builder.queryField("getTotalScores", (t) =>
           (acc, score) => acc + (score.score ? Number(score.score) : 0),
           0,
         );
+
         const judgeScore = scores.reduce((acc, score) => {
           if (score.judgeId === user.id) {
             return acc + (score.score ? Number(score.score) : 0);
           }
           return acc;
         }, 0);
+
         return {
           totalScore,
           judgeScore,
@@ -178,7 +183,15 @@ builder.queryField("getTotalScores", (t) =>
           criteriaType: criteria?.type ?? CriteriaType.NUMBER,
         };
       });
-      return Promise.all(total_scores);
+
+      try {
+        return Promise.all(total_scores);
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't fetch the total scores",
+        );
+      }
     },
   }),
 );
@@ -277,12 +290,9 @@ builder.queryField("getScoreSheetJuryView", (t) =>
     },
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JURY") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "JURY") throw new Error("Not authorized");
+
       const teams = await ctx.prisma.team.findMany({
         where: {
           roundNo: {
@@ -293,6 +303,7 @@ builder.queryField("getScoreSheetJuryView", (t) =>
           attended: true,
         },
       });
+
       const judges = await ctx.prisma.judge.findMany({
         where: {
           eventId: Number(args.eventId),
@@ -302,12 +313,14 @@ builder.queryField("getScoreSheetJuryView", (t) =>
           User: true,
         },
       });
+
       const criteria = await ctx.prisma.criteria.findMany({
         where: {
           eventId: Number(args.eventId),
           roundNo: Number(args.roundNo),
         },
       });
+
       const scoreSheet = teams.map(async (team) => {
         const judgesScore = judges.map(async (judge) => {
           const scores = await ctx.prisma.scores.findMany({
@@ -333,6 +346,7 @@ builder.queryField("getScoreSheetJuryView", (t) =>
             criteria: criteriaScore,
           };
         });
+
         const scores = await ctx.prisma.scores.findMany({
           where: {
             teamId: team.id,
@@ -341,10 +355,12 @@ builder.queryField("getScoreSheetJuryView", (t) =>
             },
           },
         });
+
         const totalScore = scores.reduce(
           (acc, score) => acc + (score.score ? Number(score.score) : 0),
           0,
         );
+
         return {
           teamName: team.name,
           teamId: team.id,
@@ -352,7 +368,13 @@ builder.queryField("getScoreSheetJuryView", (t) =>
           judges: await Promise.all(judgesScore),
         };
       });
-      return Promise.all(scoreSheet);
+
+      try {
+        return Promise.all(scoreSheet);
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch the score sheet");
+      }
     },
   }),
 );

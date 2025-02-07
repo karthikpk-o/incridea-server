@@ -223,6 +223,8 @@ model EventPaymentOrder {
 }
 
 model BranchRep {
+  id Int @id @default(autoincrement())
+
   userId Int  @unique
   User   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -232,10 +234,13 @@ model BranchRep {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([userId, branchId])
   @@index([branchId, userId])
 }
 
 model Organizer {
+  id Int @id @default(autoincrement())
+
   userId Int
   User   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -250,6 +255,8 @@ model Organizer {
 }
 
 model TeamMember {
+  id Int @id @default(autoincrement())
+
   userId Int
   User   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -264,6 +271,8 @@ model TeamMember {
 }
 
 model Judge {
+  id Int @id @default(autoincrement())
+
   userId Int  @unique
   User   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -307,6 +316,8 @@ model Criteria {
 }
 
 model Scores {
+  id Int @id @default(autoincrement())
+
   score String
 
   teamId Int
@@ -328,6 +339,8 @@ model Scores {
 }
 
 model Comments {
+  id Int @id @default(autoincrement())
+
   comment String
 
   teamId Int
@@ -350,7 +363,8 @@ model Comments {
 }
 
 model Winners {
-  id               Int        @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   notificationSent Boolean    @default(false)
   type             WinnerType
 
@@ -371,7 +385,8 @@ model Winners {
 }
 
 model Card {
-  id   Int     @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   clue String
   day  DayType
 
@@ -385,6 +400,8 @@ model Card {
 }
 
 model Submission {
+  id Int @id @default(autoincrement())
+
   image String
 
   userId Int
@@ -402,6 +419,8 @@ model Submission {
 }
 
 model ProniteRegistration {
+  id Int @id @default(autoincrement())
+
   proniteDay ProniteDay
 
   userId Int
@@ -415,7 +434,8 @@ model ProniteRegistration {
 }
 
 model CertificateIssue {
-  id     Int     @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   issued Boolean @default(false)
 
   userId Int
@@ -432,7 +452,8 @@ model CertificateIssue {
 }
 
 model Options {
-  id       String  @id @default(cuid())
+  id String @id @default(cuid())
+
   value    String
   isAnswer Boolean @default(false)
 
@@ -464,8 +485,9 @@ model QuizSubmission {
 }
 
 model QuizScore {
-  id        String @id @default(cuid())
-  score     Int    @default(0)
+  id String @id @default(cuid())
+
+  score     Int   @default(0)
   timeTaken Float
 
   teamId Int
@@ -482,7 +504,8 @@ model QuizScore {
 }
 
 model Quiz {
-  id            String   @id @default(cuid())
+  id String @id @default(cuid())
+
   name          String
   description   String?  @db.Text
   startTime     DateTime
@@ -508,7 +531,8 @@ model Quiz {
 }
 
 model Question {
-  id          String  @id @default(cuid())
+  id String @id @default(cuid())
+
   question    String
   description String? @db.Text
   isCode      Boolean @default(false)
@@ -526,7 +550,8 @@ model Question {
 }
 
 model Level {
-  id    Int @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   point Int @default(0)
 
   EventId Int?
@@ -562,7 +587,8 @@ model XP {
 }
 
 model Hotel {
-  id      Int     @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   name    String  @unique
   details String?
   price   Int

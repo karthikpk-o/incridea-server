@@ -16,7 +16,8 @@ builder.queryField("users", (t) =>
       return ctx.prisma.user.findMany({
         where: {
           role: {
-            notIn: ["ADMIN", "JUDGE", "USER", "JURY"],
+            // TODO(Omkar): add "USER in the follwing list"
+            notIn: ["ADMIN", "JUDGE", "JURY"],
           },
           OR: [
             {

@@ -9,12 +9,20 @@ builder.queryField("getBranch", (t) =>
         required: true,
       }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: (query, root, args, ctx, info) => {
-      return ctx.prisma.branch.findUniqueOrThrow({
-        where: {
-          id: Number(args.id),
-        },
-      });
+      try {
+        return ctx.prisma.branch.findUniqueOrThrow({
+          where: {
+            id: Number(args.id),
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch branch");
+      }
     },
   }),
 );
@@ -22,10 +30,18 @@ builder.queryField("getBranch", (t) =>
 builder.queryField("getBranches", (t) =>
   t.prismaField({
     type: ["Branch"],
+    errors: {
+      types: [Error],
+    },
     resolve: (query, root, args, ctx, info) => {
-      return ctx.prisma.branch.findMany({
-        ...query,
-      });
+      try {
+        return ctx.prisma.branch.findMany({
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch branches");
+      }
     },
   }),
 );

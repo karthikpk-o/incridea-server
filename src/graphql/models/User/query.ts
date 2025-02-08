@@ -1,5 +1,5 @@
 import { builder } from "~/graphql/builder";
-import { avatarList } from "~/constants";
+import { CONSTANT } from "~/constants";
 
 builder.queryField("users", (t) =>
   t.prismaConnection({
@@ -77,48 +77,78 @@ builder.queryField("userById", (t) =>
   }),
 );
 
-builder.queryField("totalRegistrations", (t) =>
+class RegistrationsCount {
+  internalRegistrations: number;
+  externalRegistrations: number;
+  constructor(internalRegistrations: number, externalRegistrations: number) {
+    this.internalRegistrations = internalRegistrations;
+    this.externalRegistrations = externalRegistrations;
+  }
+}
+
+export const RegistrationCount = builder.objectType(RegistrationsCount, {
+  name: "EventRegistrationsCount",
+  fields: (t) => ({
+    internalRegistrations: t.exposeInt("internalRegistrations"),
+    externalRegistrations: t.exposeInt("externalRegistrations"),
+  }),
+});
+
+builder.queryField("getTotalRegistrations", (t) =>
   t.field({
-    type: "Int",
+    type: RegistrationCount,
     args: {
       date: t.arg({ type: "DateTime", required: false }),
       last: t.arg({ type: "Int", required: false }),
     },
     resolve: async (root, args, ctx) => {
+      const user = await ctx.user;
+      if (!user) {
+        throw new Error("Not authenticated");
+      }
+      if (user.role !== "JURY" && user.role !== "ADMIN") {
+        throw new Error("Not authorized");
+      }
+      let dateFilter = {};
+
       if (args.date) {
-        return ctx.prisma.user.count({
-          where: {
-            role: {
-              in: ["PARTICIPANT", "ORGANIZER", "BRANCH_REP"],
-            },
-            createdAt: {
-              gte: args.date,
-              lte: new Date(args.date.getTime() + 86400000),
-            },
+        dateFilter = {
+          createdAt: {
+            gte: args.date,
+            lte: new Date(args.date.getTime() + 86400000),
           },
-        });
-      }
-      if (args.last) {
-        return ctx.prisma.user.count({
-          where: {
-            role: {
-              in: ["PARTICIPANT", "ORGANIZER", "BRANCH_REP"],
-            },
-            createdAt: {
-              gte: new Date(
-                new Date().getTime() - args.last * 86400000,
-              ).toISOString(),
-            },
+        };
+      } else if (args.last) {
+        dateFilter = {
+          createdAt: {
+            gte: new Date(
+              new Date().getTime() - args.last * 86400000,
+            ).toISOString(),
           },
-        });
+        };
       }
-      return ctx.prisma.user.count({
+
+      const internalRegistrations = await ctx.prisma.user.count({
         where: {
           role: {
             in: ["PARTICIPANT", "ORGANIZER", "BRANCH_REP"],
           },
+          collegeId: 1,
+          ...dateFilter,
         },
       });
+
+      const externalRegistrations = await ctx.prisma.user.count({
+        where: {
+          role: {
+            in: ["PARTICIPANT"],
+          },
+          collegeId: { not: 1 },
+          ...dateFilter,
+        },
+      });
+
+      return { internalRegistrations, externalRegistrations };
     },
   }),
 );
@@ -129,7 +159,23 @@ builder.queryField("getAvatars", (t) =>
     resolve: async (root, args, ctx) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      return avatarList;
+
+      return CONSTANT.AVATARS;
+    },
+  }),
+);
+
+builder.queryField("getStoneVisibilities", (t) =>
+  t.field({
+    type: "String",
+    errors: {
+      types: [Error],
+    },
+    resolve: async (root, args, ctx) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      return user.stoneVisibilities;
     },
   }),
 );

@@ -18,6 +18,7 @@ builder.mutationField("createEvent", (t) =>
   t.prismaField({
     type: "Event",
     args: {
+      // FIXME(Omkar): data & EventCreateInput needed?
       data: t.arg({
         type: EventCreateInput,
         required: true,
@@ -30,6 +31,7 @@ builder.mutationField("createEvent", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "BRANCH_REP") throw new Error("No Permission");
+
       const branch = await ctx.prisma.branchRep.findUnique({
         where: {
           userId: user.id,
@@ -37,20 +39,25 @@ builder.mutationField("createEvent", (t) =>
       });
       if (!branch) throw new Error(`No Branch Under ${user.name}`);
 
-      return ctx.prisma.event.create({
-        data: {
-          name: args.data.name,
-          description: args.data.description,
-          venue: args.data.venue,
-          ...(args.data.eventType ? { eventType: args.data.eventType } : {}),
-          Branch: {
-            connect: {
-              id: branch.branchId,
+      try {
+        return ctx.prisma.event.create({
+          data: {
+            name: args.data.name,
+            description: args.data.description,
+            venue: args.data.venue,
+            ...(args.data.eventType ? { eventType: args.data.eventType } : {}),
+            Branch: {
+              connect: {
+                id: branch.branchId,
+              },
             },
           },
-        },
-        ...query,
-      });
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create event");
+      }
     },
   }),
 );
@@ -85,6 +92,7 @@ builder.mutationField("updateEvent", (t) =>
     type: "Event",
     args: {
       id: t.arg({ type: "ID", required: true }),
+      // FIXME(Omkar): data & EventUpdateInput needed?
       data: t.arg({
         type: EventUpdateInput,
         required: true,
@@ -102,12 +110,14 @@ builder.mutationField("updateEvent", (t) =>
         user.role !== "ADMIN"
       )
         throw new Error("No Permission");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.id),
         },
       });
       if (!event) throw new Error(`No Event with id ${args.id}`);
+
       if (user.role === "BRANCH_REP") {
         const branchRep = await ctx.prisma.branchRep.findUnique({
           where: {
@@ -119,6 +129,7 @@ builder.mutationField("updateEvent", (t) =>
         if (event.branchId !== branchRep.branchId)
           throw new Error(`You are not authorized to update this event`);
       }
+
       if (user.role === "ORGANIZER") {
         const organizer = await ctx.prisma.organizer.findUnique({
           where: {
@@ -141,18 +152,24 @@ builder.mutationField("updateEvent", (t) =>
           if (value) acc[key] = value;
           return acc;
         },
+        // TODO(Omkar): Typing can be better ig
         {} as { [key: string]: string | number | Date },
       );
 
-      return ctx.prisma.event.update({
-        where: {
-          id: Number(args.id),
-        },
-        data: {
-          ...data,
-        },
-        ...query,
-      });
+      try {
+        return ctx.prisma.event.update({
+          where: {
+            id: Number(args.id),
+          },
+          data: {
+            ...data,
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't update event");
+      }
     },
   }),
 );
@@ -171,12 +188,14 @@ builder.mutationField("deleteEvent", (t) =>
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "BRANCH_REP" && user.role !== "ORGANIZER")
         throw new Error("No Permission");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: args.id,
         },
       });
       if (!event) throw new Error(`No Event with id ${args.id}`);
+
       if (user.role === "BRANCH_REP") {
         const branchRep = await ctx.prisma.branchRep.findUnique({
           where: {
@@ -188,6 +207,7 @@ builder.mutationField("deleteEvent", (t) =>
         if (event.branchId !== branchRep.branchId)
           throw new Error(`You are not authorized to delete this event`);
       }
+
       if (user.role === "ORGANIZER") {
         const organizer = await ctx.prisma.organizer.findUnique({
           where: {
@@ -202,13 +222,20 @@ builder.mutationField("deleteEvent", (t) =>
             `Oops ${user.name}! you are not an organizer of this event`,
           );
       }
+
       if (event.published) throw new Error("Event is already published");
-      await ctx.prisma.event.delete({
-        where: {
-          id: args.id,
-        },
-      });
-      return "Event Deleted Successfully";
+
+      try {
+        await ctx.prisma.event.delete({
+          where: {
+            id: args.id,
+          },
+        });
+        return "Event Deleted Successfully";
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete event");
+      }
     },
   }),
 );
@@ -227,6 +254,7 @@ builder.mutationField("publishEvent", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "ADMIN") throw new Error("No Permission");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.id),
@@ -234,15 +262,20 @@ builder.mutationField("publishEvent", (t) =>
       });
       if (!event) throw new Error(`Event ${args.id} does not exist`);
 
-      await ctx.prisma.event.update({
-        where: {
-          id: Number(args.id),
-        },
-        data: {
-          published: Boolean(args.published),
-        },
-      });
-      return "Event published Successfully";
+      try {
+        await ctx.prisma.event.update({
+          where: {
+            id: Number(args.id),
+          },
+          data: {
+            published: Boolean(args.published),
+          },
+        });
+        return "Event published Successfully";
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't publish event");
+      }
     },
   }),
 );

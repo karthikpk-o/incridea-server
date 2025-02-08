@@ -17,9 +17,10 @@ const main = async () => {
 
   const user = await db.user.create({
     data: {
-      email: "test@incridea.in",
-      name: "Test",
-      password: await bcrypt.hash("asdfghjkl;'", 12),
+      email: "admin@incridea.in",
+      name: "ADMIN",
+      phoneNumber: "0000000000",
+      password: await bcrypt.hash("admin@123", 12),
       isVerified: true,
       role: "ADMIN",
       College: {
@@ -79,40 +80,109 @@ const main = async () => {
       image: "",
       published: true,
       venue: "Sadananda",
-      Rounds: {
-        create: {
-          roundNo: 1,
-        },
-      },
       Branch: {
         connect: {
           id: branch.id,
         },
       },
+      Organizers: {
+        create: {
+          User: {
+            create: {
+              email: "organiser@incridea.in",
+              name: "ORGANIZER",
+              phoneNumber: "0000000000",
+              password: await bcrypt.hash("organiser@123", 12),
+              isVerified: true,
+              role: "ORGANIZER",
+              College: {
+                connect: {
+                  id: college.id,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
 
-  await db.organizer.create({
+  await db.round.createMany({
+    data: [
+      {
+        roundNo: 1,
+        eventId: event.id,
+      },
+      {
+        roundNo: 2,
+        eventId: event.id,
+      },
+    ],
+  });
+
+  const judge1 = await db.user.create({
     data: {
-      Event: {
-        connect: {
-          id: event.id,
-        },
-      },
-      User: {
-        connect: {
-          id: user.id,
-        },
-      },
+      email: "judge1@incridea.in",
+      name: "JUDGE 1",
+      phoneNumber: "0000000000",
+      password: await bcrypt.hash("judge1@123", 12),
+      isVerified: true,
+      role: "JUDGE",
+      collegeId: college.id,
     },
+  });
+
+  const judge2 = await db.user.create({
+    data: {
+      email: "judge2@incridea.in",
+      name: "JUDGE 2",
+      phoneNumber: "0000000000",
+      password: await bcrypt.hash("judge2@123", 12),
+      isVerified: true,
+      role: "JUDGE",
+      collegeId: college.id,
+    },
+  });
+
+  const judge3 = await db.user.create({
+    data: {
+      email: "judge3@incridea.in",
+      name: "JUDGE 3",
+      phoneNumber: "0000000000",
+      password: await bcrypt.hash("judge3@123", 12),
+      isVerified: true,
+      role: "JUDGE",
+      collegeId: college.id,
+    },
+  });
+
+  await db.judge.createMany({
+    data: [
+      {
+        eventId: event.id,
+        roundNo: 1,
+        userId: judge1.id,
+      },
+      {
+        eventId: event.id,
+        roundNo: 1,
+        userId: judge2.id,
+      },
+      {
+        eventId: event.id,
+        roundNo: 2,
+        userId: judge3.id,
+      },
+    ],
   });
 
   const teamMembers = [
     await db.user.create({
       data: {
-        email: "user1@incridea.in",
-        name: "User 1",
-        password: await bcrypt.hash("asdfghjkl;'", 12),
+        email: "participant1@incridea.in",
+        name: "PARTICIPANT 1",
+        phoneNumber: "0000000000",
+        password: await bcrypt.hash("participant1@123", 12),
         isVerified: true,
         role: "PARTICIPANT",
         collegeId: college.id,
@@ -120,9 +190,32 @@ const main = async () => {
     }),
     await db.user.create({
       data: {
-        email: "user2@incridea.in",
-        name: "User 2",
-        password: await bcrypt.hash("asdfghjkl;'", 12),
+        email: "participant2@incridea.in",
+        name: "PARTICIPANT 2",
+        phoneNumber: "0000000000",
+        password: await bcrypt.hash("participant2@123", 12),
+        isVerified: true,
+        role: "PARTICIPANT",
+        collegeId: college.id,
+      },
+    }),
+    await db.user.create({
+      data: {
+        email: "participant3@incridea.in",
+        name: "PARTICIPANT 3",
+        phoneNumber: "0000000000",
+        password: await bcrypt.hash("participant3@123", 12),
+        isVerified: true,
+        role: "PARTICIPANT",
+        collegeId: college.id,
+      },
+    }),
+    await db.user.create({
+      data: {
+        email: "participant4@incridea.in",
+        name: "PARTICIPANT 4",
+        phoneNumber: "0000000000",
+        password: await bcrypt.hash("participant4@123", 12),
         isVerified: true,
         role: "PARTICIPANT",
         collegeId: college.id,
@@ -132,12 +225,12 @@ const main = async () => {
 
   await db.team.create({
     data: {
-      name: "Test team",
-      attended: false,
+      name: "Test team 1",
+      attended: true,
       confirmed: true,
       EventPaymentOrder: {
         create: {
-          orderId: "",
+          orderId: "1234",
           amount: 100,
           status: "SUCCESS",
           paymentData: { name: "Razorpay" },
@@ -151,9 +244,48 @@ const main = async () => {
       leaderId: teamMembers[0].id,
       TeamMembers: {
         createMany: {
-          data: Array.from(teamMembers, (member) => ({
-            userId: member.id,
-          })),
+          data: [
+            {
+              userId: teamMembers[0].id,
+            },
+            {
+              userId: teamMembers[1].id,
+            },
+          ],
+        },
+      },
+    },
+  });
+
+  await db.team.create({
+    data: {
+      name: "Test team 2",
+      attended: true,
+      confirmed: true,
+      EventPaymentOrder: {
+        create: {
+          orderId: "2345",
+          amount: 100,
+          status: "SUCCESS",
+          paymentData: { name: "Razorpay" },
+        },
+      },
+      Event: {
+        connect: {
+          id: event.id,
+        },
+      },
+      leaderId: teamMembers[2].id,
+      TeamMembers: {
+        createMany: {
+          data: [
+            {
+              userId: teamMembers[2].id,
+            },
+            {
+              userId: teamMembers[3].id,
+            },
+          ],
         },
       },
     },

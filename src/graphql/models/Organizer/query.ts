@@ -10,16 +10,23 @@ builder.queryField("eventByOrganizer", (t) =>
       }),
     },
     resolve: (query, root, args, ctx, info) => {
-      return ctx.prisma.event.findMany({
-        where: {
-          Organizers: {
-            some: {
-              userId: Number(args.organizerId),
+      try {
+        return ctx.prisma.event.findMany({
+          where: {
+            Organizers: {
+              some: {
+                userId: Number(args.organizerId),
+              },
             },
           },
-        },
-        ...query,
-      });
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't fetch events by organiser",
+        );
+      }
     },
   }),
 );

@@ -3,7 +3,6 @@ import { builder } from "~/graphql/builder";
 class Option {
   id: string;
   answer: string;
-
   constructor(id: string, answer: string) {
     this.id = id;
     this.answer = answer;
@@ -20,15 +19,11 @@ builder.objectType(Option, {
 
 class AllSubmissions {
   userId: string;
-  qType: string;
   question: string;
   qId: string;
   options: Option[] | null;
   mcqAns: string | null;
   isRight: boolean | null;
-  fitbAns: string | null;
-  laAns: string | null;
-  longAnsIsRight: string | null;
 
   constructor(
     options: {
@@ -37,22 +32,14 @@ class AllSubmissions {
     }[],
     mcqAns: string | null,
     isRight: boolean | null,
-    fitbAns: string | null,
-    laAns: string | null,
-    longAnsIsRight: string | null,
     userId: string,
-    qType: string,
     question: string,
     qId: string,
   ) {
     this.options = options;
     this.mcqAns = mcqAns;
     this.isRight = isRight;
-    this.fitbAns = fitbAns;
-    this.laAns = laAns;
-    this.longAnsIsRight = longAnsIsRight;
     this.userId = userId;
-    this.qType = qType;
     this.question = question;
     this.qId = qId;
   }
@@ -64,11 +51,7 @@ const AllSubmissionsType = builder.objectType(AllSubmissions, {
     options: t.expose("options", { nullable: true, type: [Option] }),
     mcqAns: t.exposeString("mcqAns", { nullable: true }),
     isRight: t.exposeBoolean("isRight", { nullable: true }),
-    fitbAns: t.exposeString("fitbAns", { nullable: true }),
-    laAns: t.exposeString("laAns", { nullable: true }),
-    longAnsIsRight: t.exposeString("longAnsIsRight", { nullable: true }),
     userId: t.exposeString("userId"),
-    qType: t.exposeString("qType"),
     question: t.exposeString("question"),
     qId: t.exposeString("qId"),
   }),
@@ -92,12 +75,9 @@ builder.queryField("getAllQuizSubmissions", (t) =>
     },
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -106,27 +86,11 @@ builder.queryField("getAllQuizSubmissions", (t) =>
           Organizers: true,
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      if (!event.Organizers.find((o) => o.userId === user.id)) {
+      if (!event) throw new Error("Event not found");
+      if (!event.Organizers.find((o) => o.userId === user.id))
         throw new Error("Not authorized");
-      }
 
-      const quizSubmissions: {
-        options: Option[] | null;
-        userId: string;
-        qType: string;
-        question: string;
-        qId: string;
-        mcqAns: string | null;
-        isRight: boolean | null;
-        fitbAns: string | null;
-        laAns: string | null;
-        longAnsIsRight: string | null;
-      }[] = [];
-
-      const mcqSubmissions = await ctx.prisma.mCQSubmission.findMany({
+      const submissions = await ctx.prisma.quizSubmission.findMany({
         where: {
           Options: {
             Question: {
@@ -147,7 +111,7 @@ builder.queryField("getAllQuizSubmissions", (t) =>
         },
       });
 
-      const mcq = mcqSubmissions.map((item) => {
+      const quizSubmissions = submissions.map((item) => {
         const optionsArr = item?.Options?.Question?.options?.map((item) => {
           return {
             id: item?.id,
@@ -158,7 +122,6 @@ builder.queryField("getAllQuizSubmissions", (t) =>
         return {
           options: optionsArr,
           userId: item?.teamId?.toString(),
-          qType: item?.Options?.Question?.questionType.toString(),
           question: item?.Options?.Question?.question,
           qId: item?.Options?.questionId,
           mcqAns: item?.Options?.value,
@@ -168,79 +131,6 @@ builder.queryField("getAllQuizSubmissions", (t) =>
           longAnsIsRight: null,
         };
       });
-      quizSubmissions.push(...mcq);
-
-      const fitbSubmissions = await ctx.prisma.fITBSubmission.findMany({
-        where: {
-          Options: {
-            Question: {
-              quizId: args.quizId,
-            },
-          },
-        },
-        include: {
-          Options: {
-            include: {
-              Question: {
-                include: {
-                  options: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      const fitb = fitbSubmissions.map((item) => {
-        return {
-          options: null,
-          userId: item?.teamId?.toString(),
-          qType: item?.Options?.Question?.questionType.toString(),
-          question: item?.Options?.Question?.question,
-          qId: item?.Options?.questionId,
-          mcqAns: null,
-          isRight: item?.isRight,
-          fitbAns: item?.value,
-          laAns: null,
-          longAnsIsRight: null,
-        };
-      });
-
-      quizSubmissions.push(...fitb);
-
-      const laSubmissions = await ctx.prisma.lASubmission.findMany({
-        where: {
-          Question: {
-            quizId: args.quizId,
-          },
-        },
-        include: {
-          Question: {
-            select: {
-              negativePoints: true,
-              questionType: true,
-              question: true,
-            },
-          },
-        },
-      });
-
-      const la = laSubmissions.map((item) => {
-        return {
-          options: null,
-          userId: item?.teamId?.toString(),
-          qType: item?.Question?.questionType,
-          question: item?.Question?.question,
-          qId: item?.questionId,
-          mcqAns: null,
-          isRight: null,
-          fitbAns: null,
-          laAns: item?.value,
-          longAnsIsRight: item?.isRight?.toString(),
-        };
-      });
-
-      quizSubmissions.push(...la);
 
       quizSubmissions.sort((a, b) => Number(a.userId) - Number(b.userId));
 
@@ -249,11 +139,15 @@ builder.queryField("getAllQuizSubmissions", (t) =>
   }),
 );
 
-builder.queryField("getQuizByEvent", (t) =>
+builder.queryField("getQuizByEventRound", (t) =>
   t.prismaField({
-    type: ["Quiz"],
+    type: "Quiz",
     args: {
       eventId: t.arg({
+        type: "Int",
+        required: true,
+      }),
+      roundId: t.arg({
         type: "Int",
         required: true,
       }),
@@ -262,47 +156,35 @@ builder.queryField("getQuizByEvent", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      try {
-        const user = await ctx.user;
-        if (!user) {
-          throw new Error("Not authenticated");
-        }
-        if (user.role !== "ORGANIZER") {
-          throw new Error("Not authorized");
-        }
-        const event = await ctx.prisma.event.findUnique({
-          where: {
-            id: Number(args.eventId),
-          },
-          include: {
-            Organizers: true,
-          },
-        });
-        if (!event) {
-          throw new Error("Event not found");
-        }
-        if (!event.Organizers.find((o) => o.userId === user.id)) {
-          throw new Error("Not authorized");
-        }
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
 
-        const data = await ctx.prisma.quiz.findMany({
-          where: {
+      const event = await ctx.prisma.event.findUnique({
+        where: {
+          id: Number(args.eventId),
+        },
+        include: {
+          Organizers: true,
+        },
+      });
+      if (!event) throw new Error("Event not found");
+      if (!event.Organizers.find((o) => o.userId === user.id))
+        throw new Error("Not authorized");
+
+      const data = await ctx.prisma.quiz.findUnique({
+        where: {
+          eventId_roundId: {
             eventId: Number(args.eventId),
+            roundId: Number(args.roundId),
           },
-          include: {
-            Round: true,
-          },
-          ...query,
-        });
-        console.log(data);
-        if (!data) {
-          throw new Error("There is no quiz in this event");
-        }
-        return data;
-      } catch (error) {
-        console.log(error);
-        throw new Error("Something went wrong");
-      }
+        },
+        ...query,
+      });
+
+      if (!data) throw new Error("There is no quiz in this event");
+
+      return data;
     },
   }),
 );
@@ -320,151 +202,119 @@ builder.queryField("getSubmissionByUser", (t) =>
         required: true,
       }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: async (root, args, ctx, info) => {
-      try {
-        const quizSubmissions: {
-          options: Option[] | null;
-          userId: string;
-          qType: string;
-          question: string;
-          qId: string;
-          mcqAns: string | null;
-          isRight: boolean | null;
-          fitbAns: string | null;
-          laAns: string | null;
-          longAnsIsRight: string | null;
-        }[] = [];
-        const mcqSubmissions = await ctx.prisma.mCQSubmission.findMany({
-          where: {
-            teamId: Number(args.teamId),
-            Options: {
-              Question: {
-                quizId: args.quizId,
-              },
-            },
-          },
-          include: {
-            Options: {
-              include: {
-                Question: {
-                  include: {
-                    options: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        const mcq = mcqSubmissions.map((item) => {
-          const optionsArr = item?.Options?.Question?.options?.map((item) => {
-            return {
-              id: item?.id,
-              answer: item?.value,
-            };
-          });
-
-          return {
-            options: optionsArr,
-            userId: item?.teamId?.toString(),
-            qType: item?.Options?.Question?.questionType.toString(),
-            question: item?.Options?.Question?.question,
-            qId: item?.Options?.questionId,
-            mcqAns: item?.Options?.value,
-            isRight: item?.Options?.isAnswer,
-            fitbAns: null,
-            laAns: null,
-            longAnsIsRight: null,
-          };
-        });
-        quizSubmissions.push(...mcq);
-
-        const fitbSubmissions = await ctx.prisma.fITBSubmission.findMany({
-          where: {
-            teamId: Number(args.teamId),
-            Options: {
-              Question: {
-                quizId: args.quizId,
-              },
-            },
-          },
-          include: {
-            Options: {
-              select: {
-                isAnswer: true,
-                questionId: true,
-                Question: {
-                  select: {
-                    question: true,
-                    questionType: true,
-                    negativePoints: true,
-                    points: true,
-                  },
-                },
-              },
-            },
-          },
-        });
-
-        const fitb = fitbSubmissions.map((item) => {
-          return {
-            options: null,
-            userId: item?.teamId?.toString(),
-            qType: item?.Options?.Question?.questionType,
-            question: item?.Options?.Question?.question,
-            qId: item?.Options?.questionId,
-            mcqAns: null,
-            isRight: item?.isRight,
-            fitbAns: item?.value,
-            laAns: null,
-            longAnsIsRight: null,
-          };
-        });
-
-        quizSubmissions.push(...fitb);
-
-        const laSubmissions = await ctx.prisma.lASubmission.findMany({
-          where: {
-            teamId: Number(args.teamId),
+      const submissions = await ctx.prisma.quizSubmission.findMany({
+        where: {
+          teamId: Number(args.teamId),
+          Options: {
             Question: {
               quizId: args.quizId,
             },
           },
-          include: {
-            Question: {
-              select: {
-                negativePoints: true,
-                questionType: true,
-                question: true,
+        },
+        include: {
+          Options: {
+            include: {
+              Question: {
+                include: {
+                  options: true,
+                },
               },
             },
           },
-        });
+        },
+      });
 
-        const la = laSubmissions.map((item) => {
+      const quizSubmissions = submissions.map((item) => {
+        const optionsArr = item?.Options?.Question?.options?.map((item) => {
           return {
-            options: null,
-            userId: item?.teamId?.toString(),
-            qType: item?.Question?.questionType,
-            question: item?.Question?.question,
-            qId: item?.questionId,
-            mcqAns: null,
-            isRight: null,
-            fitbAns: null,
-            laAns: item?.value,
-            longAnsIsRight: item?.isRight?.toString(),
+            id: item?.id,
+            answer: item?.value,
           };
         });
 
-        quizSubmissions.push(...la);
+        return {
+          options: optionsArr,
+          userId: item?.teamId?.toString(),
+          question: item?.Options?.Question?.question,
+          qId: item?.Options?.questionId,
+          mcqAns: item?.Options?.value,
+          isRight: item?.Options?.isAnswer,
+          fitbAns: null,
+          laAns: null,
+          longAnsIsRight: null,
+        };
+      });
 
-        quizSubmissions.sort((a, b) => Number(a.userId) - Number(b.userId));
+      quizSubmissions.sort((a, b) => Number(a.userId) - Number(b.userId));
 
-        return quizSubmissions;
-      } catch (error) {
-        console.log(error);
-        throw new Error("Something went wrong");
-      }
+      return quizSubmissions;
+    },
+  }),
+);
+
+builder.queryField("getQuizById", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      quizId: t.arg({
+        type: "String",
+        required: true,
+      }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+      if (!(user.role === "ORGANIZER" || user.role === "PARTICIPANT"))
+        throw new Error("Not authorized");
+
+      const quiz = await ctx.prisma.quiz.findUnique({
+        where: {
+          id: args.quizId,
+          allowAttempts: user.role === "ORGANIZER" ? false : true,
+        },
+      });
+
+      if (!quiz) throw new Error("Quiz not found");
+
+      return quiz;
+    },
+  }),
+);
+
+builder.queryField("verifyQuizPassword", (t) =>
+  t.prismaField({
+    type: "Quiz",
+    args: {
+      quizId: t.arg({ type: "String", required: true }),
+      password: t.arg({ type: "String", required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "PARTICIPANT")
+        throw new Error("Not allowed to attempt the quiz");
+
+      const quiz = await ctx.prisma.quiz.findUnique({
+        where: {
+          id: args.quizId,
+        },
+      });
+
+      if (!quiz) throw new Error("Quiz not found");
+
+      if (quiz.password === args.password) return quiz;
+      else throw new Error("Invalid password");
     },
   }),
 );

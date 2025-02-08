@@ -1,5 +1,3 @@
-import { Role } from "@prisma/client";
-
 import { builder } from "~/graphql/builder";
 
 builder.mutationField("addOrganizer", (t) =>
@@ -22,12 +20,14 @@ builder.mutationField("addOrganizer", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "BRANCH_REP") throw new Error("No Permission");
+
       const branch = await ctx.prisma.branchRep.findUnique({
         where: {
           userId: user.id,
         },
       });
       if (!branch) throw new Error(`No Branch Under ${user.name}`);
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -35,37 +35,45 @@ builder.mutationField("addOrganizer", (t) =>
       });
       if (!event) throw new Error(`No Event with id ${args.eventId}`);
       if (event.branchId !== branch.branchId) throw new Error(`No Permission`);
-      const data = await ctx.prisma.organizer.create({
-        data: {
-          Event: {
-            connect: {
-              id: Number(args.eventId),
-            },
-          },
-          User: {
-            connect: {
-              id: Number(args.userId),
-            },
-          },
-        },
-      });
-      const userRole = await ctx.prisma.user.findUnique({
+
+      const organiserUser = await ctx.prisma.user.findUnique({
         where: {
           id: Number(args.userId),
         },
       });
+      if (!organiserUser) throw new Error("Organiser user not found");
+      if (organiserUser.role !== "PARTICIPANT")
+        throw new Error("User has to pay for the fest to be an organiser");
 
-      if (data && userRole?.role === "PARTICIPANT") {
-        await ctx.prisma.user.update({
-          where: {
-            id: Number(args.userId),
-          },
-          data: {
-            role: "ORGANIZER",
-          },
+      try {
+        return await ctx.prisma.$transaction(async (db) => {
+          await db.user.update({
+            where: {
+              id: Number(args.userId),
+            },
+            data: {
+              role: "ORGANIZER",
+            },
+          });
+          return await db.organizer.create({
+            data: {
+              Event: {
+                connect: {
+                  id: Number(args.eventId),
+                },
+              },
+              User: {
+                connect: {
+                  id: Number(args.userId),
+                },
+              },
+            },
+          });
         });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't add organiser");
       }
-      return data;
     },
   }),
 );
@@ -90,12 +98,14 @@ builder.mutationField("removeOrganizer", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (user.role !== "BRANCH_REP") throw new Error("No Permission");
+
       const branch = await ctx.prisma.branchRep.findUnique({
         where: {
           userId: user.id,
         },
       });
       if (!branch) throw new Error(`No Branch Under ${user.name}`);
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
@@ -103,19 +113,20 @@ builder.mutationField("removeOrganizer", (t) =>
       });
       if (!event) throw new Error(`No Event with id ${args.eventId}`);
       if (event.branchId !== branch.branchId) throw new Error(`No Permission`);
-      const userRole = await ctx.prisma.user.findUnique({
+
+      const organiserUser = await ctx.prisma.user.findUnique({
         where: {
           id: Number(args.userId),
         },
       });
+      if (!organiserUser) throw new Error("Organiser user not found");
 
       const count = await ctx.prisma.organizer.count({
         where: {
           userId: Number(args.userId),
         },
       });
-      let role: Role = Role.USER;
-      // chek if user is paid
+
       const successPaymentOrder = await ctx.prisma.paymentOrder.findMany({
         where: {
           userId: Number(args.userId),
@@ -123,28 +134,34 @@ builder.mutationField("removeOrganizer", (t) =>
         },
       });
 
-      if (successPaymentOrder.length > 0) {
-        role = Role.PARTICIPANT;
-      }
-      if (userRole?.role === "ORGANIZER" && !(count > 1)) {
-        await ctx.prisma.user.update({
+      try {
+        // What if user has ORGANISER role but not an organiser
+        // or user is a ORGANISER for only 1 event
+        if (organiserUser.role === "ORGANIZER" && !(count > 1)) {
+          await ctx.prisma.user.update({
+            where: {
+              id: Number(args.userId),
+            },
+            data: {
+              role: successPaymentOrder.length > 0 ? "PARTICIPANT" : "USER",
+            },
+          });
+        }
+
+        await ctx.prisma.organizer.delete({
           where: {
-            id: Number(args.userId),
-          },
-          data: {
-            role: role,
+            userId_eventId: {
+              userId: Number(args.userId),
+              eventId: Number(args.eventId),
+            },
           },
         });
+
+        return "Removed Organizer";
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't remove organiser");
       }
-      await ctx.prisma.organizer.delete({
-        where: {
-          userId_eventId: {
-            userId: Number(args.userId),
-            eventId: Number(args.eventId),
-          },
-        },
-      });
-      return "removed Organizer";
     },
   }),
 );

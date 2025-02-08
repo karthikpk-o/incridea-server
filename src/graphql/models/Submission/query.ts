@@ -16,13 +16,19 @@ builder.queryField("getAllSubmissions", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
       if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
-      return ctx.prisma.submission.findMany({
-        where: {
-          Card: {
-            day: args.day,
+
+      try {
+        return ctx.prisma.submission.findMany({
+          where: {
+            Card: {
+              day: args.day,
+            },
           },
-        },
-      });
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch submissions");
+      }
     },
   }),
 );
@@ -40,15 +46,19 @@ builder.queryField("submissionsByUser", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      const submissions = await ctx.prisma.submission.findMany({
-        where: {
-          userId: user.id,
-          Card: {
-            day: args.day,
+      try {
+        return await ctx.prisma.submission.findMany({
+          where: {
+            userId: user.id,
+            Card: {
+              day: args.day,
+            },
           },
-        },
-      });
-      return submissions;
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch submissions");
+      }
     },
   }),
 );

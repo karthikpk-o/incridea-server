@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { type Request, type Response } from "express";
 import { validateWebhookSignature } from "razorpay/dist/utils/razorpay-utils";
+import { z } from "zod";
 
 import { env } from "~/env";
 import { prisma } from "~/utils/db";
@@ -51,7 +52,8 @@ export async function handler(req: Request, res: Response) {
             paymentData: req.body.payload.payment.entity.paymentData,
           },
         });
-        await prisma.user.update({
+
+        const user = await prisma.user.update({
           where: {
             id: paymentOrder.userId,
           },
@@ -59,6 +61,42 @@ export async function handler(req: Request, res: Response) {
             role: "PARTICIPANT",
           },
         });
+
+        const { success, data } = z
+          .object({
+            email: z.string(),
+            name: z.string(),
+            phoneNumber: z.string(),
+          })
+          .safeParse({
+            email: user.email,
+            name: user.name,
+            phoneNumber: user.phoneNumber,
+          });
+
+        if (success) {
+          const response = await fetch(
+            `${env.CAPTURE_INCRIDEA_URL}/api/verifiedEmail`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${env.CAPTURE_INCRIDEA_SECRET}`,
+              },
+              body: JSON.stringify(data),
+            },
+          );
+
+          if (response.status === 200)
+            await prisma.user.update({
+              where: {
+                id: user.id,
+              },
+              data: {
+                captureUpdated: true,
+              },
+            });
+          else console.log(JSON.stringify(await response.json(), null, 2));
+        }
 
         res.status(200).json(updatedPaymentOrder);
         return;

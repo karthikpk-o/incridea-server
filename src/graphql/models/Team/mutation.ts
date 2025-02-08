@@ -700,7 +700,7 @@ builder.mutationField("organizerAddTeamMember", (t) =>
       ) {
         throw new Error("Not authorized");
       }
-      if (!(user.College?.type === "ENGINEERING")) {
+      if (!(participant.College?.type === "ENGINEERING")) {
         if (
           !(await canRegister(
             participant.id,
@@ -1274,10 +1274,9 @@ builder.mutationField("promoteToNextRound", (t) =>
         },
         ...query,
       });
-      await ctx.pubsub.publish(
-        `TEAM_UPDATED/${team.Event.id}-${args.roundNo}`,
-        data,
-      );
+
+      ctx.pubsub.publish(`TEAM_UPDATED/${team.Event.id}-${args.roundNo}`, data);
+
       return data;
     },
   }),

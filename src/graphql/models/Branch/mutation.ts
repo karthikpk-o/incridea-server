@@ -16,11 +16,17 @@ builder.mutationField("addBranch", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not Authenticated");
       if (user.role !== "ADMIN") throw new Error("No Permission");
-      return ctx.prisma.branch.create({
-        data: {
-          name: args.name,
-        },
-      });
+
+      try {
+        return ctx.prisma.branch.create({
+          data: {
+            name: args.name,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create branch");
+      }
     },
   }),
 );

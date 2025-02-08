@@ -14,11 +14,17 @@ builder.queryField("getCards", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      return ctx.prisma.card.findMany({
-        where: {
-          day: args.day,
-        },
-      });
+
+      try {
+        return ctx.prisma.card.findMany({
+          where: {
+            day: args.day,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch cards");
+      }
     },
   }),
 );

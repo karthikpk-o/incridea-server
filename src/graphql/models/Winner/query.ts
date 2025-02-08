@@ -16,12 +16,18 @@ builder.queryField("winnersByEvent", (t) =>
       if (!user) throw new Error("Not Authenticated");
       if (!["JUDGE", "JURY"].includes(user.role))
         throw new Error("You are not authorized");
-      return ctx.prisma.winners.findMany({
-        where: {
-          eventId: Number(args.eventId),
-        },
-        ...query,
-      });
+
+      try {
+        return ctx.prisma.winners.findMany({
+          where: {
+            eventId: Number(args.eventId),
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch winners");
+      }
     },
   }),
 );
@@ -37,9 +43,15 @@ builder.queryField("allWinners", (t) =>
       if (!user) throw new Error("Not Authenticated");
       if (!["JUDGE", "JURY"].includes(user.role))
         throw new Error("You are not authorized");
-      return ctx.prisma.winners.findMany({
-        ...query,
-      });
+
+      try {
+        return ctx.prisma.winners.findMany({
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch winners");
+      }
     },
   }),
 );
@@ -136,12 +148,10 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
     },
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JURY" && user.role !== "ADMIN") {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JURY" && user.role !== "ADMIN")
         throw new Error("Not authorized");
-      }
 
       const colleges = await prisma.college.findMany();
 
@@ -161,8 +171,11 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
         },
       });
 
+      // TODO(Omkar): Error handling
+
       const collegePoints = await Promise.all(
         colleges.map(async (collegeItem) => {
+          // TODO(Omkar): Might be too heavy of a query need refactor
           const IsEligible = await checkChampionshipEligibility(collegeItem.id);
           const eachCollegeData: ChampionshipPointsClass = {
             collegeId: collegeItem.id,
@@ -194,24 +207,23 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
           collegeWinners.forEach((winner) => {
             if (!winner.Event) return;
 
-            if (winner.Event.category === "TECHNICAL") {
+            if (winner.Event.category === "TECHNICAL")
               eachCollegeData.techCount++;
-            } else if (winner.Event.category === "NON_TECHNICAL") {
+            else if (winner.Event.category === "NON_TECHNICAL")
               eachCollegeData.nonTechCount++;
-            } else if (winner.Event.category === "CORE") {
+            else if (winner.Event.category === "CORE")
               eachCollegeData.coreCount++;
-            }
 
-            if (winner.Event.tier === "GOLD") {
+            if (winner.Event.tier === "GOLD")
               eachCollegeData.goldCount[winner.type]++;
-            } else if (winner.Event.tier === "SILVER") {
+            else if (winner.Event.tier === "SILVER")
               eachCollegeData.silverCount[winner.type]++;
-            } else if (winner.Event.tier === "BRONZE") {
+            else if (winner.Event.tier === "BRONZE")
               eachCollegeData.bronzeCount[winner.type]++;
-            } else if (winner.Event.tier === "DIAMOND") {
+            else if (winner.Event.tier === "DIAMOND")
               eachCollegeData.diamondCount[winner.type]++;
-            }
           });
+
           return eachCollegeData;
         }),
       );

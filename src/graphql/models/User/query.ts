@@ -11,12 +11,13 @@ builder.queryField("users", (t) =>
         required: false,
       }),
     },
+    // TODO(Omkar): Intentionally didnt check for error handling, had no time to fix frontend code
     resolve: (query, root, args, ctx, info) => {
       const filter = args.contains ?? "";
       return ctx.prisma.user.findMany({
         where: {
           role: {
-            // TODO(Omkar): add "USER in the follwing list"
+            // TODO(Omkar): add "USER" in the follwing list after documentation work is done
             notIn: ["ADMIN", "JUDGE", "JURY"],
           },
           OR: [
@@ -51,9 +52,8 @@ builder.queryField("me", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
+
       return user;
     },
   }),
@@ -69,11 +69,16 @@ builder.queryField("userById", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      return ctx.prisma.user.findUniqueOrThrow({
-        where: {
-          id: Number(args.id),
-        },
-      });
+      try {
+        return ctx.prisma.user.findUniqueOrThrow({
+          where: {
+            id: Number(args.id),
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't fetch user details");
+      }
     },
   }),
 );
@@ -102,54 +107,76 @@ builder.queryField("getTotalRegistrations", (t) =>
       date: t.arg({ type: "DateTime", required: false }),
       last: t.arg({ type: "Int", required: false }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: async (root, args, ctx) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JURY" && user.role !== "ADMIN") {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JURY" && user.role !== "ADMIN")
         throw new Error("Not authorized");
+
+      try {
+        const internalRegistrations = await ctx.prisma.user.count({
+          where: {
+            role: {
+              notIn: ["JUDGE", "USER"],
+            },
+            collegeId: 1,
+            ...(args.date
+              ? {
+                  createdAt: {
+                    gte: args.date,
+                    lte: new Date(args.date.getTime() + 86400000),
+                  },
+                }
+              : args.last
+                ? {
+                    createdAt: {
+                      gte: new Date(
+                        new Date().getTime() - args.last * 86400000,
+                      ).toISOString(),
+                    },
+                  }
+                : {}),
+          },
+        });
+
+        const externalRegistrations = await ctx.prisma.user.count({
+          where: {
+            role: {
+              in: ["PARTICIPANT"],
+            },
+            collegeId: {
+              not: 1,
+            },
+            ...(args.date
+              ? {
+                  createdAt: {
+                    gte: args.date,
+                    lte: new Date(args.date.getTime() + 86400000),
+                  },
+                }
+              : args.last
+                ? {
+                    createdAt: {
+                      gte: new Date(
+                        new Date().getTime() - args.last * 86400000,
+                      ).toISOString(),
+                    },
+                  }
+                : {}),
+          },
+        });
+
+        return { internalRegistrations, externalRegistrations };
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't fetch registrations count",
+        );
       }
-      let dateFilter = {};
-
-      if (args.date) {
-        dateFilter = {
-          createdAt: {
-            gte: args.date,
-            lte: new Date(args.date.getTime() + 86400000),
-          },
-        };
-      } else if (args.last) {
-        dateFilter = {
-          createdAt: {
-            gte: new Date(
-              new Date().getTime() - args.last * 86400000,
-            ).toISOString(),
-          },
-        };
-      }
-
-      const internalRegistrations = await ctx.prisma.user.count({
-        where: {
-          role: {
-            in: ["PARTICIPANT", "ORGANIZER", "BRANCH_REP"],
-          },
-          collegeId: 1,
-          ...dateFilter,
-        },
-      });
-
-      const externalRegistrations = await ctx.prisma.user.count({
-        where: {
-          role: {
-            in: ["PARTICIPANT"],
-          },
-          collegeId: { not: 1 },
-          ...dateFilter,
-        },
-      });
-
-      return { internalRegistrations, externalRegistrations };
     },
   }),
 );

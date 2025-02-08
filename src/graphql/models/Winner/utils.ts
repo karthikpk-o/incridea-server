@@ -1,41 +1,6 @@
 import { prisma } from "~/utils/db";
 
-type Tier = "DIAMOND" | "GOLD" | "SILVER" | "BRONZE";
-type winnerType = "WINNER" | "RUNNER_UP" | "SECOND_RUNNER_UP";
-
-type PointsTable = {
-  [key in Tier]: {
-    [key in winnerType]: number;
-  };
-};
-
-const pointsTable: PointsTable = {
-  DIAMOND: {
-    WINNER: 600,
-    RUNNER_UP: 550,
-    SECOND_RUNNER_UP: 500,
-  },
-  GOLD: {
-    WINNER: 450,
-    RUNNER_UP: 400,
-    SECOND_RUNNER_UP: 350,
-  },
-  SILVER: {
-    WINNER: 300,
-    RUNNER_UP: 250,
-    SECOND_RUNNER_UP: 200,
-  },
-  BRONZE: {
-    WINNER: 150,
-    RUNNER_UP: 100,
-    SECOND_RUNNER_UP: 50,
-  },
-};
-
-const allocatePoints = (tier: Tier, winnerType: winnerType): number => {
-  return pointsTable[tier][winnerType];
-};
-
+// TODO(Omkar): Might be too heavy of a query need refactor
 const checkChampionshipEligibility = async (
   collegeId: number,
 ): Promise<boolean> => {
@@ -88,4 +53,4 @@ const checkChampionshipEligibility = async (
   return techCount >= 3 && nonTechCount >= 2;
 };
 
-export { allocatePoints, checkChampionshipEligibility };
+export { checkChampionshipEligibility };

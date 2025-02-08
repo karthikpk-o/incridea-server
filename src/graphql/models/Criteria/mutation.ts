@@ -77,7 +77,7 @@ builder.mutationField("createCriteria", (t) =>
             name: args.data.name
               ? `${args.data.name}`
               : `Criteria ${criteriaNo}`,
-            type: args.data.type ? args.data.type : CriteriaType.NUMBER,
+            type: args.data.type ?? CriteriaType.NUMBER,
           },
         });
       } catch (e) {

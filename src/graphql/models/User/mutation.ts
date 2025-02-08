@@ -80,8 +80,8 @@ builder.mutationField("signUp", (t) =>
         CONSTANT.AVATARS[
           Math.floor(Math.random() * (CONSTANT.AVATARS.length - 1))
         ]!.url;
-      const user = await createUserByEmailAndPassword(args.data);
-      return user;
+
+      return await createUserByEmailAndPassword(args.data);
     },
   }),
 );
@@ -126,23 +126,21 @@ builder.mutationField("login", (t) =>
     },
     resolve: async (root, args, ctx) => {
       const existingUser = await findUserByEmail(args.data.email);
-      if (!existingUser) {
-        throw new Error("No user found");
-      }
+      if (!existingUser) throw new Error("No user found");
+
       const validPassword = await bcrypt.compare(
         args.data.password,
         existingUser.password,
       );
-      if (!validPassword) {
-        throw new Error("Invalid password");
-      }
-      if (!existingUser.isVerified) {
-        throw new Error("Please verify your email");
-      }
+
+      if (!validPassword) throw new Error("Invalid password");
+
+      if (!existingUser.isVerified) throw new Error("Please verify your email");
 
       const jti = uuidv4();
-      //give new refresh token
+
       const { accessToken, refreshToken } = generateTokens(existingUser, jti);
+
       await addRefreshTokenToWhitelist({
         jti,
         refreshToken,
@@ -183,20 +181,22 @@ builder.mutationField("refreshToken", (t) =>
         throw new Error("Unauthorized");
 
       const hashedToken = hashToken(args.refreshToken);
-      if (hashedToken !== savedRefreshToken.hashedToken) {
+      if (hashedToken !== savedRefreshToken.hashedToken)
         throw new Error("Unauthorized");
-      }
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = await findUserById(payload.userId);
-      if (!user) {
-        throw new Error("Unauthorized");
-      }
+      if (!user) throw new Error("Unauthorized");
+
       await revokeRefreshToken(savedRefreshToken.id);
+
       const jti = uuidv4();
+
       const { accessToken, refreshToken: newRefreshToken } = generateTokens(
         user,
         jti,
       );
+
       await addRefreshTokenToWhitelist({
         jti,
         refreshToken: newRefreshToken,
@@ -254,7 +254,6 @@ builder.mutationField("sendEmailVerification", (t) =>
 builder.mutationField("verifyEmail", (t) =>
   t.prismaField({
     type: "User",
-
     errors: {
       types: [Error],
     },
@@ -267,9 +266,11 @@ builder.mutationField("verifyEmail", (t) =>
         secrets.JWT_VERIFICATION_SECRET,
       ) as JwtPayload;
       if (!payload.jti) throw new Error("Invalid token");
+
       const savedToken = await findVerificationTokenByID(payload.jti);
       if (!savedToken || savedToken.revoked === true)
         throw new Error("Invalid token");
+
       // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
       const user = await findUserById(payload.userId);
       if (!user) throw new Error("Invalid token");
@@ -286,7 +287,6 @@ builder.mutationField("verifyEmail", (t) =>
   }),
 );
 
-// send password reset email
 builder.mutationField("sendPasswordResetEmail", (t) =>
   t.field({
     type: "String",
@@ -330,7 +330,6 @@ builder.mutationField("sendPasswordResetEmail", (t) =>
   }),
 );
 
-// reset password
 builder.mutationField("resetPassword", (t) =>
   t.prismaField({
     type: "User",
@@ -347,6 +346,7 @@ builder.mutationField("resetPassword", (t) =>
         secrets.JWT_PASSWORD_RESET_SECRET,
       ) as JwtPayload;
       if (!payload.jti) throw new Error("Invalid token");
+
       const savedToken = await findPasswordResetTokenByID(payload.jti);
       if (!savedToken || savedToken.revoked === true)
         throw new Error("Invalid token");
@@ -361,6 +361,7 @@ builder.mutationField("resetPassword", (t) =>
         where: { id: user.id },
         data: { password: hashedPassword },
       });
+
       await revokePasswordResetToken(savedToken.id);
 
       // revoke any refresh tokens, signing out user from all devices
@@ -384,10 +385,19 @@ builder.mutationField("updateProfileImage", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      return await ctx.prisma.user.update({
-        where: { id: user.id },
-        data: { profileImage: args.imageURL },
-      });
+      try {
+        return await ctx.prisma.user.update({
+          where: {
+            id: user.id,
+          },
+          data: {
+            profileImage: args.imageURL,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't update profile image");
+      }
     },
   }),
 );

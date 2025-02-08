@@ -11,6 +11,7 @@ builder.queryField("events", (t) =>
         required: false,
       }),
     },
+    // TODO(Omkar): Intentionally didnt check for error handling, had no time to fix frontend code
     resolve: async (query, root, args, ctx, info) => {
       const filter = args.contains ?? "";
       try {

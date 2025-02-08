@@ -11,36 +11,30 @@ builder.mutationField("createTeam", (t) =>
     errors: {
       types: [Error],
     },
-
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (
-        user.role === "USER" ||
-        user.role === "JUDGE" ||
-        user.role === "JURY"
-      ) {
+      if (user.role === "USER" || user.role === "JUDGE" || user.role === "JURY")
         throw new Error("Not authorized");
-      }
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
         },
       });
       if (!event) throw new Error("Event not found");
-      // Non engineering college students can't register for more than 1 core event
-      if (!(user.College?.type === "ENGINEERING")) {
-        if (
-          !(await canRegister(
-            user.id,
-            user.College?.type as string,
-            event.category,
-          ))
-        )
-          throw new Error("Not eligible to register");
-      }
 
-      // TODO: check if event started and if yes, throw error
+      // Non engineering college students can't register for more than 1 core event
+      if (
+        !(user.College?.type === "ENGINEERING") &&
+        !(await canRegister(
+          user.id,
+          user.College?.type as string,
+          event.category,
+        ))
+      )
+        throw new Error("Not eligible to register");
+
       if (
         event.eventType === "INDIVIDUAL" ||
         event.eventType === "INDIVIDUAL_MULTIPLE_ENTRY"
@@ -60,6 +54,7 @@ builder.mutationField("createTeam", (t) =>
         });
         if (registeredTeam.length > 0) throw new Error("Already registered");
       }
+
       if (event.maxTeams && event.maxTeams > 0) {
         const totalTeams = await ctx.prisma.team.count({
           where: {
@@ -67,9 +62,8 @@ builder.mutationField("createTeam", (t) =>
             confirmed: true,
           },
         });
-        if (event.maxTeams && totalTeams >= event.maxTeams) {
+        if (event.maxTeams && totalTeams >= event.maxTeams)
           throw new Error("Event is full");
-        }
       }
 
       const team = await ctx.prisma.team.findUnique({
@@ -83,23 +77,27 @@ builder.mutationField("createTeam", (t) =>
           TeamMembers: true,
         },
       });
-      if (team) {
-        throw new Error("Team name already exists");
-      }
-      return await ctx.prisma.team.create({
-        data: {
-          name: args.name,
-          eventId: Number(args.eventId),
-          TeamMembers: {
-            create: {
-              userId: user.id,
+      if (team) throw new Error("Team name already exists");
+
+      try {
+        return await ctx.prisma.team.create({
+          data: {
+            name: args.name,
+            eventId: Number(args.eventId),
+            TeamMembers: {
+              create: {
+                userId: user.id,
+              },
             },
+            leaderId: user.id,
+            confirmed: false,
           },
-          leaderId: user.id,
-          confirmed: false,
-        },
-        ...query,
-      });
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create team");
+      }
     },
   }),
 );
@@ -115,16 +113,11 @@ builder.mutationField("joinTeam", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (
-        user.role === "USER" ||
-        user.role === "JUDGE" ||
-        user.role === "JURY"
-      ) {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role === "USER" || user.role === "JUDGE" || user.role === "JURY")
         throw new Error("Not authorized");
-      }
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -145,37 +138,33 @@ builder.mutationField("joinTeam", (t) =>
           },
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
-      if (team.confirmed) {
-        throw new Error("Can't Join team, Team is confirmed");
-      }
+      if (!team) throw new Error("Team not found");
+
+      if (team.confirmed) throw new Error("Can't Join team, Team is confirmed");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: team.eventId,
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      if (!(user.College?.type == "ENGINEERING")) {
-        if (
-          !(await canRegister(
-            user.id,
-            user.College?.type as string,
-            event.category,
-          ))
-        ) {
-          throw new Error("Not eligible to register");
-        }
-      }
+      if (!event) throw new Error("Event not found");
+
+      if (
+        !(user.College?.type == "ENGINEERING") &&
+        !(await canRegister(
+          user.id,
+          user.College?.type as string,
+          event.category,
+        ))
+      )
+        throw new Error("Not eligible to register");
+
       if (
         event.eventType === "INDIVIDUAL" ||
         event.eventType === "INDIVIDUAL_MULTIPLE_ENTRY"
-      ) {
+      )
         throw new Error("Event is individual");
-      }
+
       if (event.eventType === "TEAM") {
         const registeredTeam = await ctx.prisma.team.findMany({
           where: {
@@ -187,33 +176,37 @@ builder.mutationField("joinTeam", (t) =>
             },
           },
         });
-        if (registeredTeam.length > 0) {
-          throw new Error("Already registered");
-        }
+        if (registeredTeam.length > 0) throw new Error("Already registered");
       }
+
       const teamMembers = await ctx.prisma.teamMember.findMany({
         where: {
           teamId: Number(args.teamId),
         },
       });
-      if (teamMembers.length >= event.maxTeamSize) {
+      if (teamMembers.length >= event.maxTeamSize)
         throw new Error("Team is full");
-      }
+
       const leader = await ctx.prisma.user.findUnique({
         where: {
           id: Number(team.leaderId),
         },
       });
       const ignore = [65, 66, 67, 68, 69];
-      if (user.collegeId !== leader?.collegeId && !ignore.includes(event.id)) {
+      if (user.collegeId !== leader?.collegeId && !ignore.includes(event.id))
         throw new Error("Team members should belong to same college");
+
+      try {
+        return await ctx.prisma.teamMember.create({
+          data: {
+            teamId: Number(args.teamId),
+            userId: user.id,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't join team");
       }
-      return await ctx.prisma.teamMember.create({
-        data: {
-          teamId: Number(args.teamId),
-          userId: user.id,
-        },
-      });
     },
   }),
 );
@@ -229,16 +222,11 @@ builder.mutationField("leaveTeam", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (
-        user.role === "USER" ||
-        user.role === "JUDGE" ||
-        user.role === "JURY"
-      ) {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role === "USER" || user.role === "JUDGE" || user.role === "JURY")
         throw new Error("Not authorized");
-      }
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -247,27 +235,29 @@ builder.mutationField("leaveTeam", (t) =>
           TeamMembers: true,
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
+
       if (
         team.TeamMembers.find((member) => member.userId === user.id) ===
         undefined
-      ) {
+      )
         throw new Error("Not a member of team");
-      }
-      if (team.confirmed) {
-        throw new Error("Team is confirmed");
-      }
 
-      return await ctx.prisma.teamMember.delete({
-        where: {
-          userId_teamId: {
-            userId: user.id,
-            teamId: Number(args.teamId),
+      if (team.confirmed) throw new Error("Team is confirmed");
+
+      try {
+        return await ctx.prisma.teamMember.delete({
+          where: {
+            userId_teamId: {
+              userId: user.id,
+              teamId: Number(args.teamId),
+            },
           },
-        },
-      });
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't leave team");
+      }
     },
   }),
 );
@@ -283,38 +273,31 @@ builder.mutationField("confirmTeam", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (
-        user.role === "USER" ||
-        user.role === "JUDGE" ||
-        user.role === "JURY"
-      ) {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role === "USER" || user.role === "JUDGE" || user.role === "JURY")
         throw new Error("Not authorized");
-      }
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
-      if (team.leaderId !== user.id) {
+      if (!team) throw new Error("Team not found");
+
+      if (team.leaderId !== user.id)
         throw new Error("Not authorized only leader can confirm team");
-      }
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: team.eventId,
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      if (event.eventType === "INDIVIDUAL") {
+      if (!event) throw new Error("Event not found");
+
+      if (event.eventType === "INDIVIDUAL")
         throw new Error("Event is individual");
-      }
+
       if (event.maxTeams && event.maxTeams > 0) {
         const totalTeams = await ctx.prisma.team.count({
           where: {
@@ -322,14 +305,12 @@ builder.mutationField("confirmTeam", (t) =>
             confirmed: true,
           },
         });
-        if (event.maxTeams && totalTeams >= event.maxTeams) {
+        if (event.maxTeams && totalTeams >= event.maxTeams)
           throw new Error("Event is full");
-        }
       }
       const isPaidEvent = event.fees > 0;
-      if (isPaidEvent) {
-        throw new Error("Event is paid");
-      }
+      if (isPaidEvent) throw new Error("Event is paid");
+
       // check if user is leader of team
       const teamMembers = await ctx.prisma.teamMember.findMany({
         where: {
@@ -337,19 +318,24 @@ builder.mutationField("confirmTeam", (t) =>
         },
       });
 
-      if (teamMembers.length < event.minTeamSize) {
+      if (teamMembers.length < event.minTeamSize)
         throw new Error(
           `Team is not full need at least ${event.minTeamSize} members`,
         );
+
+      try {
+        return await ctx.prisma.team.update({
+          where: {
+            id: Number(args.teamId),
+          },
+          data: {
+            confirmed: true,
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't confirm team");
       }
-      return await ctx.prisma.team.update({
-        where: {
-          id: Number(args.teamId),
-        },
-        data: {
-          confirmed: true,
-        },
-      });
     },
   }),
 );
@@ -365,44 +351,41 @@ builder.mutationField("deleteTeam", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (
-        user.role === "USER" ||
-        user.role === "JUDGE" ||
-        user.role === "JURY"
-      ) {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role === "USER" || user.role === "JUDGE" || user.role === "JURY")
         throw new Error("Not authorized");
-      }
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
-      if (team.leaderId !== user.id) {
+      if (!team) throw new Error("Team not found");
+
+      if (team.leaderId !== user.id)
         throw new Error("Not authorized only leader can delete team");
-      }
-      if (team.confirmed) {
-        throw new Error("Team is confirmed");
-      }
+
+      if (team.confirmed) throw new Error("Team is confirmed");
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: team.eventId,
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
+      if (!event) throw new Error("Event not found");
+
+      try {
+        return await ctx.prisma.team.delete({
+          where: {
+            id: Number(args.teamId),
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete team");
       }
-      return await ctx.prisma.team.delete({
-        where: {
-          id: Number(args.teamId),
-        },
-        ...query,
-      });
     },
   }),
 );
@@ -419,9 +402,7 @@ builder.mutationField("removeTeamMember", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
+      if (!user) throw new Error("Not authenticated");
 
       const team = await ctx.prisma.team.findUnique({
         where: {
@@ -431,38 +412,36 @@ builder.mutationField("removeTeamMember", (t) =>
           TeamMembers: true,
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
 
       if (
         team.TeamMembers.find((member) => member.userId === Number(args.userId))
-      ) {
+      )
         throw new Error("User does not belong to this team");
-      }
 
-      if (!team.leaderId) {
-        throw new Error("The leader does not exist");
-      } else {
-        if (team.leaderId !== user.id) {
-          throw new Error("Action allowed only for the leader");
-        }
-      }
+      if (!team.leaderId) throw new Error("The leader does not exist");
+      else if (team.leaderId !== user.id)
+        throw new Error("Action allowed only for the leader");
 
-      return await ctx.prisma.teamMember.delete({
-        where: {
-          userId_teamId: {
-            userId: Number(args.userId),
-            teamId: Number(args.teamId),
+      try {
+        return await ctx.prisma.teamMember.delete({
+          where: {
+            userId_teamId: {
+              userId: Number(args.userId),
+              teamId: Number(args.teamId),
+            },
           },
-        },
-        ...query,
-      });
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't remove team member");
+      }
     },
   }),
 );
-// Solo Events
 
+// Solo Events
 builder.mutationField("registerSoloEvent", (t) =>
   t.prismaField({
     type: "Team",
@@ -474,40 +453,30 @@ builder.mutationField("registerSoloEvent", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (
-        user.role === "USER" ||
-        user.role === "JUDGE" ||
-        user.role === "JURY"
-      ) {
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role === "USER" || user.role === "JUDGE" || user.role === "JURY")
         throw new Error("Not authorized");
-      }
+
       const event = await ctx.prisma.event.findUnique({
         where: {
           id: Number(args.eventId),
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
-      // Non engineering college students can't register for more than 1 core event
-      if (!(user.College?.type === "ENGINEERING")) {
-        if (
-          !(await canRegister(
-            user.id,
-            user.College?.type as string,
-            event.category,
-          ))
-        ) {
-          throw new Error("Not eligible to register");
-        }
-      }
+      if (!event) throw new Error("Event not found");
 
-      if (event.eventType === "TEAM") {
-        throw new Error("Event is team");
-      }
+      // Non engineering college students can't register for more than 1 core event
+      if (
+        !(user.College?.type === "ENGINEERING") &&
+        !(await canRegister(
+          user.id,
+          user.College?.type as string,
+          event.category,
+        ))
+      )
+        throw new Error("Not eligible to register");
+
+      if (event.eventType === "TEAM") throw new Error("Event is team");
 
       const isPaidEvent = event.fees > 0;
       if (event.eventType === "INDIVIDUAL") {
@@ -521,24 +490,27 @@ builder.mutationField("registerSoloEvent", (t) =>
             },
           },
         });
-        if (registeredTeam.length > 0) {
-          throw new Error("Already registered");
-        }
+        if (registeredTeam.length > 0) throw new Error("Already registered");
       }
-      const team = await ctx.prisma.team.create({
-        data: {
-          name: user.id.toString(),
-          eventId: Number(args.eventId),
-          leaderId: user.id,
-          confirmed: !isPaidEvent,
-          TeamMembers: {
-            create: {
-              userId: user.id,
+
+      try {
+        return await ctx.prisma.team.create({
+          data: {
+            name: user.id.toString(),
+            eventId: Number(args.eventId),
+            leaderId: user.id,
+            confirmed: !isPaidEvent,
+            TeamMembers: {
+              create: {
+                userId: user.id,
+              },
             },
           },
-        },
-      });
-      return team;
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't register for event");
+      }
     },
   }),
 );
@@ -582,14 +554,13 @@ builder.mutationField("organizerCreateTeam", (t) =>
         throw new Error("Not authorized");
 
       try {
-        const team = await ctx.prisma.team.create({
+        return await ctx.prisma.team.create({
           data: {
             name: args.name,
             eventId: Number(args.eventId),
             confirmed: true,
           },
         });
-        return team;
       } catch (e) {
         console.log(e);
         throw new Error("Team already exists");
@@ -609,12 +580,10 @@ builder.mutationField("organizerDeleteTeam", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -627,21 +596,25 @@ builder.mutationField("organizerDeleteTeam", (t) =>
           },
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
+
       if (
         team.Event.Organizers.filter((org) => org.userId === user.id).length ===
         0
-      ) {
+      )
         throw new Error("Not authorized");
+
+      try {
+        return await ctx.prisma.team.delete({
+          where: {
+            id: Number(args.teamId),
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete team");
       }
-      return await ctx.prisma.team.delete({
-        where: {
-          id: Number(args.teamId),
-        },
-        ...query,
-      });
     },
   }),
 );
@@ -658,12 +631,10 @@ builder.mutationField("organizerAddTeamMember", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -676,9 +647,8 @@ builder.mutationField("organizerAddTeamMember", (t) =>
           },
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
+
       const participant = await ctx.prisma.user.findUnique({
         where: {
           id: Number(args.userId),
@@ -691,35 +661,33 @@ builder.mutationField("organizerAddTeamMember", (t) =>
         !participant ||
         participant.role === "USER" ||
         participant.role === "JUDGE"
-      ) {
+      )
         throw new Error(`No participant with id ${args.userId}`);
-      }
+
       if (
         team.Event.Organizers.filter((org) => org.userId === user.id).length ===
         0
-      ) {
+      )
         throw new Error("Not authorized");
-      }
-      if (!(participant.College?.type === "ENGINEERING")) {
-        if (
-          !(await canRegister(
-            participant.id,
-            participant.College?.type as string,
-            team.Event.category,
-          ))
-        ) {
-          throw new Error("Not eligible to register");
-        }
-      }
+
+      if (
+        !(participant.College?.type === "ENGINEERING") &&
+        !(await canRegister(
+          participant.id,
+          participant.College?.type as string,
+          team.Event.category,
+        ))
+      )
+        throw new Error("Not eligible to register");
 
       const teamMembers = await ctx.prisma.teamMember.findMany({
         where: {
           teamId: Number(args.teamId),
         },
       });
-      if (teamMembers.length >= team.Event.maxTeamSize) {
+      if (teamMembers.length >= team.Event.maxTeamSize)
         throw new Error("Team is full");
-      }
+
       if (team.Event.eventType === "TEAM") {
         const registeredTeam = await ctx.prisma.team.findMany({
           where: {
@@ -731,10 +699,9 @@ builder.mutationField("organizerAddTeamMember", (t) =>
             },
           },
         });
-        if (registeredTeam.length > 0) {
-          throw new Error("Already registered");
-        }
+        if (registeredTeam.length > 0) throw new Error("Already registered");
       }
+
       if (teamMembers.length !== 0) {
         const leader = await ctx.prisma.user.findUnique({
           where: {
@@ -744,15 +711,14 @@ builder.mutationField("organizerAddTeamMember", (t) =>
             College: true,
           },
         });
-        console.log(leader?.College?.id, participant.College?.id);
         const ignore = [65, 66, 67, 68, 69];
         if (
           participant.College?.id !== leader?.College?.id &&
           !ignore.includes(team.Event.id)
-        ) {
+        )
           throw new Error("Team members should belong to same college");
-        }
       }
+
       if (teamMembers.length === 0)
         await ctx.prisma.team.update({
           where: {
@@ -763,12 +729,17 @@ builder.mutationField("organizerAddTeamMember", (t) =>
           },
         });
 
-      return await ctx.prisma.teamMember.create({
-        data: {
-          userId: participant.id,
-          teamId: Number(args.teamId),
-        },
-      });
+      try {
+        return await ctx.prisma.teamMember.create({
+          data: {
+            userId: participant.id,
+            teamId: Number(args.teamId),
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't add team member");
+      }
     },
   }),
 );
@@ -785,12 +756,10 @@ builder.mutationField("organizerDeleteTeamMember", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -803,24 +772,28 @@ builder.mutationField("organizerDeleteTeamMember", (t) =>
           },
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
+
       if (
         team.Event.Organizers.filter((org) => org.userId === user.id).length ===
         0
-      ) {
+      )
         throw new Error("Not authorized");
-      }
-      return await ctx.prisma.teamMember.delete({
-        where: {
-          userId_teamId: {
-            userId: Number(args.userId),
-            teamId: Number(args.teamId),
+
+      try {
+        return await ctx.prisma.teamMember.delete({
+          where: {
+            userId_teamId: {
+              userId: Number(args.userId),
+              teamId: Number(args.teamId),
+            },
           },
-        },
-        ...query,
-      });
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete team member");
+      }
     },
   }),
 );
@@ -838,12 +811,10 @@ builder.mutationField("organizerMarkAttendance", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -857,15 +828,14 @@ builder.mutationField("organizerMarkAttendance", (t) =>
           TeamMembers: true,
         },
       });
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
+
       if (
         team.Event.Organizers.filter((org) => org.userId === user.id).length ===
         0
-      ) {
+      )
         throw new Error("Not authorized");
-      }
+
       // get all userIds from team
       const teamMembers = team.TeamMembers.map((member) => member.userId);
       if (args.attended) {
@@ -934,15 +904,21 @@ builder.mutationField("organizerMarkAttendance", (t) =>
           });
         }
       }
-      return await ctx.prisma.team.update({
-        where: {
-          id: Number(args.teamId),
-        },
-        data: {
-          attended: args.attended,
-        },
-        ...query,
-      });
+
+      try {
+        return await ctx.prisma.team.update({
+          where: {
+            id: Number(args.teamId),
+          },
+          data: {
+            attended: args.attended,
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't mark attendance");
+      }
     },
   }),
 );
@@ -961,12 +937,10 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
     },
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findFirst({
         where: {
           AND: [
@@ -983,9 +957,8 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
           ],
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
+      if (!event) throw new Error("Event not found");
+
       const participant = await ctx.prisma.user.findUnique({
         where: {
           id: Number(args.userId),
@@ -995,9 +968,9 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
         !participant ||
         participant.role === "USER" ||
         participant.role === "JUDGE"
-      ) {
+      )
         throw new Error(`No participant with id ${args.userId}`);
-      }
+
       const updated = await ctx.prisma.team.updateMany({
         where: {
           TeamMembers: {
@@ -1010,9 +983,8 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
           attended: args.attended,
         },
       });
-      if (updated.count === 0) {
-        throw new Error("No team found");
-      }
+      if (updated.count === 0) throw new Error("No team found");
+
       if (args.attended) {
         // give xp for attedning event
         const level = await ctx.prisma.level.findFirst({
@@ -1048,7 +1020,7 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
               levelId: level.id,
             },
           });
-          if (!users) {
+          if (!users)
             // give xp to all team members
             await ctx.prisma.xP.create({
               data: {
@@ -1056,7 +1028,6 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
                 levelId: level.id,
               },
             });
-          }
         }
       } else {
         // remove xp for attedning event
@@ -1065,7 +1036,7 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
             EventId: Number(args.eventId),
           },
         });
-        if (level) {
+        if (level)
           // remove xp to all team members
           await ctx.prisma.xP.deleteMany({
             where: {
@@ -1073,7 +1044,6 @@ builder.mutationField("organizerMarkAttendanceSolo", (t) =>
               levelId: level.id,
             },
           });
-        }
       }
       return updated.count;
     },
@@ -1092,12 +1062,10 @@ builder.mutationField("organizerRegisterSolo", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "ORGANIZER") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "ORGANIZER") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findFirst({
         where: {
           AND: [
@@ -1114,9 +1082,8 @@ builder.mutationField("organizerRegisterSolo", (t) =>
           ],
         },
       });
-      if (!event) {
-        throw new Error("Event not found");
-      }
+      if (!event) throw new Error("Event not found");
+
       if (
         event.eventType === "TEAM" ||
         event.eventType === "TEAM_MULTIPLE_ENTRY"
@@ -1135,21 +1102,18 @@ builder.mutationField("organizerRegisterSolo", (t) =>
         !participant ||
         participant.role === "USER" ||
         participant.role === "JUDGE"
-      ) {
+      )
         throw new Error(`No participant with id ${args.userId}`);
-      }
 
-      if (!(user.College?.type === "ENGINEERING")) {
-        if (
-          !(await canRegister(
-            participant.id,
-            participant.College?.type as string,
-            event.category,
-          ))
-        ) {
-          throw new Error("Not eligible to register");
-        }
-      }
+      if (
+        !(user.College?.type === "ENGINEERING") &&
+        !(await canRegister(
+          participant.id,
+          participant.College?.type as string,
+          event.category,
+        ))
+      )
+        throw new Error("Not eligible to register");
 
       if (event.eventType === "INDIVIDUAL") {
         const registered = await ctx.prisma.team.findMany({
@@ -1172,23 +1136,26 @@ builder.mutationField("organizerRegisterSolo", (t) =>
           throw new Error("Participant already registered");
       }
 
-      const team = await ctx.prisma.team.create({
-        data: {
-          eventId: Number(args.eventId),
-          name: args.userId,
-          attended: true,
-          confirmed: true,
-          leaderId: Number(args.userId),
-          TeamMembers: {
-            create: {
-              userId: Number(args.userId),
+      try {
+        return await ctx.prisma.team.create({
+          data: {
+            eventId: Number(args.eventId),
+            name: args.userId,
+            attended: true,
+            confirmed: true,
+            leaderId: Number(args.userId),
+            TeamMembers: {
+              create: {
+                userId: Number(args.userId),
+              },
             },
           },
-        },
-        ...query,
-      });
-
-      return team;
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't register for event");
+      }
     },
   }),
 );
@@ -1206,12 +1173,10 @@ builder.mutationField("promoteToNextRound", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JUDGE") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -1225,9 +1190,7 @@ builder.mutationField("promoteToNextRound", (t) =>
         },
       });
 
-      if (!team) {
-        throw new Error("Team not found");
-      }
+      if (!team) throw new Error("Team not found");
 
       const round = await ctx.prisma.round.findUnique({
         where: {
@@ -1240,44 +1203,49 @@ builder.mutationField("promoteToNextRound", (t) =>
           Judges: true,
         },
       });
-      if (!round) {
-        throw new Error("Round not found");
-      }
-      if (round.completed) {
-        throw new Error("Round completed");
-      }
-      if (
-        round.Judges.filter((judge) => judge.userId === user.id).length === 0
-      ) {
+      if (!round) throw new Error("Round not found");
+
+      if (round.completed) throw new Error("Round completed");
+
+      if (round.Judges.filter((judge) => judge.userId === user.id).length === 0)
         throw new Error("Not authorized");
-      }
+
       if (
         team.Event.Rounds.length <= Number(args.roundNo) ||
         Number(args.roundNo) <= 0
-      ) {
+      )
         throw new Error("Invalid round number");
-      }
+
       let roundNo = team.roundNo;
 
-      if (args.selected && team.roundNo === Number(args.roundNo)) {
+      if (args.selected && team.roundNo === Number(args.roundNo))
         roundNo = Number(args.roundNo) + 1;
-      } else if (!args.selected && team.roundNo === Number(args.roundNo) + 1) {
+      else if (!args.selected && team.roundNo === Number(args.roundNo) + 1)
         roundNo = Number(args.roundNo);
+
+      try {
+        const data = await ctx.prisma.team.update({
+          where: {
+            id: Number(args.teamId),
+          },
+          data: {
+            roundNo,
+          },
+          ...query,
+        });
+
+        ctx.pubsub.publish(
+          `TEAM_UPDATED/${team.Event.id}-${args.roundNo}`,
+          data,
+        );
+
+        return data;
+      } catch (e) {
+        console.log(e);
+        throw new Error(
+          "Something went wrong! Couldn't promote team to next round",
+        );
       }
-
-      const data = await ctx.prisma.team.update({
-        where: {
-          id: Number(args.teamId),
-        },
-        data: {
-          roundNo,
-        },
-        ...query,
-      });
-
-      ctx.pubsub.publish(`TEAM_UPDATED/${team.Event.id}-${args.roundNo}`, data);
-
-      return data;
     },
   }),
 );

@@ -38,6 +38,7 @@ const builder = new SchemaBuilder<{
     clientMutationId: "omit",
     cursorType: "String",
   },
+  // TODO(Omkar): Subcriptions
   // smartSubscriptions: {
   //   ...subscribeOptionsFromIterator((name, ctx) => {
   //     return ctx.pubsub.asyncIterableIterator(name);

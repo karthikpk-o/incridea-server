@@ -19,6 +19,7 @@ const wsServer = new WebSocketServer({
   path: yoga.graphqlEndpoint,
 });
 
+// TODO(Omkar): subscriptions
 useServer(
   {
     // @ts-expect-error refer docss https://the-guild.dev/graphql/yoga-server/docs/features/subscriptions#graphql-over-websocket-protocol-via-graphql-ws

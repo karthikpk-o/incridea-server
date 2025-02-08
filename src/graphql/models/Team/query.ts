@@ -15,6 +15,7 @@ builder.queryField("teamsByRound", (t) =>
       }),
       contains: t.arg.string({ required: false }),
     },
+    // TODO(Omkar): Intentionally didnt check for error handling, had no time to fix frontend code
     resolve: async (query, root, args, ctx, info) => {
       const filter = args.contains ?? "";
       const user = await ctx.user;
@@ -46,11 +47,9 @@ builder.queryField("teamsByRound", (t) =>
             ],
           },
         });
-        if (isOrganizerOrJudge.length === 0) {
-          return [];
-        }
+        if (isOrganizerOrJudge.length === 0) return [];
       }
-      const teams = ctx.prisma.team.findMany({
+      return ctx.prisma.team.findMany({
         where: {
           roundNo: {
             gte: args.roundNo,
@@ -87,7 +86,6 @@ builder.queryField("teamsByRound", (t) =>
         },
         ...query,
       });
-      return teams;
     },
   }),
 );

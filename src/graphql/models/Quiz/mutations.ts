@@ -131,7 +131,7 @@ builder.mutationField("updateQuiz", (t) =>
         } else if (q.mode === "edit") {
           await ctx.prisma.question.update({
             where: {
-              id: q.id ? q.id : "",
+              id: q.id ?? "",
             },
             data: {
               question: q.question,
@@ -149,7 +149,9 @@ builder.mutationField("updateQuiz", (t) =>
           });
         } else if (q.mode === "delete") {
           await ctx.prisma.question.delete({
-            where: { id: q.id ? q.id : "" },
+            where: {
+              id: q.id ?? "",
+            },
           });
         }
       }

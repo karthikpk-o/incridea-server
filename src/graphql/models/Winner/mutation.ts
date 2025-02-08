@@ -1,8 +1,8 @@
 import { WinnerType } from "@prisma/client";
 
 import { builder } from "~/graphql/builder";
-import { allocatePoints } from "./utils";
 import { prisma } from "~/utils/db";
+import { CONSTANT } from "~/constants";
 
 builder.mutationField("createWinner", (t) =>
   t.prismaField({
@@ -17,12 +17,10 @@ builder.mutationField("createWinner", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JUDGE") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
       const event = await ctx.prisma.event.findFirst({
         where: {
           id: Number(args.eventId),
@@ -48,22 +46,20 @@ builder.mutationField("createWinner", (t) =>
           },
         },
       });
-      if (!event) {
-        throw new Error("Not authorized");
-      }
+      if (!event) throw new Error("Not authorized");
 
       const total_rounds = event.Rounds.length;
-      if (event.Rounds[total_rounds - 1]!.completed) {
-        throw new Error("Cant Change Round Completed");
-      }
+      if (event.Rounds[total_rounds - 1]!.completed)
+        throw new Error("Cant change round completed");
+
       // check if he is the judge of last round
       if (
         !event.Rounds[total_rounds - 1]!.Judges.some(
           (judge) => judge.userId === user.id,
         )
-      ) {
+      )
         throw new Error("Not authorized");
-      }
+
       const team = await ctx.prisma.team.findUnique({
         where: {
           id: Number(args.teamId),
@@ -73,30 +69,26 @@ builder.mutationField("createWinner", (t) =>
         },
       });
 
-      if (!team) {
+      if (!team) throw new Error("Team not found");
+
+      if (team.eventId !== Number(args.eventId))
         throw new Error("Team not found");
-      }
-      if (team.eventId !== Number(args.eventId)) {
-        throw new Error("Team not found");
-      }
-      if (team.roundNo !== total_rounds) {
+
+      if (team.roundNo !== total_rounds)
         throw new Error("Team not promoted to last round");
-      }
 
       const winner = await ctx.prisma.winners.findFirst({
         where: {
-          type: args.type as WinnerType,
+          type: args.type,
           eventId: Number(args.eventId),
           teamId: Number(args.teamId),
         },
       });
-      if (winner) {
-        throw new Error("Winner already exists");
-      }
+      if (winner) throw new Error("Winner already exists");
 
       try {
-        const data = await ctx.prisma.$transaction(async (prisma) => {
-          const data = await ctx.prisma.winners.create({
+        return await ctx.prisma.$transaction(async (db) => {
+          const data = await db.winners.create({
             data: {
               teamId: Number(args.teamId),
               eventId: Number(args.eventId),
@@ -105,7 +97,7 @@ builder.mutationField("createWinner", (t) =>
             ...query,
           });
           //check if winner level exists
-          const levelExists = await ctx.prisma.level.findFirst({
+          const levelExists = await db.level.findFirst({
             where: {
               winnerId: data.id,
             },
@@ -114,7 +106,7 @@ builder.mutationField("createWinner", (t) =>
           const teamMembers = team.TeamMembers.map((member) => member.userId);
           if (levelExists) {
             //check if team members are already given xp points
-            const xp = await ctx.prisma.xP.findMany({
+            const xp = await db.xP.findMany({
               where: {
                 userId: {
                   in: teamMembers,
@@ -124,7 +116,7 @@ builder.mutationField("createWinner", (t) =>
             });
             if (xp.length == 0) {
               //give xp points to all team members
-              await ctx.prisma.xP.createMany({
+              await db.xP.createMany({
                 data: teamMembers.map((userId) => ({
                   userId,
                   levelId: levelExists.id,
@@ -133,28 +125,17 @@ builder.mutationField("createWinner", (t) =>
             }
           } else {
             // give xp points for winning
-            let point =
-              args.type === "WINNER"
-                ? 100
-                : args.type === "RUNNER_UP"
-                  ? 75
-                  : 50;
-            if (event.category === "CORE") {
-              point =
-                args.type === "WINNER"
-                  ? 150
-                  : args.type === "RUNNER_UP"
-                    ? 100
-                    : 75;
-            }
-            const level = await ctx.prisma.level.create({
+            const point =
+              CONSTANT.WINNER_POINTS.USER[event.category][args.type];
+
+            const level = await db.level.create({
               data: {
                 point: point,
                 winnerId: data.id,
               },
             });
             //give xp points to all team members
-            await ctx.prisma.xP.createMany({
+            await db.xP.createMany({
               data: teamMembers.map((userId) => ({
                 userId,
                 levelId: level.id,
@@ -162,7 +143,7 @@ builder.mutationField("createWinner", (t) =>
             });
           }
 
-          const college = await ctx.prisma.user.findUnique({
+          const college = await db.user.findUnique({
             where: {
               id: team.leaderId ?? 0,
             },
@@ -175,12 +156,12 @@ builder.mutationField("createWinner", (t) =>
             },
           });
 
-          if (!college || !college.College) {
+          if (!college || !college.College)
             throw new Error("College not found");
-          }
 
-          const points = allocatePoints(event.tier, args.type);
-          await ctx.prisma.college.update({
+          const points = CONSTANT.WINNER_POINTS.COLLEGE[event.tier][args.type];
+
+          await db.college.update({
             where: {
               id: college.College.id,
             },
@@ -193,15 +174,14 @@ builder.mutationField("createWinner", (t) =>
 
           return data;
         });
-        return data;
-      } catch {
-        throw new Error("could not create winner, please try again");
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't create winners");
       }
     },
   }),
 );
 
-// delete winner
 builder.mutationField("deleteWinner", (t) =>
   t.prismaField({
     type: "Winners",
@@ -213,12 +193,10 @@ builder.mutationField("deleteWinner", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      if (user.role !== "JUDGE") {
-        throw new Error("Not authorized");
-      }
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
       const winner = await ctx.prisma.winners.findUnique({
         where: {
           id: Number(args.id),
@@ -236,9 +214,8 @@ builder.mutationField("deleteWinner", (t) =>
           },
         },
       });
-      if (!winner) {
-        throw new Error("Winner not found");
-      }
+      if (!winner) throw new Error("Winner not found");
+
       const event = await ctx.prisma.event.findFirst({
         where: {
           id: winner.eventId,
@@ -262,25 +239,23 @@ builder.mutationField("deleteWinner", (t) =>
           },
         },
       });
-      if (!event) {
-        throw new Error("Not authorized");
-      }
+      if (!event) throw new Error("Not authorized");
+
       const total_rounds = event.Rounds.length;
-      if (event.Rounds[total_rounds - 1]!.completed) {
+      if (event.Rounds[total_rounds - 1]!.completed)
         throw new Error("Cant Change Round Completed");
-      }
+
       if (
         !event.Rounds[total_rounds - 1]!.Judges.some(
           (judge) => judge.userId === user.id,
         )
-      ) {
+      )
         throw new Error("Not authorized");
-      }
 
       try {
-        const data = await prisma.$transaction(async (prisma) => {
+        return await prisma.$transaction(async (db) => {
           //delete winner xp points
-          const level = await ctx.prisma.level.findFirst({
+          const level = await db.level.findFirst({
             where: {
               winnerId: Number(args.id),
             },
@@ -289,8 +264,9 @@ builder.mutationField("deleteWinner", (t) =>
           const teamMembers = winner.Team.TeamMembers.map(
             (member) => member.userId,
           );
+
           if (level) {
-            await ctx.prisma.xP.deleteMany({
+            await db.xP.deleteMany({
               where: {
                 userId: {
                   in: teamMembers,
@@ -298,15 +274,17 @@ builder.mutationField("deleteWinner", (t) =>
                 levelId: level.id,
               },
             });
-            await ctx.prisma.level.delete({
+            await db.level.delete({
               where: {
                 id: level.id,
               },
             });
           }
 
-          const points = allocatePoints(event.tier, winner.type);
-          const college = await ctx.prisma.user.findUnique({
+          const points =
+            CONSTANT.WINNER_POINTS.COLLEGE[event.tier][winner.type];
+
+          const college = await db.user.findUnique({
             where: {
               id: winner.Team.leaderId ?? 0,
             },
@@ -319,11 +297,10 @@ builder.mutationField("deleteWinner", (t) =>
             },
           });
 
-          if (!college || !college.College) {
+          if (!college || !college.College)
             throw new Error("College not found");
-          }
 
-          await ctx.prisma.college.update({
+          await db.college.update({
             where: {
               id: college.College.id,
             },
@@ -334,18 +311,16 @@ builder.mutationField("deleteWinner", (t) =>
             },
           });
 
-          const data = await ctx.prisma.winners.delete({
+          return await db.winners.delete({
             where: {
               id: Number(args.id),
             },
             ...query,
           });
-
-          return data;
         });
-        return data;
-      } catch {
-        throw new Error("could not delete winner, please try again");
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't delete winner");
       }
     },
   }),

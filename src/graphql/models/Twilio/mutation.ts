@@ -9,60 +9,60 @@ builder.mutationField("notifyParticipants", (t) =>
       eventId: t.arg.id({ required: true }),
       roundNo: t.arg.int({ required: true }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: async (root, args, ctx) => {
-      try {
-        const user = await ctx.user;
-        if (!user) {
-          throw new Error("Not authenticated");
-        }
-        if (user.role !== "ORGANIZER") {
-          throw new Error("Not authorized to send WhatsApp notifications");
-        }
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
 
-        const round = await ctx.prisma.round.findUnique({
-          where: {
-            eventId_roundNo: {
-              eventId: Number(args.eventId),
-              roundNo: args.roundNo,
-            },
+      if (user.role !== "ORGANIZER")
+        throw new Error("Not authorized to send WhatsApp notifications");
+
+      const round = await ctx.prisma.round.findUnique({
+        where: {
+          eventId_roundNo: {
+            eventId: Number(args.eventId),
+            roundNo: args.roundNo,
           },
-          include: {
-            Event: {
-              include: {
-                Teams: {
-                  where: {
-                    roundNo: args.roundNo,
-                  },
-                  include: {
-                    TeamMembers: {
-                      include: {
-                        User: true,
-                      },
+        },
+        include: {
+          Event: {
+            include: {
+              Teams: {
+                where: {
+                  roundNo: args.roundNo,
+                },
+                include: {
+                  TeamMembers: {
+                    include: {
+                      User: true,
                     },
                   },
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        if (!round) {
-          throw new Error("Round not found");
-        }
+      if (!round) throw new Error("Round not found");
 
-        if (round.notificationSent) {
-          return "Notification already sent for this round";
-        }
+      if (round.notificationSent)
+        return "Notification already sent for this round";
 
-        const formattedDate = round.date
-          ? format(new Date(round.date), "MMMM do, yyyy h:mm a")
-          : "TBD";
-        const venue = round.Event.venue;
-        const templateSid =
-          args.roundNo === 1
-            ? "HXa91e9e7ea7c7c64def67295495c7a57c"
-            : "HXa025709e347a0bb12ac474bb1e2173cf";
+      const formattedDate = round.date
+        ? format(new Date(round.date), "MMMM do, yyyy h:mm a")
+        : "TBD";
 
+      const venue = round.Event.venue;
+
+      const templateSid =
+        args.roundNo === 1
+          ? "HXa91e9e7ea7c7c64def67295495c7a57c"
+          : "HXa025709e347a0bb12ac474bb1e2173cf";
+
+      try {
         for (const team of round.Event.Teams) {
           for (const member of team.TeamMembers) {
             const contentVariables = JSON.stringify({
@@ -73,7 +73,9 @@ builder.mutationField("notifyParticipants", (t) =>
               "5": formattedDate,
               "6": venue,
             });
+
             const phoneNumberWithCountryCode = `+91${member.User.phoneNumber}`;
+
             await sendWhatsAppMessage(
               phoneNumberWithCountryCode,
               templateSid,
@@ -109,39 +111,38 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
     args: {
       eventId: t.arg.id({ required: true }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: async (root, args, ctx) => {
-      try {
-        const user = await ctx.user;
-        if (!user) {
-          throw new Error("Not authenticated");
-        }
-        if (user.role !== "JURY") {
-          throw new Error("Not authorized to send WhatsApp notifications");
-        }
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
 
-        const event = await ctx.prisma.event.findUnique({
-          where: { id: Number(args.eventId) },
-          include: {
-            Winner: {
-              include: {
-                Team: {
-                  include: {
-                    TeamMembers: {
-                      include: {
-                        User: true,
-                      },
+      if (user.role !== "JURY")
+        throw new Error("Not authorized to send WhatsApp notifications");
+
+      const event = await ctx.prisma.event.findUnique({
+        where: { id: Number(args.eventId) },
+        include: {
+          Winner: {
+            include: {
+              Team: {
+                include: {
+                  TeamMembers: {
+                    include: {
+                      User: true,
                     },
                   },
                 },
               },
             },
           },
-        });
+        },
+      });
 
-        if (!event) {
-          throw new Error("Event not found");
-        }
+      if (!event) throw new Error("Event not found");
 
+      try {
         const notificationSent = await ctx.prisma.winners.findFirst({
           where: {
             eventId: Number(args.eventId),
@@ -149,11 +150,10 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
           },
         });
 
-        if (notificationSent) {
+        if (notificationSent)
           return "Notification already sent for this event winners";
-        }
 
-        const EventName = event.name;
+        const eventName = event.name;
 
         for (const winner of event.Winner) {
           for (const member of winner.Team.TeamMembers) {
@@ -161,7 +161,7 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
               "1": member.User.name,
               "2": winner.Team.name,
               "3": winner.type,
-              "4": EventName,
+              "4": eventName,
             });
             const phoneNumberWithCountryCode = `+91${member.User.phoneNumber}`;
             await sendWhatsAppMessage(

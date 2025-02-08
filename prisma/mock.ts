@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 
+// TODO(Omkar): delete this file?
 const prisma = new PrismaClient();
 
 // async function main() {

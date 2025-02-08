@@ -35,5 +35,6 @@ builder.prismaObject("User", {
     hotel: t.relation("UserInHotel", {
       nullable: true,
     }),
+    stoneVisibilities: t.exposeString("stoneVisibilities"),
   }),
 });

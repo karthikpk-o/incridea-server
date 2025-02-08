@@ -1,6 +1,5 @@
 import { builder } from "~/graphql/builder";
 
-//get all user xp points
 builder.queryField("getUserXp", (t) =>
   t.prismaField({
     type: ["XP"],
@@ -9,24 +8,26 @@ builder.queryField("getUserXp", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
+      if (!user) throw new Error("Not authenticated");
+
+      try {
+        return await ctx.prisma.xP.findMany({
+          where: {
+            userId: Number(user.id),
+          },
+          include: {
+            Level: true,
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't get xp");
       }
-      const data = await ctx.prisma.xP.findMany({
-        where: {
-          userId: Number(user.id),
-        },
-        include: {
-          Level: true,
-        },
-        ...query,
-      });
-      return data;
     },
   }),
 );
 
-//get user score based on level
 builder.queryField("getUserLevelScore", (t) =>
   t.prismaField({
     type: "XP",
@@ -38,27 +39,29 @@ builder.queryField("getUserLevelScore", (t) =>
     },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
-      if (!user) {
-        throw new Error("Not authenticated");
-      }
-      const data = await ctx.prisma.xP.findUniqueOrThrow({
-        where: {
-          userId_levelId: {
-            userId: Number(user.id),
-            levelId: Number(args.levelId),
+      if (!user) throw new Error("Not authenticated");
+
+      try {
+        return await ctx.prisma.xP.findUniqueOrThrow({
+          where: {
+            userId_levelId: {
+              userId: Number(user.id),
+              levelId: Number(args.levelId),
+            },
           },
-        },
-        include: {
-          Level: true,
-        },
-        ...query,
-      });
-      return data;
+          include: {
+            Level: true,
+          },
+          ...query,
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't get level score");
+      }
     },
   }),
 );
 
-//get all users xp for leaderboard
 builder.queryField("getXpLeaderboard", (t) =>
   t.prismaField({
     type: ["XP"],
@@ -66,16 +69,20 @@ builder.queryField("getXpLeaderboard", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      const leaderboard = await ctx.prisma.xP.findMany({
-        include: {
-          User: true,
-          Level: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
-      return leaderboard;
+      try {
+        return await ctx.prisma.xP.findMany({
+          include: {
+            User: true,
+            Level: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        });
+      } catch (e) {
+        console.log(e);
+        throw new Error("Something went wrong! Couldn't get leaderboard");
+      }
     },
   }),
 );

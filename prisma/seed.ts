@@ -15,7 +15,7 @@ const main = async () => {
     },
   });
 
-  const user = await db.user.create({
+  await db.user.create({
     data: {
       email: "admin@incridea.in",
       name: "ADMIN",
@@ -23,13 +23,19 @@ const main = async () => {
       password: await bcrypt.hash("admin@123", 12),
       isVerified: true,
       role: "ADMIN",
-      College: {
-        connect: {
-          id: college.id,
-        },
-      },
     },
   });
+
+  const branchRep = await db.user.create({
+    data: {
+      email: "branchrep@incridea.in",
+      name: "BRANCHREP",
+      phoneNumber: "0000000000",
+      password: await bcrypt.hash("branchrep@123", 12),
+      isVerified: true,
+      role: "BRANCH_REP",
+    }
+  })
 
   const branch = await db.branch.create({
     data: {
@@ -47,7 +53,7 @@ const main = async () => {
       },
       User: {
         connect: {
-          id: user.id,
+          id: branchRep.id,
         },
       },
     },

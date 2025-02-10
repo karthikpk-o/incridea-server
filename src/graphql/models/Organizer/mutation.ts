@@ -36,7 +36,14 @@ builder.mutationField("addOrganizer", (t) =>
       if (!event) throw new Error(`No Event with id ${args.eventId}`);
       if (event.branchId !== branch.branchId) throw new Error(`No Permission`);
 
-      // TODO(OMkar): Add check if user has paid or not
+      const organiserUser = await ctx.prisma.user.findUnique({
+        where: {
+          id: Number(args.userId),
+        },
+      });
+      if (!organiserUser) throw new Error("Organiser user not found");
+      if (organiserUser.role !== "PARTICIPANT")
+        throw new Error("User has to pay for the fest to be an organiser");
 
       try {
         return await ctx.prisma.$transaction(async (db) => {

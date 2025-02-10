@@ -9,6 +9,7 @@ const sendEmail = async (
   },
 ) => {
   const count = (await prisma.emailMonitor.findFirst())?.count ?? 0;
+
   const email = [
     env.SMTP_EMAIL1,
     env.SMTP_EMAIL2,
@@ -17,13 +18,21 @@ const sendEmail = async (
     env.SMTP_EMAIL5,
   ][count % 5]!;
 
+  const password = [
+    env.SMTP_PASSWORD1,
+    env.SMTP_PASSWORD2,
+    env.SMTP_PASSWORD3,
+    env.SMTP_PASSWORD4,
+    env.SMTP_PASSWORD5,
+  ][count % 5]!;
+
   const transport = createTransport({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
     secure: env.SMTP_PORT === 465,
     auth: {
       user: email,
-      pass: env.SMTP_PASSWORD,
+      pass: password,
     },
   });
 

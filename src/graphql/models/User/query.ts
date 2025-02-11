@@ -32,8 +32,8 @@ builder.queryField("users", (t) =>
             },
             filter !== "" && !isNaN(Number(filter))
               ? {
-                id: Number(filter),
-              }
+                  id: Number(filter),
+                }
               : {},
           ],
         },
@@ -125,19 +125,19 @@ builder.queryField("getTotalRegistrations", (t) =>
             collegeId: 1,
             ...(args.date
               ? {
-                createdAt: {
-                  gte: args.date,
-                  lte: new Date(args.date.getTime() + 86400000),
-                },
-              }
-              : args.last
-                ? {
                   createdAt: {
-                    gte: new Date(
-                      new Date().getTime() - args.last * 86400000,
-                    ).toISOString(),
+                    gte: args.date,
+                    lte: new Date(args.date.getTime() + 86400000),
                   },
                 }
+              : args.last
+                ? {
+                    createdAt: {
+                      gte: new Date(
+                        new Date().getTime() - args.last * 86400000,
+                      ).toISOString(),
+                    },
+                  }
                 : {}),
           },
         });
@@ -152,19 +152,19 @@ builder.queryField("getTotalRegistrations", (t) =>
             },
             ...(args.date
               ? {
-                createdAt: {
-                  gte: args.date,
-                  lte: new Date(args.date.getTime() + 86400000),
-                },
-              }
-              : args.last
-                ? {
                   createdAt: {
-                    gte: new Date(
-                      new Date().getTime() - args.last * 86400000,
-                    ).toISOString(),
+                    gte: args.date,
+                    lte: new Date(args.date.getTime() + 86400000),
                   },
                 }
+              : args.last
+                ? {
+                    createdAt: {
+                      gte: new Date(
+                        new Date().getTime() - args.last * 86400000,
+                      ).toISOString(),
+                    },
+                  }
                 : {}),
           },
         });

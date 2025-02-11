@@ -34,8 +34,8 @@ const main = async () => {
       password: await bcrypt.hash("branchrep@123", 12),
       isVerified: true,
       role: "BRANCH_REP",
-    }
-  })
+    },
+  });
 
   const branch = await db.branch.create({
     data: {

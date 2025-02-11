@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/only-throw-error */
-import { createUploadthing, UTFiles, type FileRouter } from "uploadthing/express";
+import {
+  createUploadthing,
+  UTFiles,
+  type FileRouter,
+} from "uploadthing/express";
 import { authenticateUser } from "~/uploadthing/authenticateUser";
 import { UploadThingError } from "uploadthing/server";
 
@@ -18,19 +22,22 @@ export const uploadRouter = {
     "model/gltf-binary": {
       maxFileCount: 1,
       maxFileSize: "512MB",
-    }
-  }).middleware(async ({ req, res, files }) => {
-    const user = await authenticateUser(req, res);
-    if (!user || user.role !== "ADMIN")
-      throw new UploadThingError({
-        message: "Unauthorized",
-        code: "FORBIDDEN",
-      });
-    return {
-      [UTFiles]:
-        files.map((file) => ({ ...file, customId: "asset_" + file.name }))
-    };
+    },
   })
+    .middleware(async ({ req, res, files }) => {
+      const user = await authenticateUser(req, res);
+      if (!user || user.role !== "ADMIN")
+        throw new UploadThingError({
+          message: "Unauthorized",
+          code: "FORBIDDEN",
+        });
+      return {
+        [UTFiles]: files.map((file) => ({
+          ...file,
+          customId: "asset_" + file.name,
+        })),
+      };
+    })
     .onUploadComplete((data) => {
       console.log("Gallery Image:", data.file.url);
     }),
@@ -40,18 +47,21 @@ export const uploadRouter = {
       maxFileCount: 1,
       maxFileSize: "512KB",
     },
-  }).middleware(async ({ req, res, files }) => {
-    const user = await authenticateUser(req, res);
-    if (!user || user.role !== "ADMIN")
-      throw new UploadThingError({
-        message: "Unauthorized",
-        code: "FORBIDDEN",
-      });
-    return {
-      [UTFiles]:
-        files.map((file) => ({ ...file, customId: "gallery_" + file.name }))
-    };
   })
+    .middleware(async ({ req, res, files }) => {
+      const user = await authenticateUser(req, res);
+      if (!user || user.role !== "ADMIN")
+        throw new UploadThingError({
+          message: "Unauthorized",
+          code: "FORBIDDEN",
+        });
+      return {
+        [UTFiles]: files.map((file) => ({
+          ...file,
+          customId: "gallery_" + file.name,
+        })),
+      };
+    })
     .onUploadComplete((data) => {
       console.log("Gallery Image:", data.file.url);
     }),

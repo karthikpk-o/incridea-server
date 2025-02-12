@@ -17,11 +17,11 @@ export const uploadRouter = {
     },
     video: {
       maxFileCount: 1,
-      maxFileSize: "512MB",
+      maxFileSize: "16MB",
     },
     "model/gltf-binary": {
       maxFileCount: 1,
-      maxFileSize: "512MB",
+      maxFileSize: "4MB",
     },
   })
     .middleware(async ({ req, res, files }) => {
@@ -35,30 +35,6 @@ export const uploadRouter = {
         [UTFiles]: files.map((file) => ({
           ...file,
           customId: "asset_" + file.name,
-        })),
-      };
-    })
-    .onUploadComplete((data) => {
-      console.log("Gallery Image:", data.file.url);
-    }),
-
-  gallery: f({
-    image: {
-      maxFileCount: 1,
-      maxFileSize: "512KB",
-    },
-  })
-    .middleware(async ({ req, res, files }) => {
-      const user = await authenticateUser(req, res);
-      if (!user || user.role !== "ADMIN")
-        throw new UploadThingError({
-          message: "Unauthorized",
-          code: "FORBIDDEN",
-        });
-      return {
-        [UTFiles]: files.map((file) => ({
-          ...file,
-          customId: "gallery_" + file.name,
         })),
       };
     })
@@ -94,6 +70,25 @@ export const uploadRouter = {
     .middleware(async ({ req, res }) => {
       const user = await authenticateUser(req, res);
       if (!user || user.role !== "ORGANIZER")
+        throw new UploadThingError({
+          message: "Unauthorized",
+          code: "FORBIDDEN",
+        });
+      return {};
+    })
+    .onUploadComplete((data) => {
+      console.log("Question Image :", data.file.url);
+    }),
+
+  accommodation: f({
+    image: {
+      maxFileCount: 1,
+      maxFileSize: "512KB",
+    },
+  })
+    .middleware(async ({ req, res }) => {
+      const user = await authenticateUser(req, res);
+      if (!user)
         throw new UploadThingError({
           message: "Unauthorized",
           code: "FORBIDDEN",

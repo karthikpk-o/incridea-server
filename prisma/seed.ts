@@ -8,6 +8,10 @@ const main = async () => {
     data: {},
   });
 
+  await db.serverSettings.create({
+    data: {}
+  })
+
   const college = await db.college.create({
     data: {
       name: "NMAM Institute of Technology",
@@ -23,6 +27,13 @@ const main = async () => {
       password: await bcrypt.hash("admin@123", 12),
       isVerified: true,
       role: "ADMIN",
+      PaymentOrders: {
+        create: {
+          orderId: "dummy0",
+          amount: 38500,
+          type: "EVENT_REGISTRATION"
+        }
+      }
     },
   });
 
@@ -296,6 +307,17 @@ const main = async () => {
       },
     },
   });
+
+
+  await db.user.create({
+    data: {
+      email: "user@incridea.in",
+      name: "USER",
+      password: await bcrypt.hash("user@123", 12),
+      phoneNumber: "0000000000",
+      isVerified: true,
+    }
+  })
 };
 
 main().catch(console.log);

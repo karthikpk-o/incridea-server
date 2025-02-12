@@ -53,6 +53,14 @@ export async function handler(req: Request, res: Response) {
           },
         });
 
+        try {
+          const serverSettings = await prisma.serverSettings.findFirstOrThrow()
+          if (!serverSettings.registrationsOpen)
+            console.log(`Registrations are closed! Yet user with userid: "${paymentOrder.userId}" has paid for the registrations!`)
+        } catch (e) {
+          console.log(e)
+        }
+
         const user = await prisma.user.update({
           where: {
             id: paymentOrder.userId,

@@ -31,12 +31,18 @@ export const uploadRouter = {
           message: "Unauthorized",
           code: "FORBIDDEN",
         });
+      const customId = req.headers.custom_id as string | undefined;
       return {
         [UTFiles]: files.map((file) => ({
           ...file,
-          customId: "asset_" + file.name,
+          ...(customId ? {
+            customId: customId.replace(/[\s\\/]/g, "_"),
+          } : {})
         })),
       };
+    })
+    .onUploadError((error) => {
+      console.error("Error uploading asset:", error);
     })
     .onUploadComplete((data) => {
       console.log("Gallery Image:", data.file.url);

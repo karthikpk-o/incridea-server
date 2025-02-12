@@ -56,7 +56,7 @@ export const uploadRouter = {
   })
     .middleware(async ({ req, res }) => {
       const user = await authenticateUser(req, res);
-      if (!user || user.role !== "ORGANIZER")
+      if (!user || (user.role !== "ADMIN" && user.role !== "ORGANIZER"))
         throw new UploadThingError({
           message: "Unauthorized",
           code: "FORBIDDEN",

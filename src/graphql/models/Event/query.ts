@@ -50,17 +50,27 @@ builder.queryField("eventById", (t) =>
       }),
     },
     resolve: async (query, root, args, ctx, info) => {
-      try {
-        return await ctx.prisma.event.findUniqueOrThrow({
-          where: {
-            id: Number(args.id),
-          },
-          ...query,
-        });
-      } catch (e) {
-        console.log(e);
-        throw new Error("Something went wrong! Couldn't fetch event");
-      }
+      const user = await ctx.user
+
+      const event = await ctx.prisma.event.findUnique({
+        where: {
+          id: Number(args.id),
+        },
+        ...query,
+      });
+
+      if (!event)
+        throw new Error("Event not found");
+
+      if (event.published)
+        return event;
+
+      if (!user) throw new Error("Not authenticated")
+
+      if (["ADMIN", "ORGANIZER", "BRANCH_REP"].includes(user.role))
+        return event;
+
+      throw new Error("Event not published");
     },
   }),
 );

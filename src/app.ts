@@ -10,7 +10,7 @@ import { env } from "~/env";
 
 const app = express();
 
-app.use(cors({ origin: env.FRONTEND_URL }));
+app.use(cors({ origin: [env.FRONTEND_URL, "https://incridea.in"] }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 

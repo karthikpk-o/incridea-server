@@ -49,6 +49,9 @@ builder.queryField("eventById", (t) =>
         required: true,
       }),
     },
+    errors: {
+      types: [Error],
+    },
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user
 

@@ -12,16 +12,16 @@ const f = createUploadthing();
 export const uploadRouter = {
   asset: f({
     image: {
-      maxFileCount: 10,
-      maxFileSize: "512KB",
+      maxFileCount: 50,
+      maxFileSize: "64MB",
     },
     video: {
-      maxFileCount: 5,
-      maxFileSize: "16MB",
+      maxFileCount: 50,
+      maxFileSize: "64MB",
     },
     "model/gltf-binary": {
-      maxFileCount: 5,
-      maxFileSize: "4MB",
+      maxFileCount: 50,
+      maxFileSize: "64MB",
     },
   })
     .middleware(async ({ req, res, files }) => {

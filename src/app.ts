@@ -1,5 +1,4 @@
 import { handler as razorpayCapture } from "~/razorpay/webhook";
-import { uploadThingHandler } from "~/uploadthing";
 import { yoga } from "~/graphql";
 import { certificateRouter } from "~/routers";
 import bodyParser from "body-parser";
@@ -20,8 +19,7 @@ app.use("/graphql", yoga.requestListener);
 
 app.post("/webhook/capture", razorpayCapture);
 
-app.use("/uploadthing", uploadThingHandler);
-app.use("/api/uploadthing", UTApiRouter);
+app.use("/uploadthing", UTApiRouter);
 
 // TODO(Omkar): Route?
 app.use(certificateRouter);

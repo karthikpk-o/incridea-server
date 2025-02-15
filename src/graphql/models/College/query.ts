@@ -9,6 +9,9 @@ builder.queryField("colleges", (t) =>
     resolve: (query, root, args, ctx, info) => {
       try {
         return ctx.prisma.college.findMany({
+          orderBy: {
+            name: 'asc'
+          },
           ...query,
         });
       } catch (e) {

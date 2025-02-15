@@ -32,8 +32,8 @@ builder.queryField("users", (t) =>
             },
             filter !== "" && !isNaN(Number(filter))
               ? {
-                  id: Number(filter),
-                }
+                id: Number(filter),
+              }
               : {},
           ],
         },
@@ -120,24 +120,25 @@ builder.queryField("getTotalRegistrations", (t) =>
         const internalRegistrations = await ctx.prisma.user.count({
           where: {
             role: {
+              // Internal participant might be anything excpet these roles
               notIn: ["JUDGE", "USER"],
             },
             collegeId: 1,
             ...(args.date
               ? {
-                  createdAt: {
-                    gte: args.date,
-                    lte: new Date(args.date.getTime() + 86400000),
-                  },
-                }
+                createdAt: {
+                  gte: args.date,
+                  lte: new Date(args.date.getTime() + 86400000),
+                },
+              }
               : args.last
                 ? {
-                    createdAt: {
-                      gte: new Date(
-                        new Date().getTime() - args.last * 86400000,
-                      ).toISOString(),
-                    },
-                  }
+                  createdAt: {
+                    gte: new Date(
+                      new Date().getTime() - args.last * 86400000,
+                    ).toISOString(),
+                  },
+                }
                 : {}),
           },
         });
@@ -145,6 +146,7 @@ builder.queryField("getTotalRegistrations", (t) =>
         const externalRegistrations = await ctx.prisma.user.count({
           where: {
             role: {
+              // External participant can only be these roles
               in: ["PARTICIPANT"],
             },
             collegeId: {
@@ -152,19 +154,19 @@ builder.queryField("getTotalRegistrations", (t) =>
             },
             ...(args.date
               ? {
-                  createdAt: {
-                    gte: args.date,
-                    lte: new Date(args.date.getTime() + 86400000),
-                  },
-                }
+                createdAt: {
+                  gte: args.date,
+                  lte: new Date(args.date.getTime() + 86400000),
+                },
+              }
               : args.last
                 ? {
-                    createdAt: {
-                      gte: new Date(
-                        new Date().getTime() - args.last * 86400000,
-                      ).toISOString(),
-                    },
-                  }
+                  createdAt: {
+                    gte: new Date(
+                      new Date().getTime() - args.last * 86400000,
+                    ).toISOString(),
+                  },
+                }
                 : {}),
           },
         });

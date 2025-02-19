@@ -16,7 +16,9 @@ builder.mutationField("createHotel", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      const isAllowed = checkIfAccommodationMember(user.id) || user.role === "ADMIN";
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+      const isAllowed =
+        checkIfAccommodationMember(user.id) || user.role === "ADMIN";
       if (!isAllowed) throw new Error("Not allowed to perform this action");
 
       const hotel = await ctx.prisma.hotel.findUnique({
@@ -55,7 +57,9 @@ builder.mutationField("deleteHotel", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      const isAllowed = checkIfAccommodationMember(user.id) || user.role === "ADMIN";
+      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+      const isAllowed =
+        checkIfAccommodationMember(user.id) || user.role === "ADMIN";
       if (!isAllowed) throw new Error("Not allowed to perform this action");
 
       const hotel = await ctx.prisma.hotel.findUnique({

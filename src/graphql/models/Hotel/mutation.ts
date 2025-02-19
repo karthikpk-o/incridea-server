@@ -16,8 +16,8 @@ builder.mutationField("createHotel", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const isAllowed =
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         checkIfAccommodationMember(user.id) || user.role === "ADMIN";
       if (!isAllowed) throw new Error("Not allowed to perform this action");
 
@@ -57,8 +57,8 @@ builder.mutationField("deleteHotel", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
       const isAllowed =
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         checkIfAccommodationMember(user.id) || user.role === "ADMIN";
       if (!isAllowed) throw new Error("Not allowed to perform this action");
 

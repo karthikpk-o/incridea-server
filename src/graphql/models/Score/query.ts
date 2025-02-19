@@ -291,7 +291,7 @@ builder.queryField("getScoreSheetJuryView", (t) =>
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (user.role !== "JURY") throw new Error("Not authorized");
+      if (user.role !== "JURY" && user.role !== "ADMIN") throw new Error("Not authorized");
 
       const teams = await ctx.prisma.team.findMany({
         where: {

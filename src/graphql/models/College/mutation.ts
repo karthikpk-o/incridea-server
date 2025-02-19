@@ -23,7 +23,7 @@ builder.mutationField("createCollege", (t) =>
       try {
         return ctx.prisma.college.create({
           data: {
-            name: args.name,
+            name: args.name.toUpperCase(),
             details: args.details,
           },
         });

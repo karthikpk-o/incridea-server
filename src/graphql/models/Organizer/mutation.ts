@@ -42,7 +42,7 @@ builder.mutationField("addOrganizer", (t) =>
         },
       });
       if (!organiserUser) throw new Error("Organiser user not found");
-      if (organiserUser.role !== "PARTICIPANT")
+      if (organiserUser.role !== "PARTICIPANT" && organiserUser.role !== "ORGANIZER")
         throw new Error("User has to pay for the fest to be an organiser");
 
       try {

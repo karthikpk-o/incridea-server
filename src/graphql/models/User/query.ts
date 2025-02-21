@@ -123,7 +123,7 @@ builder.queryField("getTotalRegistrations", (t) =>
               // Internal participant might be anything excpet these roles
               notIn: ["JUDGE", "USER"],
             },
-            collegeId: 1,
+            collegeId: CONSTANT.INTERNAL_COLLEGE_ID,
             ...(args.date
               ? {
                 createdAt: {
@@ -150,7 +150,7 @@ builder.queryField("getTotalRegistrations", (t) =>
               in: ["PARTICIPANT"],
             },
             collegeId: {
-              not: 1,
+              not: CONSTANT.INTERNAL_COLLEGE_ID,
             },
             ...(args.date
               ? {

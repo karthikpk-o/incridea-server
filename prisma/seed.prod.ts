@@ -7,6 +7,10 @@ const main = async () => {
     data: {},
   });
 
+  await db.serverSettings.create({
+    data: {}
+  })
+
   await db.college.create({
     data: {
       name: "NMAM Institute of Technology",

@@ -1,79 +1,56 @@
 const AVATARS = [
   {
-    id: "1",
-    name: "avatar1",
-    url: "https://res.cloudinary.com/dh1bowbbe/image/upload/v1706813980/mario-removebg-preview_t2hziu.png",
+    "name": "boy.avif",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsB4Gr6LqkWUXGK6wnILoru9xPAvsyRJZftNH3",
   },
   {
-    id: "2",
-    name: "avatar2",
-    url: "https://res.cloudinary.com/dh1bowbbe/image/upload/v1706813980/avatar2-removebg-preview_qw3yvu.png",
+    "name": "laughing guy.png",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsx8pap8LfD7Rd4EMFQmCBav9AunfUTXIybKc5",
   },
   {
-    id: "3",
-    name: "avatar3",
-    url: "https://res.cloudinary.com/dh1bowbbe/image/upload/v1706813980/avatar1-removebg-preview_t9nfqo.png",
+    "name": "halo.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYslaCWJtMlrQ4V58Wu7dpShRXaAzL0EBFGvweZ",
   },
   {
-    id: "4",
-    name: "avatar4",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113027/8%20bit/image-removebg-preview.png",
+    "name": "alien.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsbeXw4wa6HMayVpiftmYsLCor4QwWXxc2q1lE",
   },
   {
-    id: "5",
-    name: "avatar5",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113014/8%20bit/captainamerica.png",
+    "name": "ape.webp",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYshKRvXY7Oa8dWsYcl03fHokUEXLKJbCFV9uRz",
   },
   {
-    id: "6",
-    name: "avatar6",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113013/8%20bit/blackwidow.png",
+    "name": "woody.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsv2RmmqIKZW7GngJxhIPYBv0rVeKoUlEsj96z",
   },
   {
-    id: "7",
-    name: "avatar7",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113012/8%20bit/batman.png",
+    "name": "hecker.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsyxEd9cRWsWdY7KiMXRcSBezA9Nn3fvGZhT60",
   },
   {
-    id: "8",
-    name: "avatar8",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113013/8%20bit/Baron_Zemo-removebg-preview.png",
+    "name": "incredible father.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYs7o73z4UWmhgn3FxJEjMV60R2YUlHPbwf1sdX",
   },
   {
-    id: "9",
-    name: "avatar9",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113020/8%20bit/clipart4398211.png",
+    "name": "beluga.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsa7tDgbLUAYWwfIge5Buk6C2r1ycR3MhalptJ",
   },
   {
-    id: "10",
-    name: "avatar10",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113018/8%20bit/clipart2752355.png",
+    "name": "chill_guy.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsHeQeolxnfILa72RWpcCrVMDuJGhlwi30O1t5",
   },
   {
-    id: "11",
-    name: "avatar11",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113024/8%20bit/groot.png",
+    "name": "crying_cat.webp",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsbtkcxUa6HMayVpiftmYsLCor4QwWXxc2q1lE",
   },
   {
-    id: "12",
-    name: "avatar12",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113025/8%20bit/image-removebg-preview_1.png",
+    "name": "monster.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsbShUBma6HMayVpiftmYsLCor4QwWXxc2q1lE",
   },
   {
-    id: "13",
-    name: "avatar13",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113025/8%20bit/harrypotter.png",
-  },
-  {
-    id: "14",
-    name: "avatar14",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113013/8%20bit/black_widow.png",
-  },
-  {
-    id: "15",
-    name: "avatar15",
-    url: "https://res.cloudinary.com/dg1941jdi/image/upload/v1707113030/8%20bit/samusaran.png",
-  },
+    "name": "cat_toungue.jpg",
+    "url": "https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsHKmwsmxnfILa72RWpcCrVMDuJGhlwi30O1t5",
+  }
 ];
 
 export { AVATARS };

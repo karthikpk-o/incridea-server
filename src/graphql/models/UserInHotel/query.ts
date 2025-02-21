@@ -10,7 +10,7 @@ builder.queryField("accommodationRequests", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfAccommodationMember(user.id))
+      if (!checkIfAccommodationMember(user.id) && user.role !== "ADMIN")
         throw new Error("Not authorized");
 
       try {
@@ -66,7 +66,7 @@ builder.queryField("accommodationRequestsByUserId", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfAccommodationMember(user.id))
+      if (!checkIfAccommodationMember(user.id) && user.role !== "ADMIN")
         throw new Error("Not authorized");
       const userId = Number(args.userId);
 
@@ -99,7 +99,7 @@ builder.queryField("accommodationRequestByDay", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfAccommodationMember(user.id))
+      if (!checkIfAccommodationMember(user.id) && user.role !== "ADMIN")
         throw new Error("Not authorized");
 
       try {
@@ -133,7 +133,7 @@ builder.queryField("accommodationRequestByHotel", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfAccommodationMember(user.id))
+      if (!checkIfAccommodationMember(user.id) && user.role !== "ADMIN")
         throw new Error("Not authorized");
 
       const hotelName = args.name;
@@ -178,7 +178,7 @@ builder.queryField("getUserAccommodation", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfAccommodationMember(user.id))
+      if (!checkIfAccommodationMember(user.id) && user.role !== "ADMIN")
         throw new Error("Not authorized");
 
       try {

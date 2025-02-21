@@ -57,7 +57,6 @@ const builder = new SchemaBuilder<{
 builder.addScalarType("DateTime", DateTimeResolver);
 builder.objectType("Avatar", {
   fields: (t) => ({
-    id: t.exposeString("id"),
     name: t.exposeString("name"),
     url: t.exposeString("url"),
   }),

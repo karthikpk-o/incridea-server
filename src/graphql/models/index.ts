@@ -16,6 +16,8 @@ import "~/graphql/models/Question";
 import "~/graphql/models/Quiz";
 import "~/graphql/models/Round";
 import "~/graphql/models/Score";
+import "~/graphql/models/ServerSettings";
+import "~/graphql/models/Sponsor";
 import "~/graphql/models/Submission";
 import "~/graphql/models/Team";
 import "~/graphql/models/User";

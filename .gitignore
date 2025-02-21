@@ -19,6 +19,7 @@
 .DS_Store
 *.pem
 .vscode/*
+.idea/*
 
 # debug
 npm-debug.log*
@@ -26,8 +27,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
+# .env files
+.env
+.env*
 .env*.local
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +43,5 @@ next-env.d.ts
 dist/
 
 .eslintcache
+
+*.local.ts

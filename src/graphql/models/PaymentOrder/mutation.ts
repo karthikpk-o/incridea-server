@@ -1,8 +1,7 @@
-import Razorpay from "razorpay";
 
 import { builder } from "~/graphql/builder";
-import { env } from "~/env";
 import { CONSTANT } from "~/constants";
+import { razorpay } from "~/razorpay";
 
 enum OrderTypeEnum {
   FEST_REGISTRATION = "FEST_REGISTRATION",
@@ -35,12 +34,6 @@ builder.mutationField("createPaymentOrder", (t) =>
       )
         throw new Error("Already Registered");
 
-      // TODO(Omkar): Extract to another file
-      const razorpay = new Razorpay({
-        key_id: env.RAZORPAY_KEY,
-        key_secret: env.RAZORPAY_SECRET,
-      });
-
       if (args.type === OrderTypeEnum.EVENT_REGISTRATION)
         // EVENT_REGISTRATION
         throw new Error("Not implemented");
@@ -48,6 +41,10 @@ builder.mutationField("createPaymentOrder", (t) =>
       // FEST_REGISTRATION
       // check if user already has a pending order for FEST_REGISTRATION
       if (user.role !== "USER") throw new Error("Already Registered");
+
+      const serverSettings = await ctx.prisma.serverSettings.findFirst();
+      if (!serverSettings) throw new Error("Something went wrong!");
+      if (!serverSettings.registrationsOpen) throw new Error("Registrations are closed!");
 
       const existingOrder = await ctx.prisma.paymentOrder.findFirst({
         where: {
@@ -161,11 +158,6 @@ builder.mutationField("eventPaymentOrder", (t) =>
       if (user.id != team.leaderId)
         throw new Error("Oops! You are Not the leader");
 
-      // TODO(Omkar): Extract to another file
-      const razorpay = new Razorpay({
-        key_id: env.RAZORPAY_KEY,
-        key_secret: env.RAZORPAY_SECRET,
-      });
 
       const payment_capture = 1;
       const amount = Math.ceil(team.Event.fees / 0.98);

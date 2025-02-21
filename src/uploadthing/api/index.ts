@@ -1,25 +1,11 @@
-import { utapi } from ".";
-import { type RequestHandler } from "express";
-import { authenticateUser } from "./authenticateUser";
+import { Router } from "express";
+import { z } from "zod";
+import { utapi } from "~/uploadthing";
+import { authenticateUser } from "~/uploadthing/authenticateUser";
 
-type DeleteResult = {
-  success: boolean;
-  message: string;
-  details?: unknown;
-};
+const router = Router();
 
-type DeleteFileRequestBody = {
-  url: string;
-};
-
-export const deleteFileByUrl: RequestHandler<
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
-  {},
-  DeleteResult,
-  DeleteFileRequestBody
-> = async (req, res) => {
-  const { url } = req.body;
-
+router.post("/delete", async (req, res) => {
   const user = await authenticateUser(req, res);
 
   if (!user) {
@@ -30,16 +16,20 @@ export const deleteFileByUrl: RequestHandler<
     return;
   }
 
-  if (typeof url !== "string") {
+  const { success, data, error } = z.object({
+    url: z.string(),
+  }).safeParse(req.body);
+
+  if (!success) {
     res.status(400).json({
       success: false,
-      message: "Invalid request body: URL is required and must be a string",
+      message: "Invalid request body: " + error.toString(),
     });
-    return;
+    return
   }
 
   const regex = /\/f\/([a-zA-Z0-9]+)$/;
-  const match = regex.exec(url);
+  const match = regex.exec(data.url);
 
   if (!match?.[1]) {
     res.status(400).json({
@@ -53,6 +43,8 @@ export const deleteFileByUrl: RequestHandler<
 
   try {
     const deleteDetails = await utapi.deleteFiles(fileKey);
+    if (!deleteDetails.success)
+      throw new Error("Failed to delete file");
     res.status(200).json({
       success: true,
       message: "File deleted successfully",
@@ -65,4 +57,7 @@ export const deleteFileByUrl: RequestHandler<
       message: "Failed to delete file",
     });
   }
-};
+})
+
+
+export { router as UTApiRouter };

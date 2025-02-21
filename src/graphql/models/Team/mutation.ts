@@ -1,5 +1,4 @@
 import { builder } from "~/graphql/builder";
-import { canRegister } from "~/services/event.services";
 
 builder.mutationField("createTeam", (t) =>
   t.prismaField({
@@ -24,16 +23,6 @@ builder.mutationField("createTeam", (t) =>
       });
       if (!event) throw new Error("Event not found");
 
-      // Non engineering college students can't register for more than 1 core event
-      if (
-        !(user.College?.type === "ENGINEERING") &&
-        !(await canRegister(
-          user.id,
-          user.College?.type as string,
-          event.category,
-        ))
-      )
-        throw new Error("Not eligible to register");
 
       if (
         event.eventType === "INDIVIDUAL" ||
@@ -148,16 +137,6 @@ builder.mutationField("joinTeam", (t) =>
         },
       });
       if (!event) throw new Error("Event not found");
-
-      if (
-        !(user.College?.type == "ENGINEERING") &&
-        !(await canRegister(
-          user.id,
-          user.College?.type as string,
-          event.category,
-        ))
-      )
-        throw new Error("Not eligible to register");
 
       if (
         event.eventType === "INDIVIDUAL" ||
@@ -415,7 +394,7 @@ builder.mutationField("removeTeamMember", (t) =>
       if (!team) throw new Error("Team not found");
 
       if (
-        team.TeamMembers.find((member) => member.userId === Number(args.userId))
+        !team.TeamMembers.find((member) => member.userId === Number(args.userId))
       )
         throw new Error("User does not belong to this team");
 
@@ -464,17 +443,6 @@ builder.mutationField("registerSoloEvent", (t) =>
         },
       });
       if (!event) throw new Error("Event not found");
-
-      // Non engineering college students can't register for more than 1 core event
-      if (
-        !(user.College?.type === "ENGINEERING") &&
-        !(await canRegister(
-          user.id,
-          user.College?.type as string,
-          event.category,
-        ))
-      )
-        throw new Error("Not eligible to register");
 
       if (event.eventType === "TEAM") throw new Error("Event is team");
 
@@ -669,16 +637,6 @@ builder.mutationField("organizerAddTeamMember", (t) =>
         0
       )
         throw new Error("Not authorized");
-
-      if (
-        !(participant.College?.type === "ENGINEERING") &&
-        !(await canRegister(
-          participant.id,
-          participant.College?.type as string,
-          team.Event.category,
-        ))
-      )
-        throw new Error("Not eligible to register");
 
       const teamMembers = await ctx.prisma.teamMember.findMany({
         where: {
@@ -1104,16 +1062,6 @@ builder.mutationField("organizerRegisterSolo", (t) =>
         participant.role === "JUDGE"
       )
         throw new Error(`No participant with id ${args.userId}`);
-
-      if (
-        !(user.College?.type === "ENGINEERING") &&
-        !(await canRegister(
-          participant.id,
-          participant.College?.type as string,
-          event.category,
-        ))
-      )
-        throw new Error("Not eligible to register");
 
       if (event.eventType === "INDIVIDUAL") {
         const registered = await ctx.prisma.team.findMany({

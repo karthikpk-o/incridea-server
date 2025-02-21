@@ -628,6 +628,18 @@ model UserInHotel {
   @@index([hotelId])
 }
 
+model Sponsor {
+  id String @id @default(cuid())
+
+  name        String
+  title       String
+  description String @db.Text
+  websiteUrl  String
+  imageUrl    String
+
+  published Boolean @default(false)
+}
+
 enum Gender {
   MALE
   FEMALE

@@ -494,6 +494,8 @@ model QuizScore {
 
   score     Int   @default(0)
   timeTaken Float
+  flags      Int   @default(0)
+  allowUser Boolean @default(true)
 
   teamId Int
   Team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -504,6 +506,7 @@ model QuizScore {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([teamId, quizId])
   @@index([quizId])
   @@index([teamId])
 }
@@ -520,6 +523,7 @@ model Quiz {
   qualifyNext   Int      @default(5)
   password      String
   completed     Boolean  @default(false)
+  overridePassword String
 
   roundId Int
   eventId Int

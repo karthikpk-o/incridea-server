@@ -11,5 +11,7 @@ builder.prismaObject("QuizScore", {
     timeTaken: t.exposeFloat("timeTaken"),
     team: t.relation("Team"),
     quiz: t.relation("Quiz"),
+    flags: t.exposeInt("flags"),
+    allowUser: t.exposeBoolean("allowUser"),
   }),
 });

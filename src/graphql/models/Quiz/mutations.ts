@@ -33,6 +33,7 @@ builder.mutationField("createQuiz", (t) =>
       points: t.arg({ type: "Int", required: true }),
       qualifyNext: t.arg({ type: "Int", required: true }),
       password: t.arg({ type: "String", required: true }),
+      overridePassword: t.arg({ type: "String", required: true }),
     },
     errors: {
       types: [Error],
@@ -66,6 +67,7 @@ builder.mutationField("createQuiz", (t) =>
           startTime: new Date(args.startTime),
           endTime: new Date(args.endTime),
           password: args.password,
+          overridePassword: args.overridePassword,
           Round: {
             connect: {
               eventId_roundNo: {

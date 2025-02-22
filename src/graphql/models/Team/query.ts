@@ -185,7 +185,8 @@ builder.queryField("attemptQuiz", (t) =>
         },
       });
 
-      if (quizScore) throw new Error("You have already attempted the quiz");
+      if (quizScore && quizScore.timeTaken != 0)
+        throw new Error("You have already attempted the quiz");
 
       const team = await ctx.prisma.team.findFirst({
         where: {

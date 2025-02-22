@@ -71,6 +71,13 @@ builder.queryField("getXpLeaderboard", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       try {
         return await ctx.prisma.xP.findMany({
+          where: {
+            User: {
+              role: {
+                not: "USER",
+              },
+            },
+          },
           include: {
             User: true,
             Level: true,

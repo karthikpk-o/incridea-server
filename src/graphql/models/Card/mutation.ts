@@ -17,7 +17,7 @@ builder.mutationField("createCard", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
+      if (!checkIfPublicityMember(user.id) && user.role !== "ADMIN") throw new Error("Not authorized");
 
       try {
         return ctx.prisma.card.create({
@@ -48,7 +48,7 @@ builder.mutationField("updateCard", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
+      if (!checkIfPublicityMember(user.id) && user.role !== "ADMIN") throw new Error("Not authorized");
 
       const card = await ctx.prisma.card.findUnique({
         where: {
@@ -87,7 +87,7 @@ builder.mutationField("deleteCard", (t) =>
     resolve: async (query, root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (!checkIfPublicityMember(user.id)) throw new Error("Not authorized");
+      if (!checkIfPublicityMember(user.id) && user.role !== "ADMIN") throw new Error("Not authorized");
 
       const card = await ctx.prisma.card.findUnique({
         where: {

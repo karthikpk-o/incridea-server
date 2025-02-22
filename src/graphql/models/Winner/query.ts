@@ -1,6 +1,6 @@
 import { builder } from "~/graphql/builder";
 import { prisma } from "~/utils/db";
-import { checkChampionshipEligibility } from "./utils";
+import { getChampionshipEligibilityForAllColleges } from "./utils";
 
 builder.queryField("winnersByEvent", (t) =>
   t.prismaField({
@@ -153,7 +153,7 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
       if (user.role !== "JURY" && user.role !== "ADMIN")
         throw new Error("Not authorized");
 
-      const colleges = await prisma.college.findMany();
+      const eligibilityMap = await getChampionshipEligibilityForAllColleges();
 
       const winners = await prisma.winners.findMany({
         include: {
@@ -171,62 +171,63 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
         },
       });
 
-      // TODO(Omkar): Error handling
+      const leaderIds = [
+        ...new Set(
+          winners
+            .map((w) => w.Team.leaderId)
+            .filter((id): id is number => id !== null),
+        ),
+      ];
 
-      const collegePoints = await Promise.all(
-        colleges.map(async (collegeItem) => {
-          // TODO(Omkar): Might be too heavy of a query need refactor
-          const IsEligible = await checkChampionshipEligibility(collegeItem.id);
-          const eachCollegeData: ChampionshipPointsClass = {
-            collegeId: collegeItem.id,
-            isEligible: IsEligible,
-            collegeName: collegeItem.name,
-            championshipPoints: collegeItem.championshipPoints,
-            techCount: 0,
-            nonTechCount: 0,
-            coreCount: 0,
-            diamondCount: { WINNER: 0, RUNNER_UP: 0, SECOND_RUNNER_UP: 0 },
-            goldCount: { WINNER: 0, RUNNER_UP: 0, SECOND_RUNNER_UP: 0 },
-            silverCount: { WINNER: 0, RUNNER_UP: 0, SECOND_RUNNER_UP: 0 },
-            bronzeCount: { WINNER: 0, RUNNER_UP: 0, SECOND_RUNNER_UP: 0 },
-          };
+      const leaders = await prisma.user.findMany({
+        where: { id: { in: leaderIds } },
+        select: { id: true, collegeId: true },
+      });
 
-          const collegeWinners = (
-            await Promise.all(
-              winners.map(async (winner) => {
-                const leader = await ctx.prisma.user.findUnique({
-                  where: {
-                    id: winner.Team.leaderId ?? 0,
-                  },
-                });
-                return leader?.collegeId === collegeItem.id ? winner : null;
-              }),
-            )
-          ).filter((winner) => winner !== null);
+      const leaderCollegeMap = new Map(leaders.map((l) => [l.id, l.collegeId]));
 
-          collegeWinners.forEach((winner) => {
-            if (!winner.Event) return;
-
-            if (winner.Event.category === "TECHNICAL")
-              eachCollegeData.techCount++;
-            else if (winner.Event.category === "NON_TECHNICAL")
-              eachCollegeData.nonTechCount++;
-            else if (winner.Event.category === "CORE")
-              eachCollegeData.coreCount++;
-
-            if (winner.Event.tier === "GOLD")
-              eachCollegeData.goldCount[winner.type]++;
-            else if (winner.Event.tier === "SILVER")
-              eachCollegeData.silverCount[winner.type]++;
-            else if (winner.Event.tier === "BRONZE")
-              eachCollegeData.bronzeCount[winner.type]++;
-            else if (winner.Event.tier === "DIAMOND")
-              eachCollegeData.diamondCount[winner.type]++;
-          });
-
-          return eachCollegeData;
-        }),
+      const collegePoints = Array.from(eligibilityMap.entries()).map(
+        ([collegeId, { isEligible, name, championshipPoints }]) =>
+          new ChampionshipPointsClass(
+            collegeId,
+            isEligible,
+            championshipPoints,
+            name,
+            0,
+            0,
+            0,
+            new CountClass(0, 0, 0),
+            new CountClass(0, 0, 0),
+            new CountClass(0, 0, 0),
+            new CountClass(0, 0, 0),
+          ),
       );
+
+      winners.forEach((winner) => {
+        if (!winner.Event) return;
+
+        const collegeId = leaderCollegeMap.get(winner.Team.leaderId ?? 0);
+        if (!collegeId) return;
+
+        const collegeData = collegePoints.find(
+          (c) => c.collegeId === collegeId,
+        );
+        if (!collegeData) return;
+
+        if (winner.Event.category === "TECHNICAL") collegeData.techCount++;
+        else if (winner.Event.category === "NON_TECHNICAL")
+          collegeData.nonTechCount++;
+        else if (winner.Event.category === "CORE") collegeData.coreCount++;
+
+        if (winner.Event.tier === "GOLD") collegeData.goldCount[winner.type]++;
+        else if (winner.Event.tier === "SILVER")
+          collegeData.silverCount[winner.type]++;
+        else if (winner.Event.tier === "BRONZE")
+          collegeData.bronzeCount[winner.type]++;
+        else if (winner.Event.tier === "DIAMOND")
+          collegeData.diamondCount[winner.type]++;
+      });
+
       return collegePoints;
     },
   }),

@@ -120,6 +120,7 @@ builder.queryField("getTotalRegistrations", (t) =>
         const internalRegistrations = await ctx.prisma.user.count({
           where: {
             role: {
+              // Internal participant might be anything excpet these roles
               notIn: ["JUDGE", "USER"],
             },
             collegeId: 1,
@@ -145,6 +146,7 @@ builder.queryField("getTotalRegistrations", (t) =>
         const externalRegistrations = await ctx.prisma.user.count({
           where: {
             role: {
+              // External participant can only be these roles
               in: ["PARTICIPANT"],
             },
             collegeId: {

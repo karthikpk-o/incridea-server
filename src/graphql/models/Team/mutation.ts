@@ -1,3 +1,4 @@
+import { selectionCompatible } from "node_modules/@pothos/plugin-prisma/esm/util/selections";
 import { builder } from "~/graphql/builder";
 
 builder.mutationField("createTeam", (t) =>
@@ -22,7 +23,6 @@ builder.mutationField("createTeam", (t) =>
         },
       });
       if (!event) throw new Error("Event not found");
-
 
       if (
         event.eventType === "INDIVIDUAL" ||
@@ -394,7 +394,9 @@ builder.mutationField("removeTeamMember", (t) =>
       if (!team) throw new Error("Team not found");
 
       if (
-        !team.TeamMembers.find((member) => member.userId === Number(args.userId))
+        !team.TeamMembers.find(
+          (member) => member.userId === Number(args.userId),
+        )
       )
         throw new Error("User does not belong to this team");
 
@@ -1188,6 +1190,105 @@ builder.mutationField("promoteToNextRound", (t) =>
         throw new Error(
           "Something went wrong! Couldn't promote team to next round",
         );
+      }
+    },
+  }),
+);
+
+builder.mutationField("splitTeam", (t) =>
+  t.prismaField({
+    type: ["Team"],
+    args: {
+      eventId: t.arg.id({ required: true }),
+      roundNo: t.arg.id({ required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
+      try {
+        return await ctx.prisma.$transaction(async (db) => {
+          const teams = await db.team.findMany({
+            where: {
+              eventId: Number(args.eventId),
+              roundNo: Number(args.roundNo) + 1,
+              confirmed: true,
+            },
+            include: {
+              TeamMembers: {
+                select: {
+                  userId: true,
+                  teamId: true,
+                },
+              },
+            },
+          });
+
+          const updatedTeams = [];
+
+          for (const team of teams) {
+            if (team.TeamMembers.length < 2)
+              throw new Error("Not enough members to split");
+
+            const leader = team.TeamMembers.find(
+              (member) => member.userId === team.leaderId,
+            );
+            if (!leader) throw new Error("Leader not found");
+
+            // Rename original team
+            const updatedTeam = await db.team.update({
+              where: { id: team.id },
+              data: { name: `${team.name}-1` },
+              ...query,
+            });
+
+            // make the non-leader ; leader of new team
+            const newLeader = team.TeamMembers.find(
+              (member) =>
+                member.userId !== team.leaderId && member.teamId === team.id,
+            );
+            if (!newLeader) throw new Error("New leader not found");
+
+            // Create new team
+            const newTeam = await db.team.create({
+              data: {
+                name: `${team.name}-2`,
+                eventId: team.eventId,
+                roundNo: team.roundNo,
+                leaderId: newLeader.userId,
+                attended: team.attended,
+                confirmed: team.confirmed,
+                TeamMembers: {
+                  create: {
+                    userId: newLeader.userId,
+                  },
+                },
+              },
+            });
+
+            updatedTeams.push(updatedTeam, newTeam);
+
+            //delete the team-member from the original team
+            await db.teamMember.deleteMany({
+              where: {
+                teamId: team.id,
+                userId: {
+                  not: team.leaderId ?? 0,
+                },
+              },
+            });
+          }
+
+          return updatedTeams;
+        });
+      } catch (error) {
+        console.log(error);
+        throw new Error("Something went wrong! Couldn't split team");
       }
     },
   }),

@@ -1,6 +1,6 @@
 import { builder } from "~/graphql/builder";
-import "~/graphql/models/Quiz/query";
 import "~/graphql/models/Quiz/mutations";
+import "~/graphql/models/Quiz/query";
 
 builder.prismaObject("Quiz", {
   fields: (t) => ({
@@ -29,6 +29,10 @@ builder.prismaObject("Quiz", {
     }),
     questions: t.relation("Questions"),
     password: t.expose("password", {
+      type: "String",
+      nullable: false,
+    }),
+    overridePassword: t.expose("overridePassword", {
       type: "String",
       nullable: false,
     }),

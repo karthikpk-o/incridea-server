@@ -459,7 +459,7 @@ model CertificateIssue {
 model Options {
   id String @id @default(cuid())
 
-  value    String
+  value    String  @db.Text
   isAnswer Boolean @default(false)
 
   questionId String
@@ -492,8 +492,10 @@ model QuizSubmission {
 model QuizScore {
   id String @id @default(cuid())
 
-  score     Int   @default(0)
+  score     Int     @default(0)
   timeTaken Float
+  flags     Int     @default(0)
+  allowUser Boolean @default(true)
 
   teamId Int
   Team   Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -504,6 +506,7 @@ model QuizScore {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([teamId, quizId])
   @@index([quizId])
   @@index([teamId])
 }
@@ -511,15 +514,16 @@ model QuizScore {
 model Quiz {
   id String @id @default(cuid())
 
-  name          String
-  description   String?  @db.Text
-  startTime     DateTime
-  endTime       DateTime
-  allowAttempts Boolean  @default(false)
-  points        Int      @default(1)
-  qualifyNext   Int      @default(5)
-  password      String
-  completed     Boolean  @default(false)
+  name             String
+  description      String?  @db.Text
+  startTime        DateTime
+  endTime          DateTime
+  allowAttempts    Boolean  @default(false)
+  points           Int      @default(1)
+  qualifyNext      Int      @default(5)
+  password         String
+  completed        Boolean  @default(false)
+  overridePassword String
 
   roundId Int
   eventId Int
@@ -538,7 +542,7 @@ model Quiz {
 model Question {
   id String @id @default(cuid())
 
-  question    String
+  question    String  @db.Text
   description String? @db.Text
   isCode      Boolean @default(false)
   image       String?

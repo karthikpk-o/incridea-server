@@ -630,8 +630,19 @@ heapq.heappush(heap, 3) \n
       password: await bcrypt.hash("user@123", 12),
       phoneNumber: "0000000000",
       isVerified: true,
-    },
-  });
+    }
+  })
+
+  await db.user.create({
+    data: {
+      email: "jury@incridea.in",
+      name: "JURY",
+      role: "JURY",
+      password: await bcrypt.hash("jury@123", 12),
+      phoneNumber: "0000000000",
+      isVerified: true,
+    }
+  })
 };
 
 main().catch(console.log);

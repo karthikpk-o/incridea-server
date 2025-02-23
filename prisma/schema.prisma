@@ -459,7 +459,7 @@ model CertificateIssue {
 model Options {
   id String @id @default(cuid())
 
-  value    String
+  value    String  @db.Text
   isAnswer Boolean @default(false)
 
   questionId String

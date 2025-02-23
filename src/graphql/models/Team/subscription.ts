@@ -10,10 +10,6 @@ builder.queryField("judgeGetTeamsByRound", (t) =>
     errors: {
       types: [Error],
     },
-    smartSubscription: true,
-    subscribe: (subscription, root, args, ctx, info) => {
-      subscription.register(`TEAM_UPDATED/${args.eventId}-${args.roundId}`);
-    },
     resolve: async (query, root, args, ctx, info) => {
       try {
         return await ctx.prisma.team.findMany({

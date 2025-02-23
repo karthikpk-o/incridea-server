@@ -91,7 +91,7 @@ class RegistrationsCount {
   }
 }
 
-export const RegistrationCount = builder.objectType(RegistrationsCount, {
+const RegistrationCount = builder.objectType(RegistrationsCount, {
   name: "EventRegistrationsCount",
   fields: (t) => ({
     internalRegistrations: t.exposeInt("internalRegistrations"),

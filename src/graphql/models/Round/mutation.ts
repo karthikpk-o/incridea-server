@@ -154,11 +154,6 @@ builder.mutationField("completeRound", (t) =>
           },
         });
 
-        ctx.pubsub.publish(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`, {
-          eventId: args.eventId,
-          roundNo: args.roundNo,
-        });
-
         return data;
       } catch (e) {
         console.log(e);
@@ -217,11 +212,6 @@ builder.mutationField("changeSelectStatus", (t) =>
           },
         });
         if (!data) throw new Error("No Round Found");
-
-        ctx.pubsub.publish(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`, {
-          eventId: args.eventId,
-          roundNo: args.roundNo,
-        });
 
         return data;
       } catch (e) {

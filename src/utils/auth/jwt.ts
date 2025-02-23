@@ -14,7 +14,9 @@ export const secrets = {
 export const accessTokenZ = z.object({
   userId: z.number(),
 });
-export type AccessToken = z.infer<typeof accessTokenZ>;
+
+type AccessToken = z.infer<typeof accessTokenZ>;
+
 const generateAccessToken = (user: { id: number }) =>
   jwt.sign(
     {
@@ -30,7 +32,9 @@ export const refreshTokenZ = z.object({
   userId: z.number(),
   jti: z.string(),
 });
-export type RefreshToken = z.infer<typeof refreshTokenZ>;
+
+type RefreshToken = z.infer<typeof refreshTokenZ>;
+
 const generateRefreshToken = (user: { id: number }, jti: string) =>
   jwt.sign(
     {
@@ -57,7 +61,9 @@ export const verificationTokenZ = z.object({
   userId: z.number(),
   jti: z.string(),
 });
-export type VerificationToken = z.infer<typeof verificationTokenZ>;
+
+type VerificationToken = z.infer<typeof verificationTokenZ>;
+
 export const generateVerificationToken = (user: { id: number }, jti: string) =>
   jwt.sign(
     {
@@ -74,7 +80,9 @@ export const passwordResetTokenZ = z.object({
   userId: z.number(),
   jti: z.string(),
 });
-export type PasswordResetToken = z.infer<typeof passwordResetTokenZ>;
+
+type PasswordResetToken = z.infer<typeof passwordResetTokenZ>;
+
 export const generatePasswordResetToken = (user: { id: number }, jti: string) =>
   jwt.sign(
     {

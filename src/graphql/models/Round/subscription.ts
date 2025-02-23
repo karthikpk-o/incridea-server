@@ -10,10 +10,6 @@ builder.queryField("getRoundStatus", (t) =>
     errors: {
       types: [Error],
     },
-    smartSubscription: true,
-    subscribe: (subscriptions, parent, args, ctx) => {
-      subscriptions.register(`STATUS_UPDATE/${args.eventId}-${args.roundNo}`);
-    },
     resolve: async (query, root, args, ctx, info) => {
       try {
         return ctx.prisma.round.findUniqueOrThrow({

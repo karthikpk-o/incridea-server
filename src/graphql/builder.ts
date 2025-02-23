@@ -3,9 +3,6 @@ import ErrorsPlugin from "@pothos/plugin-errors";
 import PrismaPlugin from "@pothos/plugin-prisma";
 import type PrismaTypes from "@pothos/plugin-prisma/generated";
 import RelayPlugin from "@pothos/plugin-relay";
-import SmartSubscriptionsPlugin, {
-  subscribeOptionsFromIterator,
-} from "@pothos/plugin-smart-subscriptions";
 import { DateTimeResolver } from "graphql-scalars";
 import { type Avatar } from "~/constants/type";
 
@@ -27,7 +24,11 @@ const builder = new SchemaBuilder<{
   Context: YogaContext;
 }>({
   defaultFieldNullability: false,
-  plugins: [ErrorsPlugin, PrismaPlugin, RelayPlugin, SmartSubscriptionsPlugin],
+  plugins: [
+    ErrorsPlugin,
+    PrismaPlugin,
+    RelayPlugin,
+  ],
   errors: {
     defaultTypes: [],
   },
@@ -37,20 +38,6 @@ const builder = new SchemaBuilder<{
   relay: {
     clientMutationId: "omit",
     cursorType: "String",
-  },
-  // TODO(Omkar): Subcriptions
-  // smartSubscriptions: {
-  //   ...subscribeOptionsFromIterator((name, ctx) => {
-  //     return ctx.pubsub.asyncIterableIterator(name);
-  //   }),
-  // },
-  smartSubscriptions: {
-    subscribe: () => {
-      console.log("Subscribed");
-    },
-    unsubscribe: () => {
-      console.log("Unsubscribed");
-    },
   },
 });
 
@@ -72,6 +59,5 @@ builder.objectType(Error, {
 });
 builder.queryType({});
 builder.mutationType({});
-builder.subscriptionType({});
 
 export { builder };

@@ -3,19 +3,23 @@ import { builder } from "~/graphql/builder";
 builder.queryField("eventByOrganizer", (t) =>
   t.prismaField({
     type: ["Event"],
-    args: {
-      organizerId: t.arg({
-        type: "ID",
-        required: true,
-      }),
+    errors: {
+      types: [Error]
     },
-    resolve: (query, root, args, ctx, info) => {
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+
+      if (!user) throw new Error("You are not authenticated");
+
+      if (user.role !== "ADMIN" && user.role !== "ORGANIZER")
+        throw new Error("You are not allowed to perform this action");
+
       try {
         return ctx.prisma.event.findMany({
           where: {
             Organizers: {
               some: {
-                userId: Number(args.organizerId),
+                userId: user.id,
               },
             },
           },

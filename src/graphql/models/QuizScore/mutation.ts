@@ -1,8 +1,6 @@
 import { builder } from "~/graphql/builder";
 import { prisma } from "~/utils/db";
 
-import { root } from ".eslintrc.cjs";
-
 const OptionsType = builder.inputType("SelectedOptions", {
   fields: (t) => ({
     id: t.string({ required: true }),

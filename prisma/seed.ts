@@ -124,7 +124,7 @@ const main = async () => {
     },
   });
 
-  const round1 = await db.round.create({
+  await db.round.create({
     data: {
       roundNo: 1,
       eventId: event.id,
@@ -139,313 +139,38 @@ const main = async () => {
           qualifyNext: 10,
           points: 2,
           Questions: {
-            create: [
-              {
-                question: "Which data structure is used for implementing LIFO?",
-                options: {
-                  create: [
-                    {
-                      value: "Queue",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Stack",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Array",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Linked List",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `stack = Stack()\n
-stack.push(1) \n
-stack.push(2) \n
-stack.push(3) \n
-
-print(stack.pop())  # 3 (Last In, First Out) \n
-print(stack.pop())  # 2 \n
-print(stack.pop())  # 1 \n
-print(stack.pop())`,
+            create:
+            {
+              question:
+                "Which data structure is used for implementing graph traversal?",
+              options: {
+                create: [
+                  {
+                    value: "Stack",
+                    isAnswer: false,
+                  },
+                  {
+                    value: "Queue",
+                    isAnswer: true,
+                  },
+                  {
+                    value: "Array",
+                    isAnswer: false,
+                  },
+                  {
+                    value: "Linked List",
+                    isAnswer: false,
+                  },
+                ],
               },
-              {
-                question:
-                  "Which algorithm is used to find the shortest path in a graph?",
-                options: {
-                  create: [
-                    {
-                      value: "Merge Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Dijkstra's Algorithm",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Quick Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Binary Search",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `graph = { \n
-  'A': {'B': 1, 'C': 4}, \n
-  'B': {'A': 1, 'C': 2, 'D': 5}, \n
-  'C': {'A': 4, 'B': 2, 'D': 1}, \n
-  'D': {'B': 5, 'C': 1} \n
-}
-  `,
-              },
-              {
-                question:
-                  "Which sorting algorithm has the best average case time complexity?",
-                options: {
-                  create: [
-                    {
-                      value: "Bubble Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Insertion Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Merge Sort",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Selection Sort",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `def merge_sort(arr): \n
-  if len(arr) > 1: \n
-                
-    mid = len(arr) // 2 \n
-    L = arr[:mid] \n
-    R = arr[mid:] \n
-    `,
-              },
-              {
-                question: "Which data structure is used for implementing FIFO?",
-                options: {
-                  create: [
-                    {
-                      value: "Stack",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Queue",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Tree",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Graph",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `queue = Queue() \n
-queue.put(1) \n
-queue.put(2) \n
-queue.put(3) \n
-`,
-              },
-              {
-                question:
-                  "Which algorithm is used for finding the minimum spanning tree?",
-                options: {
-                  create: [
-                    {
-                      value: "Kruskal's Algorithm",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Binary Search",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Quick Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Dijkstra's Algorithm",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `graph = { \n
-  'A': {'B': 1, 'C': 4}, \n
-  'B': {'A': 1, 'C': 2, 'D': 5}, \n
-  'C': {'A': 4, 'B': 2, 'D': 1}, \n
-  'D': {'B': 5, 'C': 1} \n
-}`,
-              },
-              {
-                question:
-                  "Which data structure is used for implementing recursion?",
-                options: {
-                  create: [
-                    {
-                      value: "Queue",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Stack",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Array",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Linked List",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `def factorial(n): \n
-  if n == 0: \n
-                
-                
-    return 1   \n
-  else: \n
-    return n * factorial(n-1)
-                  `,
-              },
-              {
-                question:
-                  "Which algorithm is used for sorting in O(n log n) time complexity?",
-                options: {
-                  create: [
-                    {
-                      value: "Bubble Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Merge Sort",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Insertion Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Selection Sort",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `def merge_sort(arr): \n
-  if len(arr) > 1: \n
-  print(arr) \n
-                `,
-              },
-              {
-                question:
-                  "Which data structure is used for implementing priority queue?",
-                options: {
-                  create: [
-                    {
-                      value: "Stack",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Heap",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Array",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Linked List",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-                isCode: true,
-                description: `import heapq \n
-heap = [] \n
-heapq.heappush(heap, 1) \n
-heapq.heappush(heap, 2) \n
-heapq.heappush(heap, 3) \n
-`,
-              },
-              {
-                question:
-                  "Which algorithm is used for finding the longest common subsequence?",
-                options: {
-                  create: [
-                    {
-                      value: "Binary Search",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Dynamic Programming",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Quick Sort",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Merge Sort",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-              },
-              {
-                question:
-                  "Which data structure is used for implementing graph traversal?",
-                options: {
-                  create: [
-                    {
-                      value: "Stack",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Queue",
-                      isAnswer: true,
-                    },
-                    {
-                      value: "Array",
-                      isAnswer: false,
-                    },
-                    {
-                      value: "Linked List",
-                      isAnswer: false,
-                    },
-                  ],
-                },
-              },
-            ],
+            },
           },
         },
       },
     },
   });
 
-  const round2 = await db.round.create({
+  await db.round.create({
     data: {
       roundNo: 2,
       eventId: event.id,

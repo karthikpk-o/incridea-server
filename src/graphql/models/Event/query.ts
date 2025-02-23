@@ -53,7 +53,7 @@ builder.queryField("eventById", (t) =>
       types: [Error],
     },
     resolve: async (query, root, args, ctx, info) => {
-      const user = await ctx.user
+      const user = await ctx.user;
 
       const event = await ctx.prisma.event.findUnique({
         where: {
@@ -62,13 +62,11 @@ builder.queryField("eventById", (t) =>
         ...query,
       });
 
-      if (!event)
-        throw new Error("Event not found");
+      if (!event) throw new Error("Event not found");
 
-      if (event.published)
-        return event;
+      if (event.published) return event;
 
-      if (!user) throw new Error("Not authenticated")
+      if (!user) throw new Error("Not authenticated");
 
       if (["ADMIN", "ORGANIZER", "BRANCH_REP"].includes(user.role))
         return event;
@@ -251,9 +249,9 @@ builder.queryField("getEventStatus", (t) =>
         const today = new Date();
 
         const eventStatuses = events.map((event) => {
-          const isCompleted = event.Winner.length > 0;
-
-          if (isCompleted) return new EventStatusClass(event.name, "COMPLETED");
+          if (event.Winner.length > 0) {
+            return new EventStatusClass(event.name, "EVENT COMPLETED");
+          }
 
           const ongoingRound = event.Rounds.find(
             (round) =>
@@ -262,20 +260,45 @@ builder.queryField("getEventStatus", (t) =>
               !round.completed,
           );
 
-          if (ongoingRound)
+          if (ongoingRound) {
             return new EventStatusClass(
               event.name,
-              `ROUND ${ongoingRound.roundNo} ONGOING`,
+              `R${ongoingRound.roundNo} ONGOING`,
             );
+          }
 
-          const yetToStartRound = event.Rounds.find(
+          const completedRounds = event.Rounds.filter(
+            (round) => round.completed,
+          ).sort((a, b) => b.roundNo - a.roundNo);
+
+          const latestCompletedRound = completedRounds[0];
+
+          const yetToStartRound = event.Rounds.filter(
             (round) => round.date && round.date.getTime() > today.getTime(),
-          );
+          ).sort((a, b) => a.roundNo - b.roundNo)[0];
 
-          if (yetToStartRound)
-            return new EventStatusClass(event.name, "YET_TO_START");
+          if (latestCompletedRound && yetToStartRound) {
+            return new EventStatusClass(
+              event.name,
+              `R${latestCompletedRound.roundNo} DONE, R${yetToStartRound.roundNo} YET TO START`,
+            );
+          }
 
-          return new EventStatusClass(event.name, "COMPLETED");
+          if (latestCompletedRound) {
+            return new EventStatusClass(
+              event.name,
+              `R${latestCompletedRound.roundNo} DONE`,
+            );
+          }
+
+          if (yetToStartRound) {
+            return new EventStatusClass(
+              event.name,
+              `R${yetToStartRound.roundNo} YET TO START`,
+            );
+          }
+
+          return new EventStatusClass(event.name, "NO ROUNDS");
         });
 
         return eventStatuses;

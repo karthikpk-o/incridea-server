@@ -7,6 +7,7 @@ import { AVATARS } from "~/constants/avatars";
 import { type Avatar } from "~/constants/type";
 
 const CONSTANT = {
+  INTERNAL_COLLEGE_ID: 1 as const,
   REG_AMOUNT_IN_INR: {
     INTERNAL: 350,
     EXTERNAL: 450,

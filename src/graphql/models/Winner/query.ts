@@ -159,7 +159,20 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
         include: {
           Team: {
             select: {
-              leaderId: true,
+              TeamMembers: {
+                take: 1,
+                select: {
+                  User: {
+                    select: {
+                      College: {
+                        select: {
+                          id: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
           Event: {
@@ -170,21 +183,6 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
           },
         },
       });
-
-      const leaderIds = [
-        ...new Set(
-          winners
-            .map((w) => w.Team.leaderId)
-            .filter((id): id is number => id !== null),
-        ),
-      ];
-
-      const leaders = await prisma.user.findMany({
-        where: { id: { in: leaderIds } },
-        select: { id: true, collegeId: true },
-      });
-
-      const leaderCollegeMap = new Map(leaders.map((l) => [l.id, l.collegeId]));
 
       const collegePoints = Array.from(eligibilityMap.entries()).map(
         ([collegeId, { isEligible, name, championshipPoints }]) =>
@@ -206,7 +204,7 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
       winners.forEach((winner) => {
         if (!winner.Event) return;
 
-        const collegeId = leaderCollegeMap.get(winner.Team.leaderId ?? 0);
+        const collegeId = winner.Team.TeamMembers[0]?.User.College?.id;
         if (!collegeId) return;
 
         const collegeData = collegePoints.find(

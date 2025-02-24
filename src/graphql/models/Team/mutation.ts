@@ -1,4 +1,3 @@
-import { selectionCompatible } from "node_modules/@pothos/plugin-prisma/esm/util/selections";
 import { builder } from "~/graphql/builder";
 
 builder.mutationField("createTeam", (t) =>
@@ -1195,7 +1194,7 @@ builder.mutationField("promoteToNextRound", (t) =>
   }),
 );
 
-builder.mutationField("splitTeam", (t) =>
+builder.mutationField("completeRoadiesRound", (t) =>
   t.prismaField({
     type: ["Team"],
     args: {
@@ -1213,10 +1212,11 @@ builder.mutationField("splitTeam", (t) =>
 
       try {
         return await ctx.prisma.$transaction(async (db) => {
+          const nextRound = Number(args.roundNo) + 1;
           const teams = await db.team.findMany({
             where: {
               eventId: Number(args.eventId),
-              roundNo: Number(args.roundNo) + 1,
+              roundNo: nextRound,
               confirmed: true,
             },
             include: {
@@ -1282,6 +1282,39 @@ builder.mutationField("splitTeam", (t) =>
                 },
               },
             });
+          }
+
+          const round = await ctx.prisma.round.findUnique({
+            where: {
+              eventId_roundNo: {
+                eventId: Number(args.eventId),
+                roundNo: Number(args.roundNo),
+              },
+            },
+            include: {
+              Judges: true,
+            },
+          });
+          if (!round) throw new Error("Round not found");
+
+          const judge = round.Judges.find((j) => j.userId === user.id);
+          if (!judge) throw new Error("Not authorized");
+
+          try {
+            await ctx.prisma.round.update({
+              where: {
+                eventId_roundNo: {
+                  eventId: Number(args.eventId),
+                  roundNo: Number(args.roundNo),
+                },
+              },
+              data: {
+                completed: true,
+              },
+            });
+          } catch (e) {
+            console.log(e);
+            throw new Error("Something went wrong! Couldn't complete round");
           }
 
           return updatedTeams;

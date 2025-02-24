@@ -1,14 +1,15 @@
 import { builder } from "~/graphql/builder";
 import { sendWhatsAppMessage } from "~/services/twilio.service";
 import { format } from "date-fns";
-
-// Template IDs
-const INDIVIDUAL_INITIAL_TEMPLATE_SID = "HX6ab2a4c0d7d181ad394fbb6d23295c3a";
-const TEAM_INITIAL_TEMPLATE_SID = "HXc11ddeffc94f57bfe5727a7acb05bfbe";
-const INDIVIDUAL_ROUND_TEMPLATE_SID = "HXedd32480ab74a8e3313a631a9b848e7b";
-const TEAM_ROUND_TEMPLATE_SID = "HX98b0fc36a7d55ef230cf43851bd300f3";
-const INDIVIDUAL_WINNER_TEMPLATE_SID = "HXffb5260122d02b8a4206bd602f6ac740";
-const TEAM_WINNER_TEMPLATE_SID = "HXf4c702d5ccc3c6b3255df9bda75ac612";
+import {
+  INDIVIDUAL_INITIAL_TEMPLATE_SID,
+  TEAM_INITIAL_TEMPLATE_SID,
+  INDIVIDUAL_ROUND_TEMPLATE_SID,
+  TEAM_ROUND_TEMPLATE_SID,
+  INDIVIDUAL_WINNER_TEMPLATE_SID,
+  TEAM_WINNER_TEMPLATE_SID,
+} from "~/constants/templateIDs";
+import { AUTHORIZED_PIDS } from "~/constants/juryIDs";
 
 builder.mutationField("notifyParticipants", (t) =>
   t.field({
@@ -145,7 +146,7 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
         if (!user) {
           throw new Error("Not authenticated");
         }
-        if (user.role !== "JURY") {
+        if (user.role !== "JURY" || !AUTHORIZED_PIDS.includes(user.id)) {
           throw new Error("Not authorized to send WhatsApp notifications");
         }
 

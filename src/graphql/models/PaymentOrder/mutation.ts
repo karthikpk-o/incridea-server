@@ -66,9 +66,9 @@ builder.mutationField("createPaymentOrder", (t) =>
       //set amount for external colleges
       let amount = CONSTANT.REG_AMOUNT_IN_INR.EXTERNAL;
       //set amount for nmamit.in email
-      if (user.email.endsWith("nmamit.in"))
+      if (user.College.id === CONSTANT.INTERNAL_COLLEGE_ID)
         amount = CONSTANT.REG_AMOUNT_IN_INR.INTERNAL;
-      else if (user.College?.type === "OTHER")
+      else if (user.College.type === "OTHER")
         amount = CONSTANT.REG_AMOUNT_IN_INR.OTHER;
 
       const payment_capture = 1;

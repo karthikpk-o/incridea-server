@@ -51,7 +51,7 @@ const getChampionshipEligibilityForAllColleges = async (): Promise<
 
   eventParticipation.forEach(({ TeamMembers, Event }) => {
     TeamMembers.forEach(({ User }) => {
-      if (!User?.collegeId) return;
+      if (!User.collegeId) return;
 
       const collegeId = User.collegeId;
       if (!collegeParticipationMap.has(collegeId)) {

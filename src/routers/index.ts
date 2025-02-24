@@ -208,7 +208,7 @@ router.get("/event/:eid/participants", async (req, res) => {
           id: user.User.id,
           name: user.User.name,
           email: user.User.email,
-          college: user.User.College ? user.User.College.name : "OTHER",
+          college: user.User.College,
           issued: user.issued,
         };
       }),

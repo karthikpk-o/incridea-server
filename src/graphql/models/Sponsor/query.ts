@@ -9,7 +9,8 @@ builder.queryField("getSponsors", (t) => t.prismaField({
     try {
       return await ctx.prisma.sponsor.findMany({
         where: {
-          published: true
+          published: true,
+          ...query
         }
       });
     } catch (e) {

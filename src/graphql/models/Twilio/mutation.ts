@@ -1,6 +1,6 @@
 import { builder } from "~/graphql/builder";
 import { sendWhatsAppMessage } from "~/services/twilio.service";
-import { format } from "date-fns";
+import { format, differenceInHours } from "date-fns";
 import {
   INDIVIDUAL_INITIAL_TEMPLATE_SID,
   TEAM_INITIAL_TEMPLATE_SID,
@@ -9,7 +9,7 @@ import {
   INDIVIDUAL_WINNER_TEMPLATE_SID,
   TEAM_WINNER_TEMPLATE_SID,
 } from "~/constants/templateIDs";
-import { AUTHORIZED_PIDS } from "~/constants/juryIDs";
+import { JURY_AUTHORIZED_IDS } from "~/constants/juryIDs";
 
 builder.mutationField("notifyParticipants", (t) =>
   t.field({
@@ -64,6 +64,18 @@ builder.mutationField("notifyParticipants", (t) =>
 
         if (round.notificationSent) {
           return "Notification already sent for this round";
+        }
+
+        const currentTime = new Date();
+        const eventStartTime = round.date ? new Date(round.date) : null;
+
+        if (
+          eventStartTime &&
+          differenceInHours(eventStartTime, currentTime) > 2
+        ) {
+          throw new Error(
+            "Notifications can only be sent within 2 hours before the event start time",
+          );
         }
 
         const formattedDate = round.date
@@ -146,7 +158,7 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
         if (!user) {
           throw new Error("Not authenticated");
         }
-        if (user.role !== "JURY" || !AUTHORIZED_PIDS.includes(user.id)) {
+        if (user.role !== "JURY" || !JURY_AUTHORIZED_IDS.includes(user.id)) {
           throw new Error("Not authorized to send WhatsApp notifications");
         }
 

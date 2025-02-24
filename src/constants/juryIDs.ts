@@ -1,2 +1,2 @@
-// Jury Authorized PIDs
-export const AUTHORIZED_PIDS = [9, 11];
+// Jury Authorized IDs
+export const JURY_AUTHORIZED_IDS = [9, 11];

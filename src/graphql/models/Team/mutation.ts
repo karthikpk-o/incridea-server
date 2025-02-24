@@ -23,7 +23,6 @@ builder.mutationField("createTeam", (t) =>
       });
       if (!event) throw new Error("Event not found");
 
-
       if (
         event.eventType === "INDIVIDUAL" ||
         event.eventType === "INDIVIDUAL_MULTIPLE_ENTRY"
@@ -394,7 +393,9 @@ builder.mutationField("removeTeamMember", (t) =>
       if (!team) throw new Error("Team not found");
 
       if (
-        !team.TeamMembers.find((member) => member.userId === Number(args.userId))
+        !team.TeamMembers.find(
+          (member) => member.userId === Number(args.userId),
+        )
       )
         throw new Error("User does not belong to this team");
 
@@ -671,7 +672,7 @@ builder.mutationField("organizerAddTeamMember", (t) =>
         });
         const ignore = [65, 66, 67, 68, 69];
         if (
-          participant.College?.id !== leader?.College?.id &&
+          participant.College.id !== leader?.College.id &&
           !ignore.includes(team.Event.id)
         )
           throw new Error("Team members should belong to same college");

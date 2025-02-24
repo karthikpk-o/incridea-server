@@ -62,8 +62,8 @@ model User {
   stoneVisibilities String  @default("111111")
   captureUpdated    Boolean @default(false)
 
-  collegeId Int?     @default(1)
-  College   College? @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  collegeId Int     @default(1)
+  College   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
   BranchRep   BranchRep?
   UserInHotel UserInHotel?

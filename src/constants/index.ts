@@ -62,8 +62,8 @@ const CONSTANT = {
   PEOPLE_WHO_DONT_DESERVE_TO_BE_IN_PRONITE: [466] as number[],
   ID_OF_PRONITE_SCANNING_USER: 669,
   PID: {
-    ACCOMMODATION: [96, 768, 1652],
-    PUBLICITY: []
+    ACCOMMODATION: [96, 768, 1652] as number[],
+    PUBLICITY: [] as number[],
   },
   PRONITE: {
     DAY_1: new Date("28 February 2025 00:00 GMT+0530"),

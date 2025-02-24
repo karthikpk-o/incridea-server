@@ -637,14 +637,53 @@ model Sponsor {
 
   name        String
   title       String
-  description String @db.Text
-  websiteUrl  String
-  imageUrl    String
+  description String  @db.Text
+  websiteUrl  String?
+  imageUrl    String?
 
   published Boolean @default(false)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model CoreTeamMember {
+  id String @id @default(cuid())
+
+  name        String
+  committee   String
+  designation CoreMemberDesignation
+  phone       String
+  email       String
+  imageUrl    String?
+
+  published Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TechTeamMember {
+  id String @id @default(cuid())
+
+  name      String
+  role      String
+  priority  Int
+  instagram String?
+  github    String?
+  linkedin  String?
+  imageUrl  String?
+  quote     String
+
+  published Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CoreMemberDesignation {
+  HEAD
+  CO_HEAD
 }
 
 enum Gender {
@@ -683,12 +722,6 @@ enum Status {
   PENDING
   SUCCESS
   FAILED
-}
-
-enum LAAnswerStatus {
-  PENDING
-  TRUE
-  FALSE
 }
 
 enum VerificationType {

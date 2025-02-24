@@ -7,7 +7,11 @@ builder.prismaObject("Sponsor", {
     name: t.exposeString("name"),
     title: t.exposeString("title"),
     description: t.exposeString("description"),
-    websiteUrl: t.exposeString("websiteUrl"),
-    imageUrl: t.exposeString("imageUrl"),
+    websiteUrl: t.exposeString("websiteUrl", {
+      nullable: true,
+    }),
+    imageUrl: t.exposeString("imageUrl", {
+      nullable: true,
+    }),
   }),
 });

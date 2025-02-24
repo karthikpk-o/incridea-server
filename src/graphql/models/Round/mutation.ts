@@ -200,7 +200,7 @@ builder.mutationField("changeSelectStatus", (t) =>
       if (!round) throw new Error("Round not found");
 
       try {
-        const data = await ctx.prisma.round.update({
+        return await ctx.prisma.round.update({
           where: {
             eventId_roundNo: {
               eventId: Number(args.eventId),
@@ -211,9 +211,6 @@ builder.mutationField("changeSelectStatus", (t) =>
             selectStatus: !round.selectStatus,
           },
         });
-        if (!data) throw new Error("No Round Found");
-
-        return data;
       } catch (e) {
         console.log(e);
         throw new Error("Something went wrong! Couldn't change select status");

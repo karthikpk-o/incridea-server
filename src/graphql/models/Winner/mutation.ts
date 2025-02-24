@@ -156,7 +156,7 @@ builder.mutationField("createWinner", (t) =>
             },
           });
 
-          if (!college || !college.College)
+          if (!college)
             throw new Error("College not found");
 
           const points = CONSTANT.WINNER_POINTS.COLLEGE[event.tier][args.type];
@@ -297,7 +297,7 @@ builder.mutationField("deleteWinner", (t) =>
             },
           });
 
-          if (!college || !college.College)
+          if (!college)
             throw new Error("College not found");
 
           await db.college.update({

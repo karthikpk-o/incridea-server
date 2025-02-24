@@ -112,20 +112,20 @@ builder.queryField("getAllQuizSubmissions", (t) =>
       });
 
       const quizSubmissions = submissions.map((item) => {
-        const optionsArr = item?.Options?.Question?.options?.map((item) => {
+        const optionsArr = item.Options.Question.options.map((item) => {
           return {
-            id: item?.id,
-            answer: item?.value,
+            id: item.id,
+            answer: item.value,
           };
         });
 
         return {
           options: optionsArr,
-          userId: item?.teamId?.toString(),
-          question: item?.Options?.Question?.question,
-          qId: item?.Options?.questionId,
-          mcqAns: item?.Options?.value,
-          isRight: item?.Options?.isAnswer,
+          userId: item.teamId.toString(),
+          question: item.Options.Question.question,
+          qId: item.Options.questionId,
+          mcqAns: item.Options.value,
+          isRight: item.Options.isAnswer,
           fitbAns: null,
           laAns: null,
           longAnsIsRight: null,
@@ -229,20 +229,20 @@ builder.queryField("getSubmissionByUser", (t) =>
       });
 
       const quizSubmissions = submissions.map((item) => {
-        const optionsArr = item?.Options?.Question?.options?.map((item) => {
+        const optionsArr = item.Options.Question.options.map((item) => {
           return {
-            id: item?.id,
-            answer: item?.value,
+            id: item.id,
+            answer: item.value,
           };
         });
 
         return {
           options: optionsArr,
-          userId: item?.teamId?.toString(),
-          question: item?.Options?.Question?.question,
-          qId: item?.Options?.questionId,
-          mcqAns: item?.Options?.value,
-          isRight: item?.Options?.isAnswer,
+          userId: item.teamId.toString(),
+          question: item.Options.Question.question,
+          qId: item.Options.questionId,
+          mcqAns: item.Options.value,
+          isRight: item.Options.isAnswer,
           fitbAns: null,
           laAns: null,
           longAnsIsRight: null,

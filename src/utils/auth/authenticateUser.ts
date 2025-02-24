@@ -8,6 +8,7 @@ const authenticateUser = async (
   prisma: PrismaClient,
   request: YogaInitialContext["request"],
 ) => {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
   if (!request) return null;
 
   const authHeader = request.headers.get("authorization");

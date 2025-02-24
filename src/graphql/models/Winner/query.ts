@@ -202,8 +202,6 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
       );
 
       winners.forEach((winner) => {
-        if (!winner.Event) return;
-
         const collegeId = winner.Team.TeamMembers[0]?.User.College?.id;
         if (!collegeId) return;
 
@@ -212,18 +210,34 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
         );
         if (!collegeData) return;
 
-        if (winner.Event.category === "TECHNICAL") collegeData.techCount++;
-        else if (winner.Event.category === "NON_TECHNICAL")
-          collegeData.nonTechCount++;
-        else if (winner.Event.category === "CORE") collegeData.coreCount++;
+        switch (winner.Event.category) {
+          case "CORE":
+            collegeData.coreCount++;
+            break;
+          case "TECHNICAL":
+            collegeData.techCount++;
+            break;
+          case "NON_TECHNICAL":
+            collegeData.nonTechCount++;
+            break;
+          case "SPECIAL":
+            break;
+        }
 
-        if (winner.Event.tier === "GOLD") collegeData.goldCount[winner.type]++;
-        else if (winner.Event.tier === "SILVER")
-          collegeData.silverCount[winner.type]++;
-        else if (winner.Event.tier === "BRONZE")
-          collegeData.bronzeCount[winner.type]++;
-        else if (winner.Event.tier === "DIAMOND")
-          collegeData.diamondCount[winner.type]++;
+        switch (winner.Event.tier) {
+          case "DIAMOND":
+            collegeData.diamondCount[winner.type]++;
+            break;
+          case "GOLD":
+            collegeData.goldCount[winner.type]++;
+            break;
+          case "SILVER":
+            collegeData.silverCount[winner.type]++;
+            break;
+          case "BRONZE":
+            collegeData.bronzeCount[winner.type]++;
+            break;
+        }
       });
 
       return collegePoints;

@@ -23,8 +23,7 @@ builder.queryField("getProniteRegistrations", (t) =>
     resolve: async (root, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (user.role !== "JURY" && user.role !== "ADMIN")
-        throw new Error("Not authorized");
+      if (user.role !== "ADMIN") throw new Error("Not authorized");
 
       try {
         const day1Count = await ctx.prisma.proniteRegistration.count({

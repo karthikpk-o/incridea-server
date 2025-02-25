@@ -4,32 +4,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/x-icon"
+    href="https://nq339so9lv.ufs.sh/f/WLP0ZbakyZdBEXROv6sStbMkTRmWzD6Z7IV9A2PaoQLxdhew">
   <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
   <title>Incridea'25 | Maintainance</title>
 </head>
 
 <body class="flex justify-center gap-4 p-10 text-center flex-col text-white items-center h-screen"
   style="background: linear-gradient(40deg, rgb(0, 51, 31) 10%, rgb(0, 102, 63) 50%, rgb(0, 51, 31));">
-  <img src="https://incridea.in/2025/logo-combined.webp" alt="Incridea'25 logo" height="10px" width="400px">
-  <h1 class="text-7xl font-bold">Under Maintainance</h1>
+  <img src="https://qmahmrnhvk.ufs.sh/f/WiEIO6HN9rYsbeOT4ea6HMayVpiftmYsLCor4QwWXxc2q1lE" alt="Incridea'25 logo"
+    height="10px" width="400px">
+  <h1 class="text-5xl font-bold">Under Maintainance</h1>
   <br>
   <br>
-  <p class="text-3xl font-bold">
-    We will get back live within 30 seconds
+  <p class="text-3xl font-bold" id="timer-text">
+    If we don't get back within <span id="countdown">30</span> seconds
   </p>
   <p class="text-2xl">
-    If we don't, Please contact the below numbers
+    Please contact the below numbers
   </p>
   <div class="grid grid-cols-1 md:grid-cols-2">
-    <span>
-      <a href="tel:9513295282" class="hover:underline hover:text-blue-500 text-2xl">
-        +919513295282
-      </a>
-    </span>
+    <a href="tel:9513295282" class="hover:underline hover:text-blue-500 text-2xl">
+      +919513295282
+    </a>
     <a href="tel:9448846524" class="hover:underline hover:text-blue-500 text-2xl">
       +919448846524
     </a>
   </div>
+  <script>
+    let timeLeft = 30;
+    const countdownElement = document.getElementById('countdown');
+    const timerTextElement = document.getElementById('timer-text');
+
+    const timer = setInterval(() => {
+      timeLeft--;
+      countdownElement.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        timerTextElement.innerHTML = "It's taking longer than expected!";
+        setTimeout(() => {
+          location.reload();
+        }, 4000);
+      }
+    }, 1000);
+  </script>
 </body>
 
 </html>

@@ -1,3 +1,4 @@
+import { CONSTANT } from "~/constants";
 import { builder } from "~/graphql/builder";
 
 builder.queryField("getRevenue", (t) =>
@@ -9,8 +10,7 @@ builder.queryField("getRevenue", (t) =>
     resolve: async (query, args, ctx, info) => {
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
-      if (user.role !== "JURY" && user.role !== "ADMIN")
-        throw new Error("Not authorized");
+      if (user.role !== "ADMIN") throw new Error("Not authorized");
 
       try {
         const revenue = await ctx.prisma.paymentOrder.aggregate({
@@ -33,6 +33,103 @@ builder.queryField("getRevenue", (t) =>
       } catch (e) {
         console.log(e);
         throw new Error("Something went wrong! Couldn't fetch revenue");
+      }
+    },
+  }),
+);
+
+class RegistrationsVSDateClass {
+  internalRegistrations: number;
+  externalRegistrations: number;
+  date: string;
+
+  constructor(
+    internalRegistrations: number,
+    externalRegistrations: number,
+    date: string,
+  ) {
+    this.internalRegistrations = internalRegistrations;
+    this.externalRegistrations = externalRegistrations;
+    this.date = date;
+  }
+}
+
+const RegistrationVSDate = builder.objectType(RegistrationsVSDateClass, {
+  name: "RegistrationVSDateObject",
+  fields: (t) => ({
+    internalRegistrations: t.exposeInt("internalRegistrations"),
+    externalRegistrations: t.exposeInt("externalRegistrations"),
+    date: t.exposeString("date"),
+  }),
+});
+
+builder.queryField("getRegistrationvsDate", (t) =>
+  t.field({
+    type: [RegistrationVSDate],
+    errors: {
+      types: [Error],
+    },
+    resolve: async (root, args, ctx) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+      if (user.role !== "ADMIN") throw new Error("Not authorized");
+
+      try {
+        const allPaymentOrders = await ctx.prisma.paymentOrder.groupBy({
+          by: ["createdAt"],
+          where: {
+            status: "SUCCESS",
+            type: "FEST_REGISTRATION",
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        const internalPaymentOrders = await ctx.prisma.paymentOrder.groupBy({
+          by: ["createdAt"],
+          where: {
+            status: "SUCCESS",
+            type: "FEST_REGISTRATION",
+            User: {
+              College: {
+                id: CONSTANT.INTERNAL_COLLEGE_ID,
+              },
+            },
+          },
+          _count: {
+            id: true,
+          },
+        });
+
+        const groupedData = new Map<
+          string,
+          { internal: number; external: number }
+        >();
+
+        allPaymentOrders.forEach((entry) => {
+          const dateKey = entry.createdAt.toISOString().split("T")[0] ?? "";
+          if (!groupedData.has(dateKey)) {
+            groupedData.set(dateKey, { internal: 0, external: 0 });
+          }
+          groupedData.get(dateKey)!.external += entry._count.id;
+        });
+
+        internalPaymentOrders.forEach((entry) => {
+          const dateKey = entry.createdAt.toISOString().split("T")[0] ?? "";
+          if (groupedData.has(dateKey)) {
+            groupedData.get(dateKey)!.internal += entry._count.id;
+            groupedData.get(dateKey)!.external -= entry._count.id;
+          }
+        });
+
+        return Array.from(groupedData.entries()).map(
+          ([date, { internal, external }]) =>
+            new RegistrationsVSDateClass(internal, Math.max(external, 0), date),
+        );
+      } catch (e) {
+        console.error(e);
+        throw new Error("Something went wrong! Couldn't fetch chart data");
       }
     },
   }),

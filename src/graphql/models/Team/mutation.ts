@@ -1193,3 +1193,136 @@ builder.mutationField("promoteToNextRound", (t) =>
     },
   }),
 );
+
+builder.mutationField("completeRoadiesRound", (t) =>
+  t.prismaField({
+    type: ["Team"],
+    args: {
+      eventId: t.arg.id({ required: true }),
+      roundNo: t.arg.id({ required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
+      try {
+        return await ctx.prisma.$transaction(async (db) => {
+          const nextRound = Number(args.roundNo) + 1;
+          const teams = await db.team.findMany({
+            where: {
+              eventId: Number(args.eventId),
+              roundNo: nextRound,
+              confirmed: true,
+            },
+            include: {
+              TeamMembers: {
+                select: {
+                  userId: true,
+                  teamId: true,
+                },
+              },
+            },
+          });
+
+          const updatedTeams = [];
+
+          for (const team of teams) {
+            if (team.TeamMembers.length < 2)
+              throw new Error("Not enough members to split");
+
+            const leader = team.TeamMembers.find(
+              (member) => member.userId === team.leaderId,
+            );
+            if (!leader) throw new Error("Leader not found");
+
+            // Rename original team
+            const updatedTeam = await db.team.update({
+              where: { id: team.id },
+              data: { name: `${team.name}-1` },
+              ...query,
+            });
+
+            // make the non-leader ; leader of new team
+            const newLeader = team.TeamMembers.find(
+              (member) =>
+                member.userId !== team.leaderId && member.teamId === team.id,
+            );
+            if (!newLeader) throw new Error("New leader not found");
+
+            // Create new team
+            const newTeam = await db.team.create({
+              data: {
+                name: `${team.name}-2`,
+                eventId: team.eventId,
+                roundNo: team.roundNo,
+                leaderId: newLeader.userId,
+                attended: team.attended,
+                confirmed: team.confirmed,
+                TeamMembers: {
+                  create: {
+                    userId: newLeader.userId,
+                  },
+                },
+              },
+            });
+
+            updatedTeams.push(updatedTeam, newTeam);
+
+            //delete the team-member from the original team
+            await db.teamMember.deleteMany({
+              where: {
+                teamId: team.id,
+                userId: {
+                  not: team.leaderId ?? 0,
+                },
+              },
+            });
+          }
+
+          const round = await ctx.prisma.round.findUnique({
+            where: {
+              eventId_roundNo: {
+                eventId: Number(args.eventId),
+                roundNo: Number(args.roundNo),
+              },
+            },
+            include: {
+              Judges: true,
+            },
+          });
+          if (!round) throw new Error("Round not found");
+
+          const judge = round.Judges.find((j) => j.userId === user.id);
+          if (!judge) throw new Error("Not authorized");
+
+          try {
+            await ctx.prisma.round.update({
+              where: {
+                eventId_roundNo: {
+                  eventId: Number(args.eventId),
+                  roundNo: Number(args.roundNo),
+                },
+              },
+              data: {
+                completed: true,
+              },
+            });
+          } catch (e) {
+            console.log(e);
+            throw new Error("Something went wrong! Couldn't complete round");
+          }
+
+          return updatedTeams;
+        });
+      } catch (error) {
+        console.log(error);
+        throw new Error("Something went wrong! Couldn't split team");
+      }
+    },
+  }),
+);

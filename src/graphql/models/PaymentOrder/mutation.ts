@@ -1,4 +1,3 @@
-
 import { builder } from "~/graphql/builder";
 import { CONSTANT } from "~/constants";
 import { razorpay } from "~/razorpay";
@@ -44,7 +43,8 @@ builder.mutationField("createPaymentOrder", (t) =>
 
       const serverSettings = await ctx.prisma.serverSettings.findFirst();
       if (!serverSettings) throw new Error("Something went wrong!");
-      if (!serverSettings.registrationsOpen) throw new Error("Registrations are closed!");
+      if (!serverSettings.registrationsOpen)
+        throw new Error("Registrations are closed!");
 
       const existingOrder = await ctx.prisma.paymentOrder.findFirst({
         where: {
@@ -157,7 +157,6 @@ builder.mutationField("eventPaymentOrder", (t) =>
 
       if (user.id != team.leaderId)
         throw new Error("Oops! You are Not the leader");
-
 
       const payment_capture = 1;
       const amount = Math.ceil(team.Event.fees / 0.98);

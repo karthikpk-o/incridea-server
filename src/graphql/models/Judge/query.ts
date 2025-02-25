@@ -30,16 +30,17 @@ builder.queryField("judgeCountByJudge", (t) =>
               },
               {
                 roundNo: round.roundNo,
-              }
-            ]
+              },
+            ],
           },
         });
       } catch (e) {
         console.log(e);
         throw new Error("Something went wrong! Couldn't fetch judge count");
       }
-    }
-  }))
+    },
+  }),
+);
 
 builder.queryField("roundByJudge", (t) =>
   t.prismaField({

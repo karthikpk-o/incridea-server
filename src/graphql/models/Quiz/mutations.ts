@@ -85,6 +85,7 @@ builder.mutationField("createQuiz", (t) =>
           points: args.points,
           qualifyNext: args.qualifyNext,
           password: args.password,
+          overridePassword: args.overridePassword
         },
         ...query,
       });

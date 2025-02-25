@@ -136,7 +136,7 @@ async function sendParticipationCertificate() {
           name: member.User.name,
           eventName: team.Event.name,
           email: member.User.email,
-          college: member.User.College?.name,
+          college: member.User.College.name,
         };
       });
     })
@@ -146,7 +146,7 @@ async function sendParticipationCertificate() {
     try {
       await sendCertificate(
         participant.name,
-        participant.college ?? "OTHER",
+        participant.college,
         participant.eventName,
         participant.email,
       );

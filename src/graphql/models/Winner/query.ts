@@ -156,6 +156,13 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
       const eligibilityMap = await getChampionshipEligibilityForAllColleges();
 
       const winners = await prisma.winners.findMany({
+        where: {
+          Event: {
+            category: {
+              not: "SPECIAL",
+            },
+          },
+        },
         include: {
           Team: {
             select: {
@@ -219,8 +226,6 @@ builder.queryField("getChampionshipLeaderboard", (t) =>
             break;
           case "NON_TECHNICAL":
             collegeData.nonTechCount++;
-            break;
-          case "SPECIAL":
             break;
         }
 

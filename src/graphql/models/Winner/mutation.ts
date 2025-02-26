@@ -158,11 +158,14 @@ builder.mutationField("createWinner", (t) =>
 
           if (!college) throw new Error("College not found");
 
-          const points = CONSTANT.WINNER_POINTS.COLLEGE[event.tier][args.type];
+          const points =
+            event.category !== "SPECIAL"
+              ? CONSTANT.WINNER_POINTS.COLLEGE[event.tier][args.type]
+              : 0;
 
           await db.college.update({
             where: {
-              id: college.College.id,
+              id: college.College?.id,
             },
             data: {
               championshipPoints: {
@@ -230,6 +233,7 @@ builder.mutationField("deleteWinner", (t) =>
         },
         select: {
           tier: true,
+          category: true,
           Rounds: {
             select: {
               Judges: true,
@@ -281,7 +285,9 @@ builder.mutationField("deleteWinner", (t) =>
           }
 
           const points =
-            CONSTANT.WINNER_POINTS.COLLEGE[event.tier][winner.type];
+            event.category !== "SPECIAL"
+              ? CONSTANT.WINNER_POINTS.COLLEGE[event.tier][winner.type]
+              : 0;
 
           const college = await db.user.findUnique({
             where: {
@@ -300,7 +306,7 @@ builder.mutationField("deleteWinner", (t) =>
 
           await db.college.update({
             where: {
-              id: college.College.id,
+              id: college.College?.id,
             },
             data: {
               championshipPoints: {

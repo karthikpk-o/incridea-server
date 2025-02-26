@@ -66,6 +66,9 @@ const RegistrationVSDate = builder.objectType(RegistrationsVSDateClass, {
 builder.queryField("getRegistrationvsDate", (t) =>
   t.field({
     type: [RegistrationVSDate],
+    args: {
+      date: t.arg({ type: "DateTime", required: false }),
+    },
     errors: {
       types: [Error],
     },
@@ -75,14 +78,27 @@ builder.queryField("getRegistrationvsDate", (t) =>
       if (user.role !== "ADMIN") throw new Error("Not authorized");
 
       try {
+        const isSpecificDate = Boolean(args.date);
+
         const allPaymentOrders = await ctx.prisma.paymentOrder.groupBy({
           by: ["createdAt"],
           where: {
             status: "SUCCESS",
             type: "FEST_REGISTRATION",
+            ...(args.date
+              ? {
+                  createdAt: {
+                    gte: args.date,
+                    lte: new Date(args.date.getTime() + 86400000),
+                  },
+                }
+              : {}),
           },
           _count: {
             id: true,
+          },
+          orderBy: {
+            createdAt: "asc",
           },
         });
 
@@ -91,6 +107,14 @@ builder.queryField("getRegistrationvsDate", (t) =>
           where: {
             status: "SUCCESS",
             type: "FEST_REGISTRATION",
+            ...(args.date
+              ? {
+                  createdAt: {
+                    gte: args.date,
+                    lte: new Date(args.date.getTime() + 86400000),
+                  },
+                }
+              : {}),
             User: {
               College: {
                 id: CONSTANT.INTERNAL_COLLEGE_ID,
@@ -100,6 +124,9 @@ builder.queryField("getRegistrationvsDate", (t) =>
           _count: {
             id: true,
           },
+          orderBy: {
+            createdAt: "asc",
+          },
         });
 
         const groupedData = new Map<
@@ -108,18 +135,31 @@ builder.queryField("getRegistrationvsDate", (t) =>
         >();
 
         allPaymentOrders.forEach((entry) => {
-          const dateKey = entry.createdAt.toISOString().split("T")[0] ?? "";
-          if (!groupedData.has(dateKey)) {
-            groupedData.set(dateKey, { internal: 0, external: 0 });
+          const dateKey = isSpecificDate
+            ? entry.createdAt.toISOString().slice(0, 13)
+            : entry.createdAt.toISOString().split("T")[0];
+
+          if (dateKey) {
+            if (!groupedData.has(dateKey)) {
+              groupedData.set(dateKey, { internal: 0, external: 0 });
+            }
+            groupedData.get(dateKey)!.external += entry._count.id;
           }
-          groupedData.get(dateKey)!.external += entry._count.id;
         });
 
         internalPaymentOrders.forEach((entry) => {
-          const dateKey = entry.createdAt.toISOString().split("T")[0] ?? "";
-          if (groupedData.has(dateKey)) {
-            groupedData.get(dateKey)!.internal += entry._count.id;
-            groupedData.get(dateKey)!.external -= entry._count.id;
+          const dateKey = isSpecificDate
+            ? entry.createdAt.toISOString().slice(0, 13)
+            : entry.createdAt.toISOString().split("T")[0];
+
+          if (dateKey) {
+            if (groupedData.has(dateKey)) {
+              groupedData.get(dateKey)!.internal += entry._count.id;
+              groupedData.get(dateKey)!.external = Math.max(
+                groupedData.get(dateKey)!.external - entry._count.id,
+                0,
+              );
+            }
           }
         });
 

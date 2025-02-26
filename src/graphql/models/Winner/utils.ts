@@ -1,3 +1,4 @@
+import { CONSTANT } from "~/constants";
 import { prisma } from "~/utils/db";
 
 const getChampionshipEligibilityForAllColleges = async (): Promise<
@@ -18,7 +19,14 @@ const getChampionshipEligibilityForAllColleges = async (): Promise<
     where: {
       Event: {
         published: true,
-        category: { in: ["TECHNICAL", "NON_TECHNICAL"] },
+        OR: [
+          {
+            category: { in: ["TECHNICAL", "NON_TECHNICAL"] },
+          },
+          {
+            id: CONSTANT.CORE_TECHNICAL_EVENT_ID,
+          },
+        ],
         Rounds: {
           some: {
             roundNo: { in: Array.from(finalRoundMap.values()) },
@@ -60,6 +68,7 @@ const getChampionshipEligibilityForAllColleges = async (): Promise<
 
       const counts = collegeParticipationMap.get(collegeId)!;
       if (Event.category === "TECHNICAL") counts.tech++;
+      if (Event.id === CONSTANT.CORE_TECHNICAL_EVENT_ID) counts.tech++;
       if (Event.category === "NON_TECHNICAL") counts.nonTech++;
     });
   });

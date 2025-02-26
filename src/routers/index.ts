@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { prisma } from "~/utils/db";
 import { HTTPError } from "~/utils/error";
 import bcrypt from "bcryptjs";
@@ -28,14 +28,22 @@ router.post("/auth/event-org/login", async (req, res) => {
         role: true,
       },
     });
-    if (!user) throw new HTTPError(404, "User Not Found");
+    if (!user) {
+      console.log("User not found");
 
-    if (user.role !== "ORGANIZER")
-      throw new HTTPError(401, "Not an event organizer");
+      throw new HTTPError(404, "User Not Found");
+    }
+
+    if (user.role !== "ADMIN" && user.role !== "ORGANIZER") {
+      console.log("Not an admin or organizer");
+      throw new HTTPError(401, "Not an admin");
+    }
 
     const valid = await bcrypt.compare(data.password, user.password);
-    if (!valid) throw new HTTPError(401, "Invalid Password");
-
+    if (!valid) {
+      console.log("Invalid password");
+      throw new HTTPError(401, "Invalid Password");
+    }
     res.status(200).send({ user_id: user.id });
   } catch (err) {
     console.log(err);
@@ -47,21 +55,38 @@ router.post("/auth/event-org/login", async (req, res) => {
   }
 });
 
-router.get("/events/organizer", async (req, res) => {
+router.use(async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const idStr = req.headers.authorization?.split(" ")[1];
-    if (!idStr) throw new HTTPError(401, "Unauthorized");
-
+    const authHeader = req.headers["authorization"];
+    if (!authHeader) {
+      throw new HTTPError(401, "headers not found");
+    }
+    const idStr = authHeader.split(" ")[1];
+    if (!idStr) throw new HTTPError(401, "invalid auth header");
     const userId = parseInt(idStr);
+    await prisma.user.findUniqueOrThrow({
+      where: {
+        id: userId,
+        role: {
+          in: ["ADMIN", "ORGANIZER"],
+        },
+      },
+    });
+    next();
+  } catch (err) {
+    if (err instanceof HTTPError) {
+      res.status(err.status).send({ msg: err.message });
+      return;
+    }
+    res.status(500).send({ msg: "Error Authorizing" });
+  }
+});
 
+router.get("/events", async (_, res) => {
+  try {
     const events = await prisma.event.findMany({
       where: {
         published: true,
-        Organizers: {
-          some: {
-            userId,
-          },
-        },
       },
       select: {
         id: true,
@@ -73,7 +98,7 @@ router.get("/events/organizer", async (req, res) => {
     res.status(200).send({ events });
   } catch (err) {
     console.log(err);
-    res.status(500).send({ msg: "Error Fetching Events" });
+    res.status(401).send({ msg: "Error Fetching Events" });
   }
 });
 
@@ -97,20 +122,11 @@ router.post("/issue-certificates", async (req, res) => {
       where: {
         id: data.eventId,
       },
-      select: {
-        Organizers: {
-          select: {
-            userId: true,
-          },
-        },
-      },
     });
 
-    if (!event) throw new HTTPError(404, "Event Not Found");
-
-    if (event.Organizers.filter((org) => org.userId === userId).length === 0)
-      throw new HTTPError(401, "Unauthorized");
-
+    if (!event) {
+      throw new HTTPError(404, "Event Not Found");
+    }
     const teams = await prisma.team.findMany({
       where: {
         eventId: data.eventId,
@@ -155,29 +171,13 @@ router.post("/issue-certificates", async (req, res) => {
 router.get("/event/:eid/participants", async (req, res) => {
   try {
     const eventId = parseInt(req.params.eid);
-
-    const idStr = req.headers.authorization?.split(" ")[1];
-    if (!idStr) throw new HTTPError(401, "Unauthorized");
-
-    const userId = parseInt(idStr);
-
     const event = await prisma.event.findUnique({
       where: {
         id: eventId,
       },
-      select: {
-        Organizers: {
-          select: {
-            userId: true,
-          },
-        },
-      },
     });
 
     if (!event) throw new HTTPError(404, "Event Not Found");
-
-    if (!event.Organizers.find((org) => org.userId === userId))
-      throw new HTTPError(401, "Unauthorized");
 
     const users = await prisma.certificateIssue.findMany({
       where: {

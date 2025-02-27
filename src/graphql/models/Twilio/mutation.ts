@@ -73,7 +73,10 @@ builder.mutationField("notifyParticipants", (t) =>
 
         if (
           eventStartTime &&
-          differenceInHours(eventStartTime, currentTime) > 2
+          differenceInHours(
+            eventStartTime,
+            currentTime.getTime() + 5.5 * 60 * 60 * 1000,
+          ) > 2
         ) {
           throw new Error(
             "Notifications can only be sent within 2 hours before the event start time",

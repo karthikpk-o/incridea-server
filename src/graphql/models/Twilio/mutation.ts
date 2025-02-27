@@ -67,7 +67,9 @@ builder.mutationField("notifyParticipants", (t) =>
         }
 
         const currentTime = new Date();
-        const eventStartTime = round.date ? new Date(round.date) : null;
+        const eventStartTime = round.date
+          ? new Date(new Date(round.date).getTime() + 5.5 * 60 * 60 * 1000)
+          : null;
 
         if (
           eventStartTime &&

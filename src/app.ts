@@ -22,6 +22,6 @@ app.post("/webhook/capture", razorpayCapture);
 app.use("/uploadthing", UTApiRouter);
 
 // TODO(Omkar): Route?
-app.use(certificateRouter);
+app.use("/certificate", certificateRouter);
 
 export { app };

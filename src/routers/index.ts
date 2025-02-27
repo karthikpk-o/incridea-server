@@ -57,6 +57,7 @@ router.post("/auth/event-org/login", async (req, res) => {
 
 router.use(async (req: Request, res: Response, next: NextFunction) => {
   try {
+    // eslint-disable-next-line @typescript-eslint/dot-notation
     const authHeader = req.headers["authorization"];
     if (!authHeader) {
       throw new HTTPError(401, "headers not found");

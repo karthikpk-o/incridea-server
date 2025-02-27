@@ -11,7 +11,7 @@ import { app } from "~/app";
 import { yoga } from "~/graphql";
 
 const httpServer = app.listen(env.PORT, () =>
-  console.log(`🚀 Server ready at: http://localhost:${env.PORT}/graphql`),
+  console.log(`🚀 Server ready at: http://localhost:${env.PORT}/graphql`)
 );
 
 const wsServer = new WebSocketServer({
@@ -52,5 +52,5 @@ useServer(
       return args;
     },
   },
-  wsServer,
+  wsServer
 );

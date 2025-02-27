@@ -10,6 +10,7 @@ import {
   TEAM_WINNER_TEMPLATE_SID,
 } from "~/constants/templateIDs";
 import { JURY_AUTHORIZED_IDS } from "~/constants/juryIDs";
+import { WinnerType } from "@prisma/client";
 
 builder.mutationField("notifyParticipants", (t) =>
   t.field({
@@ -98,20 +99,20 @@ builder.mutationField("notifyParticipants", (t) =>
             const contentVariables =
               round.Event.eventType === "INDIVIDUAL"
                 ? JSON.stringify({
-                    participant_name: member.User.name,
-                    round_number: round.roundNo.toString(),
-                    event_name: round.Event.name,
-                    event_date: formattedDate,
-                    event_location: venue,
-                  })
+                  participant_name: member.User.name,
+                  round_number: round.roundNo.toString(),
+                  event_name: round.Event.name,
+                  event_date: formattedDate,
+                  event_location: venue,
+                })
                 : JSON.stringify({
-                    participant_name: member.User.name,
-                    team_name: team.name,
-                    round_number: round.roundNo.toString(),
-                    event_name: round.Event.name,
-                    event_date: formattedDate,
-                    event_location: venue,
-                  });
+                  participant_name: member.User.name,
+                  team_name: team.name,
+                  round_number: round.roundNo.toString(),
+                  event_name: round.Event.name,
+                  event_date: formattedDate,
+                  event_location: venue,
+                });
             const phoneNumberWithCountryCode = `+91${member.User.phoneNumber}`;
             await sendWhatsAppMessage(
               phoneNumberWithCountryCode,
@@ -157,76 +158,65 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
     resolve: async (root, args, ctx) => {
       try {
         const user = await ctx.user;
-        if (!user) {
+        if (!user)
           throw new Error("Not authenticated");
-        }
-        if (user.role !== "JURY" || !JURY_AUTHORIZED_IDS.includes(user.id)) {
+
+        if (user.role !== "JURY" || !JURY_AUTHORIZED_IDS.includes(user.id))
           throw new Error("Not authorized to send WhatsApp notifications");
-        }
 
-        const event = await ctx.prisma.event.findUnique({
-          where: { id: Number(args.eventId) },
-          include: {
-            Winner: {
-              include: {
-                Team: {
-                  include: {
-                    TeamMembers: {
-                      include: {
-                        User: true,
-                      },
-                    },
-                  },
-                },
-              },
+        [WinnerType.WINNER, WinnerType.RUNNER_UP].map(async (winnerType) => {
+          const winner = await ctx.prisma.winners.findUnique({
+            where: {
+              eventId_type: {
+                eventId: Number(args.eventId),
+                type: winnerType
+              }
             },
-          },
-        });
+            include: {
+              Event: true,
+              Team: {
+                include: {
+                  TeamMembers: {
+                    include: {
+                      User: true
+                    }
+                  }
+                }
+              }
+            }
+          })
 
-        if (!event) {
-          throw new Error("Event not found");
-        }
+          if (!winner)
+            return
 
-        const notificationSent = await ctx.prisma.winners.findFirst({
-          where: {
-            eventId: Number(args.eventId),
-            notificationSent: true,
-          },
-        });
+          const EventName = winner.Event.name;
+          const templateSid =
+            winner.Event.eventType === "INDIVIDUAL"
+              ? INDIVIDUAL_WINNER_TEMPLATE_SID
+              : TEAM_WINNER_TEMPLATE_SID;
 
-        if (notificationSent) {
-          return "Notification already sent for this event winners";
-        }
-
-        const EventName = event.name;
-        const templateSid =
-          event.eventType === "INDIVIDUAL"
-            ? INDIVIDUAL_WINNER_TEMPLATE_SID
-            : TEAM_WINNER_TEMPLATE_SID;
-
-        for (const winner of event.Winner) {
           for (const member of winner.Team.TeamMembers) {
             const contentVariables =
-              event.eventType === "INDIVIDUAL"
+              winner.Event.eventType === "INDIVIDUAL"
                 ? JSON.stringify({
-                    participant_name: member.User.name,
-                    winner_type: winner.type,
-                    event_name: EventName,
-                    event_location: args.location,
-                    event_date: args.date,
-                    start_time: args.fromTime,
-                    end_time: args.toTime,
-                  })
+                  participant_name: member.User.name,
+                  winner_type: winner.type,
+                  event_name: EventName,
+                  event_location: args.location,
+                  event_date: args.date,
+                  start_time: args.fromTime,
+                  end_time: args.toTime,
+                })
                 : JSON.stringify({
-                    participant_name: member.User.name,
-                    team_name: winner.Team.name,
-                    winner_type: winner.type,
-                    event_name: EventName,
-                    event_location: args.location,
-                    event_date: args.date,
-                    start_time: args.fromTime,
-                    end_time: args.toTime,
-                  });
+                  participant_name: member.User.name,
+                  team_name: winner.Team.name,
+                  winner_type: winner.type,
+                  event_name: EventName,
+                  event_location: args.location,
+                  event_date: args.date,
+                  start_time: args.fromTime,
+                  end_time: args.toTime,
+                });
             const phoneNumberWithCountryCode = `+91${member.User.phoneNumber}`;
             await sendWhatsAppMessage(
               phoneNumberWithCountryCode,
@@ -234,12 +224,19 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
               contentVariables,
             );
           }
-        }
 
-        await ctx.prisma.winners.updateMany({
-          where: { eventId: Number(args.eventId) },
-          data: { notificationSent: true },
-        });
+          await ctx.prisma.winners.update({
+            where: {
+              eventId_type: {
+                eventId: Number(args.eventId),
+                type: winnerType
+              }
+            },
+            data: {
+              notificationSent: true
+            },
+          });
+        })
 
         return "Notification sent successfully";
       } catch (error) {

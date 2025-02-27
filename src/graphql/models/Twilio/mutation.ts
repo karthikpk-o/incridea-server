@@ -167,6 +167,7 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
         if (user.role !== "JURY" || !JURY_AUTHORIZED_IDS.includes(user.id))
           throw new Error("Not authorized to send WhatsApp notifications");
 
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         [WinnerType.WINNER, WinnerType.RUNNER_UP].map(async (winnerType) => {
           const winner = await ctx.prisma.winners.findUnique({
             where: {

@@ -69,7 +69,7 @@ const CONSTANT = {
   PRONITE: {
     DAY_1: new Date("28 February 2025 00:00 GMT+0530"),
     // DAY_2: new Date("01 March 2025 00:00 GMT+0530"),
-    DAY_2: new Date("28 February 2025 10:45 GMT+0530"),
+    DAY_2: new Date("28 February 2025 10:50 GMT+0530"),
   },
   AVATARS: AVATARS as Avatar[],
 };

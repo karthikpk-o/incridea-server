@@ -158,7 +158,7 @@ builder.queryField("attemptQuiz", (t) =>
       const user = await ctx.user;
       if (!user) throw new Error("Not authenticated");
 
-      if (user.role !== "PARTICIPANT")
+      if (user.role === "USER" || user.role === "JUDGE")
         throw new Error("Permission to attempt the quiz is denied");
 
       const quiz = await ctx.prisma.quiz.findUnique({

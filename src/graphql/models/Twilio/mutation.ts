@@ -10,6 +10,7 @@ import {
   TEAM_WINNER_TEMPLATE_SID,
 } from "~/constants/templateIDs";
 import { JURY_AUTHORIZED_IDS } from "~/constants/juryIDs";
+import { WinnerType } from "@prisma/client";
 
 builder.mutationField("notifyParticipants", (t) =>
   t.field({
@@ -67,11 +68,16 @@ builder.mutationField("notifyParticipants", (t) =>
         }
 
         const currentTime = new Date();
-        const eventStartTime = round.date ? new Date(round.date) : null;
+        const eventStartTime = round.date
+          ? new Date(new Date(round.date).getTime() + 5.5 * 60 * 60 * 1000)
+          : null;
 
         if (
           eventStartTime &&
-          differenceInHours(eventStartTime, currentTime) > 2
+          differenceInHours(
+            eventStartTime,
+            currentTime.getTime() + 5.5 * 60 * 60 * 1000,
+          ) > 2
         ) {
           throw new Error(
             "Notifications can only be sent within 2 hours before the event start time",
@@ -155,57 +161,45 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
     resolve: async (root, args, ctx) => {
       try {
         const user = await ctx.user;
-        if (!user) {
-          throw new Error("Not authenticated");
-        }
-        if (user.role !== "JURY" || !JURY_AUTHORIZED_IDS.includes(user.id)) {
-          throw new Error("Not authorized to send WhatsApp notifications");
-        }
+        if (!user) throw new Error("Not authenticated");
 
-        const event = await ctx.prisma.event.findUnique({
-          where: { id: Number(args.eventId) },
-          include: {
-            Winner: {
-              include: {
-                Team: {
-                  include: {
-                    TeamMembers: {
-                      include: {
-                        User: true,
-                      },
+        if (user.role !== "JURY" || !JURY_AUTHORIZED_IDS.includes(user.id))
+          throw new Error("Not authorized to send WhatsApp notifications");
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        [WinnerType.WINNER, WinnerType.RUNNER_UP].map(async (winnerType) => {
+          const winner = await ctx.prisma.winners.findUnique({
+            where: {
+              eventId_type: {
+                eventId: Number(args.eventId),
+                type: winnerType,
+              },
+            },
+            include: {
+              Event: true,
+              Team: {
+                include: {
+                  TeamMembers: {
+                    include: {
+                      User: true,
                     },
                   },
                 },
               },
             },
-          },
-        });
+          });
 
-        if (!event) {
-          throw new Error("Event not found");
-        }
+          if (!winner) return;
 
-        const notificationSent = await ctx.prisma.winners.findFirst({
-          where: {
-            eventId: Number(args.eventId),
-            notificationSent: true,
-          },
-        });
+          const EventName = winner.Event.name;
+          const templateSid =
+            winner.Event.eventType === "INDIVIDUAL"
+              ? INDIVIDUAL_WINNER_TEMPLATE_SID
+              : TEAM_WINNER_TEMPLATE_SID;
 
-        if (notificationSent) {
-          return "Notification already sent for this event winners";
-        }
-
-        const EventName = event.name;
-        const templateSid =
-          event.eventType === "INDIVIDUAL"
-            ? INDIVIDUAL_WINNER_TEMPLATE_SID
-            : TEAM_WINNER_TEMPLATE_SID;
-
-        for (const winner of event.Winner) {
           for (const member of winner.Team.TeamMembers) {
             const contentVariables =
-              event.eventType === "INDIVIDUAL"
+              winner.Event.eventType === "INDIVIDUAL"
                 ? JSON.stringify({
                     participant_name: member.User.name,
                     winner_type: winner.type,
@@ -232,11 +226,18 @@ builder.mutationField("sendWinnerWhatsAppNotification", (t) =>
               contentVariables,
             );
           }
-        }
 
-        await ctx.prisma.winners.updateMany({
-          where: { eventId: Number(args.eventId) },
-          data: { notificationSent: true },
+          await ctx.prisma.winners.update({
+            where: {
+              eventId_type: {
+                eventId: Number(args.eventId),
+                type: winnerType,
+              },
+            },
+            data: {
+              notificationSent: true,
+            },
+          });
         });
 
         return "Notification sent successfully";

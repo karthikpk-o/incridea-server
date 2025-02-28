@@ -392,7 +392,7 @@ model Winners {
 model Card {
   id Int @id @default(autoincrement())
 
-  clue String
+  clue String  @db.Text
   day  DayType
 
   Submissions Submission[]
@@ -452,6 +452,7 @@ model CertificateIssue {
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
 
+  @@unique([userId, eventId])
   @@index([userId])
   @@index([eventId])
 }

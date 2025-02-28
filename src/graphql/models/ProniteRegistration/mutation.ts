@@ -42,9 +42,9 @@ builder.mutationField("registerPronite", (t) =>
         where: {
           userId_proniteDay: {
             userId: Number(args.userId),
-            proniteDay: "Day1",
+            // proniteDay: "Day1",
             // TODO(Omkar): Make it dynamic
-            // proniteDay: new Date() < CONSTANT.PRONITE.DAY_2 ? "Day1" : "Day2",
+            proniteDay: new Date() < CONSTANT.PRONITE.DAY_2 ? "Day1" : "Day2",
           },
         },
       });
@@ -61,9 +61,9 @@ builder.mutationField("registerPronite", (t) =>
       return await ctx.prisma.proniteRegistration.create({
         data: {
           userId: Number(args.userId),
-          proniteDay: "Day1",
+          // proniteDay: "Day1",
           // TODO(Omkar): Make it dynamic
-          // proniteDay: new Date() < CONSTANT.PRONITE.DAY_2 ? "Day1" : "Day2",
+          proniteDay: new Date() < CONSTANT.PRONITE.DAY_2 ? "Day1" : "Day2",
         },
         ...query,
       });

@@ -24,13 +24,6 @@ builder.mutationField("registerPronite", (t) =>
       if (!scannedUser) throw new Error("No such user exists");
 
       if (
-        CONSTANT.PEOPLE_WHO_DONT_DESERVE_TO_BE_IN_PRONITE.includes(
-          scannedUser.id,
-        )
-      )
-        throw new Error("Does not deserve to register for pronite");
-
-      if (
         !["PARTICIPANT", "ORGANIZER", "BRANCH_REP", "ADMIN", "JURY"].includes(
           scannedUser.role,
         )

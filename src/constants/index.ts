@@ -60,7 +60,6 @@ const CONSTANT = {
       },
     } as { [key in EventTier]: { [key in WinnerType]: number } },
   },
-  PEOPLE_WHO_DONT_DESERVE_TO_BE_IN_PRONITE: [466] as number[],
   ID_OF_PRONITE_SCANNING_USER: 669,
   PID: {
     ACCOMMODATION: [96, 768, 1652] as number[],

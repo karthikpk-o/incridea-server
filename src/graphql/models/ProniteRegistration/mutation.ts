@@ -37,32 +37,25 @@ builder.mutationField("registerPronite", (t) =>
       )
         throw new Error("User did not register for the fest");
 
-      //set day here for pronite
       const pronite = await ctx.prisma.proniteRegistration.findUnique({
         where: {
           userId_proniteDay: {
             userId: Number(args.userId),
-            // proniteDay: "Day1",
-            // TODO(Omkar): Make it dynamic
             proniteDay: new Date() < CONSTANT.PRONITE.DAY_2 ? "Day1" : "Day2",
           },
         },
       });
 
       if (pronite) {
-        // 2024-02-23T04:35:38.014Z convert to 10:03:59 AM
         const date = new Date(pronite.createdAt).toLocaleString(undefined, {
           timeZone: "Asia/Kolkata",
         });
         throw new Error(`User already registered for pronite at ${date}`);
       }
 
-      // set day here for pronite
       return await ctx.prisma.proniteRegistration.create({
         data: {
           userId: Number(args.userId),
-          // proniteDay: "Day1",
-          // TODO(Omkar): Make it dynamic
           proniteDay: new Date() < CONSTANT.PRONITE.DAY_2 ? "Day1" : "Day2",
         },
         ...query,

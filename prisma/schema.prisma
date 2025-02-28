@@ -148,7 +148,7 @@ model Team {
   roundNo   Int     @default(1)
   confirmed Boolean @default(false)
   attended  Boolean @default(false)
-  leaderId  Int
+  leaderId  Int?
 
   eventId Int
   Event   Event @relation(fields: [eventId], references: [id], onDelete: Cascade)

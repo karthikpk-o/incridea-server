@@ -163,6 +163,121 @@ builder.mutationField("completeRound", (t) =>
   }),
 );
 
+builder.mutationField("completeRoadiesRound", (t) =>
+  t.prismaField({
+    type: ["Team"],
+    args: {
+      eventId: t.arg.id({ required: true }),
+      roundNo: t.arg.id({ required: true }),
+    },
+    errors: {
+      types: [Error],
+    },
+    resolve: async (query, root, args, ctx, info) => {
+      const user = await ctx.user;
+      if (!user) throw new Error("Not authenticated");
+
+      if (user.role !== "JUDGE") throw new Error("Not authorized");
+
+      try {
+        return await ctx.prisma.$transaction(async (db) => {
+          const nextRound = Number(args.roundNo) + 1;
+
+          // Fetch teams with all team members
+          const teams = await db.team.findMany({
+            where: {
+              eventId: Number(args.eventId),
+              roundNo: nextRound,
+              confirmed: true,
+            },
+            include: {
+              TeamMembers: true,
+            },
+          });
+
+          const createdTeams = [];
+
+          for (const team of teams) {
+            if (team.TeamMembers.length === 0) continue;
+
+            // Create a new team for each team member
+            for (let i = 0; i < team.TeamMembers.length; i++) {
+              const member = team.TeamMembers[i];
+
+              if (!member) continue;
+
+              // Create new team with this member as leader
+              const newTeam = await db.team.create({
+                data: {
+                  name: `${team.name}-${i + 1}`,
+                  eventId: team.eventId,
+                  roundNo: team.roundNo,
+                  leaderId: member.userId, // Set this member as the leader
+                  attended: team.attended,
+                  confirmed: team.confirmed,
+                  TeamMembers: {
+                    create: {
+                      userId: member.userId,
+                    },
+                  },
+                },
+                ...query,
+              });
+
+              createdTeams.push(newTeam);
+            }
+
+            // Delete the original team after creating new ones
+            await db.team.delete({
+              where: { id: team.id },
+            });
+          }
+
+          // Mark the round as completed
+          const round = await db.round.findUnique({
+            where: {
+              eventId_roundNo: {
+                eventId: Number(args.eventId),
+                roundNo: Number(args.roundNo),
+              },
+            },
+            include: {
+              Judges: true,
+            },
+          });
+
+          if (!round) throw new Error("Round not found");
+
+          const judge = round.Judges.find((j) => j.userId === user.id);
+          if (!judge) throw new Error("Not authorized");
+
+          try {
+            await db.round.update({
+              where: {
+                eventId_roundNo: {
+                  eventId: Number(args.eventId),
+                  roundNo: Number(args.roundNo),
+                },
+              },
+              data: {
+                completed: true,
+              },
+            });
+          } catch (e) {
+            console.log(e);
+            throw new Error("Something went wrong! Couldn't complete round");
+          }
+
+          return createdTeams;
+        });
+      } catch (error) {
+        console.log(error);
+        throw new Error("Something went wrong! Couldn't create teams");
+      }
+    },
+  }),
+);
+
 builder.mutationField("changeSelectStatus", (t) =>
   t.prismaField({
     type: "Round",

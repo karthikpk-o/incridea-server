@@ -4,6 +4,7 @@ import { prisma } from "~/utils/db";
 const getChampionshipEligibilityForAllColleges = async (): Promise<
   Map<number, { isEligible: boolean; name: string; championshipPoints: number }>
 > => {
+  // Get the final round number for each event
   const finalRounds = await prisma.round.groupBy({
     by: ["eventId"],
     _max: { roundNo: true },
@@ -15,27 +16,21 @@ const getChampionshipEligibilityForAllColleges = async (): Promise<
       .map((round) => [round.eventId, round._max.roundNo!]),
   );
 
-  const eventParticipation = await prisma.team.findMany({
+  // Get all teams from relevant events
+  const allTeams = await prisma.team.findMany({
     where: {
       Event: {
         published: true,
         OR: [
-          {
-            category: { in: ["TECHNICAL", "NON_TECHNICAL"] },
-          },
-          {
-            id: CONSTANT.CORE_TECHNICAL_EVENT_ID,
-          },
+          { category: { in: ["TECHNICAL", "NON_TECHNICAL"] } },
+          { id: CONSTANT.CORE_TECHNICAL_EVENT_ID },
         ],
-        Rounds: {
-          some: {
-            roundNo: { in: Array.from(finalRoundMap.values()) },
-          },
-        },
       },
     },
     select: {
       id: true,
+      eventId: true,
+      roundNo: true,
       Event: {
         select: {
           id: true,
@@ -54,25 +49,52 @@ const getChampionshipEligibilityForAllColleges = async (): Promise<
 
   const collegeParticipationMap = new Map<
     number,
-    { tech: number; nonTech: number }
+    {
+      tech: Set<number>;
+      nonTech: Set<number>;
+    }
   >();
 
-  eventParticipation.forEach(({ TeamMembers, Event }) => {
-    TeamMembers.forEach(({ User }) => {
-      if (!User.collegeId) return;
+  // iterate over all teams of tech-not tech events
+  allTeams.forEach((team) => {
+    const { TeamMembers, Event, eventId, roundNo } = team;
 
-      const collegeId = User.collegeId;
+    // Check if this team has reached the final round for its event
+    const finalRoundForEvent = finalRoundMap.get(eventId);
+    if (!finalRoundForEvent || roundNo !== finalRoundForEvent) {
+      return;
+    }
+
+    // Extract unique college IDs from team members
+    const collegeIds = new Set(
+      TeamMembers.map(({ User }) => User.collegeId).filter(
+        (id): id is number => id !== null,
+      ),
+    );
+
+    // For each unique college in the team
+    collegeIds.forEach((collegeId) => {
       if (!collegeParticipationMap.has(collegeId)) {
-        collegeParticipationMap.set(collegeId, { tech: 0, nonTech: 0 });
+        collegeParticipationMap.set(collegeId, {
+          tech: new Set(),
+          nonTech: new Set(),
+        });
       }
 
-      const counts = collegeParticipationMap.get(collegeId)!;
-      if (Event.category === "TECHNICAL") counts.tech++;
-      if (Event.id === CONSTANT.CORE_TECHNICAL_EVENT_ID) counts.tech++;
-      if (Event.category === "NON_TECHNICAL") counts.nonTech++;
+      const collegeEventCounts = collegeParticipationMap.get(collegeId)!;
+
+      // Count each event only once per college
+      if (Event.id === CONSTANT.CORE_TECHNICAL_EVENT_ID) {
+        collegeEventCounts.tech.add(Event.id);
+      } else if (Event.category === "TECHNICAL") {
+        collegeEventCounts.tech.add(Event.id);
+      } else if (Event.category === "NON_TECHNICAL") {
+        collegeEventCounts.nonTech.add(Event.id);
+      }
     });
   });
 
+  // Get all colleges
   const colleges = await prisma.college.findMany({
     select: {
       id: true,
@@ -81,18 +103,20 @@ const getChampionshipEligibilityForAllColleges = async (): Promise<
     },
   });
 
+  // Determine eligibility for each college
   const eligibilityMap = new Map<
     number,
     { isEligible: boolean; name: string; championshipPoints: number }
   >();
 
   colleges.forEach((college) => {
-    const counts = collegeParticipationMap.get(college.id) ?? {
-      tech: 0,
-      nonTech: 0,
-    };
+    const collegeEvents = collegeParticipationMap.get(college.id);
+
+    const techCount = collegeEvents ? collegeEvents.tech.size : 0;
+    const nonTechCount = collegeEvents ? collegeEvents.nonTech.size : 0;
+
     eligibilityMap.set(college.id, {
-      isEligible: counts.tech >= 3 && counts.nonTech >= 2,
+      isEligible: techCount >= 3 && nonTechCount >= 2,
       name: college.name,
       championshipPoints: college.championshipPoints,
     });
